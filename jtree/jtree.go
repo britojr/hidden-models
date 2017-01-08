@@ -1,74 +1,50 @@
 // Package jtree implements junctiontree
 package jtree
 
-import (
-	"sort"
+import "github.com/britojr/tcc/characteristic"
 
-	"github.com/britojr/tcc/characteristic"
-)
-
-type jTreeNode struct {
+// Node ...
+type Node struct {
 	cliq, sep []int
 }
 
 // JTree ...
 type JTree struct {
-	Nodes []jTreeNode
-	P     []int
+	Nodes    []Node
+	Children [][]int
 }
 
-// Generate generates a junction tree form a characteristic tree and an inverse phi array
-func Generate(T *characteristic.Tree, iphi []int) *JTree {
+// New generates a junction tree form a characteristic tree and an inverse phi array
+func New(T *characteristic.Tree, iphi []int) *JTree {
 	n := len(iphi)
 	k := n - len(T.P) + 1
-
-	// Create children vector from T.P.
-	children := make([][]int, n)
-	for i := 0; i < len(T.P); i++ {
-		if T.P[i] != -1 {
-			children[T.P[i]] = append(children[T.P[i]], i)
+	children := characteristic.ChildrenList(T)
+	first := children[0][0]
+	children[first] = append(children[first], children[0][1:]...)
+	jt := JTree{}
+	K := characteristic.ExtractCliqueList(T, n, k)
+	queue := []int{first}
+	index := 0
+	mapIndex := make([]int, len(children))
+	for len(queue) > 0 {
+		v := queue[0]
+		mapIndex[v] = index
+		queue = queue[1:]
+		clique := make([]int, len(K[v])+1)
+		clique[0] = iphi[v-1]
+		for i := 0; i < len(K[v]); i++ {
+			clique[i+1] = iphi[K[v][i]-1]
+		}
+		jt.Nodes = append(jt.Nodes, Node{clique, clique[1:]})
+		index++
+		queue = append(queue, children[v]...)
+	}
+	jt.Children = make([][]int, len(children)-1)
+	for i := 1; i < len(children); i++ {
+		jt.Children[mapIndex[i]] = make([]int, len(children[i]))
+		for j := 0; j < len(children[i]); j++ {
+			jt.Children[mapIndex[i]][j] = mapIndex[children[i][j]]
 		}
 	}
-
-	// Visit T in BFS order, starting with the children of R.
-	K := make([][]int, n)
-	queue := make([]int, n)
-	m := make([]bool, n)
-	start, end := 0, 0
-	for i := 0; i < len(children[0]); i++ {
-		m[children[0][i]] = true
-		queue[end] = children[0][i]
-		end++
-	}
-	for start != end {
-		v := queue[start]
-		start++
-		if T.P[v] == 0 {
-			for i := n - k + 1; i <= n; i++ {
-				K[v] = append(K[v], i)
-			}
-		} else {
-			for i := 0; i < len(K[T.P[v]]); i++ {
-				if i != T.L[v] {
-					K[v] = append(K[v], K[T.P[v]][i])
-				}
-			}
-			K[v] = append(K[v], T.P[v])
-			sort.Ints(K[v])
-		}
-		// for i := 0; i < len(K[v]); i++ {
-		// 	u := K[v][i]
-		// 	// adj[u-1] = append(adj[u-1], v-1)
-		// 	adj[v-1] = append(adj[v-1], u-1)
-		// }
-		for i := 0; i < len(children[v]); i++ {
-			if !m[children[v][i]] {
-				m[children[v][i]] = true
-				queue[end] = children[v][i]
-				end++
-			}
-		}
-	}
-
-	return &JTree{nil, nil}
+	return &jt
 }
