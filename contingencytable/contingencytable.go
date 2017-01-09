@@ -15,6 +15,12 @@ func LoadFromData(data [][]int, cardinality []int) *Sparse {
 		sp.strideMap[k] = stride
 		stride *= v
 	}
-	// TODO count data
+	for i := 0; i < len(data); i++ {
+		pos := 0
+		for j := 0; j < len(data[i]); j++ {
+			pos += data[i][j] * sp.strideMap[j]
+		}
+		sp.countMap[pos]++
+	}
 	return &sp
 }
