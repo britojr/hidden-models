@@ -24,3 +24,15 @@ func LoadFromData(data [][]int, cardinality []int) *Sparse {
 	}
 	return &sp
 }
+
+// Marginalize creates new contingecy containing only the given variables
+func (sp *Sparse) Marginalize(vars ...int) *Sparse {
+	mt := Sparse{make(map[int]int), make(map[int]int)}
+	return &mt
+}
+
+// Reduce creates new contingecy summing out the variable with stride of one
+func (sp *Sparse) Reduce() *Sparse {
+	mt := Sparse{make(map[int]int), make(map[int]int)}
+	return &mt
+}

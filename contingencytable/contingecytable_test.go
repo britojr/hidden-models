@@ -38,9 +38,83 @@ var sp = Sparse{
 	},
 }
 
+// { 0,  0}, = 0
+// { 0,  0}, = 0
+// { 1,  0}, = 1
+// { 0,  1}, = 3
+// { 0,  1}, = 3
+// { 0,  1}, = 3
+// { 1,  1}, = 4
+// { 2,  1}, = 5
+// { 2,  2}, = 8
+// { 0,  3}, = 9
+// { 2,  3}, = 11
+var sp13 = Sparse{
+	strideMap: map[int]int{
+		1: 1,
+		3: 3,
+	},
+	countMap: map[int]int{
+		0:  2,
+		1:  1,
+		3:  3,
+		4:  1,
+		5:  1,
+		8:  1,
+		9:  1,
+		11: 1,
+	},
+}
+
+// { 0, 0, 0}, = 0
+// { 0, 0, 0}, = 0
+// { 1, 1, 0}, = 4
+// { 2, 0, 1}, = 8
+// { 0, 1, 1}, = 9
+// { 0, 1, 1}, = 9
+// { 0, 1, 1}, = 9
+// { 1, 1, 1}, = 10
+// { 2, 0, 2}, = 14
+// { 2, 0, 3}, = 20
+// { 0, 1, 3}, = 21
+
+var spReduc = Sparse{
+	strideMap: map[int]int{
+		1: 1,
+		2: 3,
+		3: 6,
+	},
+	countMap: map[int]int{
+		0:  2,
+		4:  1,
+		8:  1,
+		9:  3,
+		10: 1,
+		14: 1,
+		20: 1,
+		21: 1,
+	},
+}
+
 func TestLoadFromData(t *testing.T) {
 	want := &sp
 	got := LoadFromData(dataset, cardinality)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("got %v; want %v", got, want)
+	}
+}
+
+func TestMarginalize(t *testing.T) {
+	want := &sp13
+	got := sp.Marginalize(1, 3)
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("got %v; want %v", got, want)
+	}
+}
+
+func TestReduce(t *testing.T) {
+	want := &spReduc
+	got := sp.Reduce()
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
