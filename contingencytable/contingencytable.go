@@ -5,6 +5,8 @@ package contingecytable
 type Sparse struct {
 	strideMap map[int]int
 	countMap  map[int]int
+    varOrdering []int
+    
 }
 
 // LoadFromData creates a new contingey table from data
@@ -34,5 +36,6 @@ func (sp *Sparse) Marginalize(vars ...int) *Sparse {
 // Reduce creates new contingecy summing out the variable with stride of one
 func (sp *Sparse) Reduce() *Sparse {
 	mt := Sparse{make(map[int]int), make(map[int]int)}
+    for i :=0; i < len(sp.)
 	return &mt
 }
