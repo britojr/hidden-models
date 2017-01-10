@@ -36,6 +36,13 @@ var sp = Sparse{
 		41: 1,
 		43: 1,
 	},
+	varOrdering: []int{0, 1, 2, 3},
+	cardinality: map[int]int{
+		0: 2,
+		1: 3,
+		2: 2,
+		3: 4,
+	},
 }
 
 // { 0,  0}, = 0
