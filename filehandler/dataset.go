@@ -15,17 +15,21 @@ type DataSet struct {
 	fileName       string
 	delimiter      rune
 	hasCardinality bool
+	splitFunc      func(c rune) bool
 	cardinality    []int
 	data           [][]int
 }
 
 // NewDataSet creates new dataset
-func NewDataSet(fileName string, delimiter rune, hasCardinality bool) *DataSet {
-	d := &DataSet{}
+func NewDataSet(fileName string, delimiter rune, hasCardinality bool) (d *DataSet) {
+	//d := new(DataSet)
 	d.fileName = fileName
 	d.delimiter = delimiter
 	d.hasCardinality = hasCardinality
-	return d
+	d.splitFunc = func(c rune) bool {
+		return c == d.delimiter
+	}
+	return
 }
 
 // Read reads the complete file
@@ -33,16 +37,13 @@ func (d *DataSet) Read() {
 	file := openFile(d.fileName)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	f := func(c rune) bool {
-		return c == d.delimiter
-	}
 	if d.hasCardinality {
 		scanner.Scan()
-		cells := strings.FieldsFunc(scanner.Text(), f)
+		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
 		d.cardinality = utils.SliceAtoi(cells)
 	}
 	for i := 0; scanner.Scan(); i++ {
-		cells := strings.FieldsFunc(scanner.Text(), f)
+		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
 		d.data = append(d.data, utils.SliceAtoi(cells))
 	}
 }
