@@ -1,6 +1,11 @@
 // Package counting implements Counting Tables
 package counting
 
+// Table interface for counting tables
+type Table interface {
+	Reduce()
+}
+
 // SparseTable is a sparse implementation of counting table
 type SparseTable struct {
 	strideMap   map[int]int
@@ -36,15 +41,40 @@ func (s *SparseTable) LoadFromData(data [][]int, cardinality []int) {
 	}
 }
 
+// Reduce creates new table summing out the variable with the lesser stride
+func (s *SparseTable) Reduce() (r *SparseTable) {
+	r = NewSparse()
+	r.varOrdering = append([]int(nil), s.varOrdering[1:]...)
+	stride := 1
+	r.strideMap = make(map[int]int)
+	r.cardinality = make(map[int]int)
+	for _, v := range r.varOrdering {
+		r.strideMap[v] = stride
+		stride *= s.cardinality[v]
+		r.cardinality[v] = s.cardinality[v]
+	}
+	r.countMap = make(map[int]int)
+	c := s.cardinality[s.varOrdering[0]]
+	for i := 0; i < stride; i++ {
+		aux := 0
+		for j := 0; j < c; j++ {
+			aux += s.countMap[(i*c)+j]
+		}
+		if aux != 0 {
+			r.countMap[i] = aux
+		}
+	}
+	return
+}
+
 // Marginalize creates new contingecy containing only the given variables
 func (s *SparseTable) Marginalize(vars ...int) *SparseTable {
 	panic("Not implemented")
 }
 
-// Reduce creates new contingecy summing out the variable with stride of one
-func (s *SparseTable) Reduce() (r *SparseTable) {
-	//r = NewSparse()
-	x := s.varOrdering[0]
+// sumOut sum out a given variable
+func (s *SparseTable) sumOut(x int) (r *SparseTable) {
+	r = NewSparse()
 	tableSize := 1
 	for k, v := range s.cardinality {
 		if k != x {

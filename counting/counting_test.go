@@ -101,6 +101,12 @@ var spReduc = SparseTable{
 		20: 1,
 		21: 1,
 	},
+	varOrdering: []int{1, 2, 3},
+	cardinality: map[int]int{
+		1: 3,
+		2: 2,
+		3: 4,
+	},
 }
 
 func TestLoadFromData(t *testing.T) {
