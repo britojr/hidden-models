@@ -10,22 +10,30 @@ import (
 	"github.com/britojr/playgo/utils"
 )
 
+type HeaderFlags byte
+
+const (
+	NameHeader HeaderFlags = 1 << iota
+	CardinHeader
+)
+
 // DataSet ...
 type DataSet struct {
-	fileName       string
-	delimiter      rune
-	hasCardinality bool
-	splitFunc      func(c rune) bool
-	cardinality    []int
-	data           [][]int
+	fileName    string
+	delimiter   rune
+	headerlns   HeaderFlags
+	splitFunc   func(c rune) bool
+	varNames    []string
+	cardinality []int
+	data        [][]int
 }
 
 // NewDataSet creates new dataset
-func NewDataSet(fileName string, delimiter rune, hasCardinality bool) (d *DataSet) {
+func NewDataSet(fileName string, delimiter rune, headerlns HeaderFlags) (d *DataSet) {
 	//d := new(DataSet)
 	d.fileName = fileName
 	d.delimiter = delimiter
-	d.hasCardinality = hasCardinality
+	d.headerlns = headerlns
 	d.splitFunc = func(c rune) bool {
 		return c == d.delimiter
 	}
@@ -37,7 +45,11 @@ func (d *DataSet) Read() {
 	file := openFile(d.fileName)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	if d.hasCardinality {
+	if d.headerlns&NameHeader != 0 {
+		scanner.Scan()
+		d.varNames = strings.FieldsFunc(scanner.Text(), d.splitFunc)
+	}
+	if d.headerlns&CardinHeader != 0 {
 		scanner.Scan()
 		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
 		d.cardinality = utils.SliceAtoi(cells)
