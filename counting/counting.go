@@ -67,6 +67,40 @@ func (s *SparseTable) Reduce() (r *SparseTable) {
 	return
 }
 
+// Eliminate creates new contingecy table summing out the given variable
+func (s *SparseTable) Eliminate(x int) (r *SparseTable) {
+	r = NewSparse()
+	r.varOrdering = make([]int, len(s.varOrdering)-1)
+	r.cardinality = make(map[int]int)
+	r.strideMap = make(map[int]int)
+	j := 0
+	stride := 1
+	for _, v := range s.varOrdering {
+		if v != x {
+			r.varOrdering[j] = v
+			r.cardinality[v] = s.cardinality[v]
+			r.strideMap[v] = stride
+			stride *= s.cardinality[v]
+			j++
+		}
+	}
+	r.countMap = make(map[int]int)
+	c := s.cardinality[x]
+	for k := 0; k < stride; k += (s.strideMap[x] * c) {
+		for i := 0; i < s.strideMap[x]; i++ {
+			base := i + k
+			aux := 0
+			for j := 0; j < c; j++ {
+				aux += s.countMap[base+j*s.strideMap[x]]
+			}
+			if aux != 0 {
+				r.countMap[i] = aux
+			}
+		}
+	}
+	return
+}
+
 // Marginalize creates new contingecy containing only the given variables
 func (s *SparseTable) Marginalize(vars ...int) *SparseTable {
 	panic("Not implemented")
