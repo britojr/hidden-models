@@ -31,6 +31,6 @@ func (c *BitCounter) SumOut(vars ...int) (r *BitCounter) {
 }
 
 // ValueIterator ..
-func (c *BitCounter) ValueIterator() func() int {
+func (c *BitCounter) ValueIterator() func() *int {
 	panic("Not implemented")
 }
