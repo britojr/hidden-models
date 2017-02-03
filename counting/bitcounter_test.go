@@ -116,7 +116,9 @@ func createValMap(next func() *int) (m map[int]int) {
 	v := next()
 	i := 0
 	for v != nil {
-		m[i] = *v
+		if *v != 0 {
+			m[i] = *v
+		}
 		v = next()
 		i++
 	}
