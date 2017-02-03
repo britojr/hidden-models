@@ -78,5 +78,9 @@ func (b *BitCounter) getCardinality(x int) int {
 }
 
 func (b *BitCounter) getCount(val []int) int {
-	return 0
+	aux := (*b.vars[b.order[0]])[val[0]].Clone()
+	for i, v := range val {
+		aux.InPlaceIntersection((*b.vars[b.order[i]])[v])
+	}
+	return int(aux.Count())
 }
