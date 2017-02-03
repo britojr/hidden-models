@@ -34,15 +34,18 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 // Marginalize ..
 func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
-	panic("Not implemented")
+	return b
 }
 
 // SumOut ..
 func (b *BitCounter) SumOut(vars ...int) (r *BitCounter) {
-	panic("Not implemented")
+	return b
 }
 
 // ValueIterator ..
-func (b *BitCounter) ValueIterator() func() *int {
-	panic("Not implemented")
+func (b *BitCounter) ValueIterator() (f func() *int) {
+	f = func() *int {
+		return nil
+	}
+	return
 }

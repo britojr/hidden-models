@@ -135,8 +135,8 @@ func TestValueIterator(t *testing.T) {
 		b := NewBitCounter()
 		b.LoadFromData(d.lines, d.card)
 		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(got, d.valMap) {
-			t.Errorf("got %v; want %v", got, d.valMap)
+		if !reflect.DeepEqual(d.valMap, got) {
+			t.Errorf("want(%v); got(%v)", d.valMap, got)
 		}
 	}
 }
@@ -147,8 +147,8 @@ func TestMarginalize(t *testing.T) {
 		b.LoadFromData(m.d.lines, m.d.card)
 		b = b.Marginalize(m.in...)
 		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(got, m.out) {
-			t.Errorf("got %v; want %v", got, m.out)
+		if !reflect.DeepEqual(m.out, got) {
+			t.Errorf("want(%v); got(%v)", m.out, got)
 		}
 	}
 }
@@ -159,8 +159,8 @@ func TestSumOut(t *testing.T) {
 		b.LoadFromData(s.d.lines, s.d.card)
 		b = b.SumOut(s.in...)
 		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(got, s.out) {
-			t.Errorf("got %v; want %v", got, s.out)
+		if !reflect.DeepEqual(s.out, got) {
+			t.Errorf("want(%v); got(%v)", s.out, got)
 		}
 	}
 }
