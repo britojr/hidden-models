@@ -144,13 +144,14 @@ func TestReduce(t *testing.T) {
 	}
 }
 
+/*
 func TestEliminate(t *testing.T) {
 	want := &spElim1
 	got := sp.Eliminate(1)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("got %v; want %v", got, want)
 	}
-}
+}*/
 
 /*func TestMarginalize(t *testing.T) {
 want := &sp13
