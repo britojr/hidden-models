@@ -10,10 +10,13 @@ import (
 	"github.com/britojr/playgo/utils"
 )
 
+// HeaderFlags ..
 type HeaderFlags byte
 
 const (
+	// NameHeader ..
 	NameHeader HeaderFlags = 1 << iota
+	//CardinHeader ..
 	CardinHeader
 )
 
@@ -30,7 +33,7 @@ type DataSet struct {
 
 // NewDataSet creates new dataset
 func NewDataSet(fileName string, delimiter rune, headerlns HeaderFlags) (d *DataSet) {
-	//d := new(DataSet)
+	d = new(DataSet)
 	d.fileName = fileName
 	d.delimiter = delimiter
 	d.headerlns = headerlns
