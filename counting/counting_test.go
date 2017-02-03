@@ -1,10 +1,5 @@
 package counting
 
-import (
-	"reflect"
-	"testing"
-)
-
 var cardinality = []int{2, 3, 2, 4}
 var dataset = [][]int{
 	{0, 0, 0, 0}, //               = 0
@@ -136,13 +131,13 @@ var spElim1 = SparseTable{
 // 	}
 // }
 
-func TestReduce(t *testing.T) {
-	want := &spReduc
-	got := sp.Reduce()
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("got %v; want %v", got, want)
-	}
-}
+// func TestReduce(t *testing.T) {
+// 	want := &spReduc
+// 	got := sp.Reduce()
+// 	if !reflect.DeepEqual(want, got) {
+// 		t.Errorf("got %v; want %v", got, want)
+// 	}
+// }
 
 /*
 func TestEliminate(t *testing.T) {

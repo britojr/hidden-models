@@ -13,15 +13,16 @@ type valToLine map[int]*bitset.BitSet
 
 // NewBitCounter creates new BitCounter
 func NewBitCounter() *BitCounter {
-	return new(BitCounter)
+	b := new(BitCounter)
+	b.vars = make(map[int]*valToLine)
+	b.order = make([]int, 0)
+	return b
 }
 
 // LoadFromData initializes the BitCounter from a given dataset
 func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
-	b.vars = make(map[int]*valToLine)
-	b.order = make([]int, len(cardinality))
 	for i, c := range cardinality {
-		b.order[i] = i
+		b.order = append(b.order, i)
 		b.vars[i] = new(valToLine)
 		*b.vars[i] = make(map[int]*bitset.BitSet)
 		for j := 0; j < c; j++ {
@@ -37,7 +38,12 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 // Marginalize ..
 func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
-	return b
+	r = NewBitCounter()
+	for _, v := range vars {
+		r.vars[v] = b.vars[v]
+		r.order = append(r.order, v)
+	}
+	return
 }
 
 // SumOut ..
