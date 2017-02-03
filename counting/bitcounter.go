@@ -47,8 +47,16 @@ func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
 }
 
 // SumOut ..
-func (b *BitCounter) SumOut(vars ...int) (r *BitCounter) {
-	return b
+func (b *BitCounter) SumOut(x int) (r *BitCounter) {
+	r = NewBitCounter()
+	for _, v := range b.order {
+		if v == x {
+			continue
+		}
+		r.vars[v] = b.vars[v]
+		r.order = append(r.order, v)
+	}
+	return
 }
 
 // ValueIterator ..

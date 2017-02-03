@@ -159,7 +159,7 @@ func TestSumOut(t *testing.T) {
 	for _, s := range sumOutTests {
 		b := NewBitCounter()
 		b.LoadFromData(s.d.lines, s.d.card)
-		b = b.SumOut(s.in...)
+		b = b.SumOut(s.in[0])
 		got := createValMap(b.ValueIterator())
 		if !reflect.DeepEqual(s.out, got) {
 			t.Errorf("want(%v); got(%v)", s.out, got)
