@@ -65,12 +65,26 @@ func (d *DataSet) Read() {
 
 // Cardinality returns cardinality slice
 func (d *DataSet) Cardinality() []int {
+	if len(d.cardinality) == 0 {
+		d.calcCardinality()
+	}
 	return d.cardinality
 }
 
 // Data returns the whole dataset
 func (d *DataSet) Data() [][]int {
 	return d.data
+}
+
+func (d *DataSet) calcCardinality() {
+	d.cardinality = make([]int, len(d.data[0]))
+	for j := 0; j < len(d.data[0]); j++ {
+		m := make(map[int]bool)
+		for i := 0; i < len(d.data); i++ {
+			m[d.data[i][j]] = true
+		}
+		d.cardinality[j] = len(m)
+	}
 }
 
 func openFile(name string) *os.File {
