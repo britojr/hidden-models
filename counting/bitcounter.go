@@ -8,29 +8,41 @@ type BitCounter struct {
 	vars map[int]*valToLine
 }
 
-type valToLine map[int]bitset.BitSet
+type valToLine map[int]*bitset.BitSet
 
 // NewBitCounter creates new BitCounter
 func NewBitCounter() *BitCounter {
-	panic("Not implemented")
+	return new(BitCounter)
 }
 
 // LoadFromData initializes the BitCounter from a given dataset
-func (c *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
-	panic("Not implemented")
+func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
+	b.vars = make(map[int]*valToLine)
+	for i, c := range cardinality {
+		b.vars[i] = new(valToLine)
+		*b.vars[i] = make(map[int]*bitset.BitSet)
+		for j := 0; j < c; j++ {
+			(*b.vars[i])[j] = bitset.New(uint(len(dataset)))
+		}
+	}
+	for i := 0; i < len(dataset); i++ {
+		for j := 0; j < len(dataset[0]); j++ {
+			(*b.vars[j])[dataset[i][j]].Set(uint(i))
+		}
+	}
 }
 
 // Marginalize ..
-func (c *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
+func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
 	panic("Not implemented")
 }
 
 // SumOut ..
-func (c *BitCounter) SumOut(vars ...int) (r *BitCounter) {
+func (b *BitCounter) SumOut(vars ...int) (r *BitCounter) {
 	panic("Not implemented")
 }
 
 // ValueIterator ..
-func (c *BitCounter) ValueIterator() func() *int {
+func (b *BitCounter) ValueIterator() func() *int {
 	panic("Not implemented")
 }

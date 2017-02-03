@@ -127,14 +127,14 @@ var spElim1 = SparseTable{
 	},
 }
 
-func TestLoadFromData(t *testing.T) {
-	want := &sp
-	got := NewSparse()
-	got.LoadFromData(dataset, cardinality)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("got %v; want %v", got, want)
-	}
-}
+// func TestLoadFromData(t *testing.T) {
+// 	want := &sp
+// 	got := NewSparse()
+// 	got.LoadFromData(dataset, cardinality)
+// 	if !reflect.DeepEqual(want, got) {
+// 		t.Errorf("got %v; want %v", got, want)
+// 	}
+// }
 
 func TestReduce(t *testing.T) {
 	want := &spReduc

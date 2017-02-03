@@ -123,6 +123,13 @@ func createValMap(next func() *int) (m map[int]int) {
 	return
 }
 
+func TestLoadFromData(t *testing.T) {
+	for _, d := range valTests {
+		b := NewBitCounter()
+		b.LoadFromData(d.lines, d.card)
+	}
+}
+
 func TestValueIterator(t *testing.T) {
 	for _, d := range valTests {
 		b := NewBitCounter()
