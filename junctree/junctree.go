@@ -1,5 +1,5 @@
-// Package jtree implements junctiontree
-package jtree
+// Package junctree implements junctiontree
+package junctree
 
 import "github.com/britojr/tcc/characteristic"
 
@@ -8,14 +8,14 @@ type Node struct {
 	cliq, sep []int
 }
 
-// JTree ...
-type JTree struct {
+// JuncTree ...
+type JuncTree struct {
 	Nodes    []Node
 	Children [][]int
 }
 
 // FromCharTree generates a junction tree from a characteristic tree and an inverse phi array
-func FromCharTree(T *characteristic.Tree, iphi []int) *JTree {
+func FromCharTree(T *characteristic.Tree, iphi []int) *JuncTree {
 	// add other root's children to the first root child
 	children := characteristic.ChildrenList(T)
 	first := children[0][0]
@@ -31,7 +31,7 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *JTree {
 	index := 0
 	mapIndex := make([]int, len(children))
 	queue := []int{first}
-	jt := new(JTree)
+	jt := new(JuncTree)
 	for len(queue) > 0 {
 		v := queue[0]
 		mapIndex[v] = index

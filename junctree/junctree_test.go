@@ -1,4 +1,4 @@
-package jtree
+package junctree
 
 import (
 	"reflect"
@@ -7,7 +7,7 @@ import (
 	"github.com/britojr/tcc/characteristic"
 )
 
-var jt = JTree{
+var jt = JuncTree{
 	[]Node{
 		{[]int{10, 1, 2, 8}, []int{1, 2, 8}},
 		{[]int{3, 10, 2, 8}, []int{10, 2, 8}},
