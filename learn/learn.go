@@ -38,7 +38,7 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 }
 
 // BestJuncTree ..
-func (l *Learner) BestJuncTree() *junctree.JuncTree {
+func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
 	bestStruct, bestScore := l.newRandomStruct()
 	for i := 1; i < l.iterations; i++ {
 		currStruct, currScore := l.newRandomStruct()
@@ -47,7 +47,7 @@ func (l *Learner) BestJuncTree() *junctree.JuncTree {
 			bestStruct = currStruct
 		}
 	}
-	return bestStruct
+	return bestStruct, bestScore
 }
 
 // SetTreeWidth ..
