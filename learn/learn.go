@@ -48,14 +48,20 @@ func (l *Learner) BestJuncTree() *junctree.JuncTree {
 	return bestStruct
 }
 
-func calcLL(jt *junctree.JuncTree) float64 {
-	return 0.0
+// calcLL calculates the loglikelihood of a junctree for the data
+func (l *Learner) calcLL(jt *junctree.JuncTree) float64 {
+	ll := 0.0
+	// for each node adds the count of every attribution of the clique
+	for node := range jt.Nodes {
+
+	}
+	return ll
 }
 
 func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
 	T, iphi, err := generator.RandomCharTree(l.n, l.treewidth)
 	utils.ErrCheck(err, "")
 	jt := junctree.FromCharTree(T, iphi)
-	score := calcLL(jt)
+	score := l.calcLL(jt)
 	return jt, score
 }
