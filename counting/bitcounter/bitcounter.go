@@ -72,6 +72,23 @@ func (b *BitCounter) ValueIterator() (f func() *int) {
 	return
 }
 
+// ValueIteratorNonZero ..
+func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
+	val := make([]int, len(b.order))
+	f = func() *int {
+		var v int
+		for val != nil && v == 0 {
+			v = b.getCount(val)
+			val = b.nextValuation(val)
+		}
+		if v != 0 {
+			return &v
+		}
+		return nil
+	}
+	return
+}
+
 func (b *BitCounter) nextValuation(val []int) []int {
 	i := 0
 	val[i]++
