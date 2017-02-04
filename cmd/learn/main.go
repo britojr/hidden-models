@@ -30,15 +30,16 @@ func main() {
 		fmt.Println("Please enter dataset file name.")
 		return
 	}
-	// Print arguments
-	fmt.Printf("Args: it=%v\n", iterations)
-	fmt.Printf("DataSet: %v\n", dsfile)
+	fmt.Printf("Args: it=%v, k=%v\n", iterations, k)
 
 	learner := learn.New()
 	learner.SetIterations(iterations)
 	learner.SetTreeWidth(k)
+
+	fmt.Printf("Loading dataset: %v\n", dsfile)
 	learner.LoadDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
 
+	fmt.Println("Learning junction tree...")
 	start := time.Now()
 	_, ll := learner.BestJuncTree()
 	elapsed := time.Since(start)
