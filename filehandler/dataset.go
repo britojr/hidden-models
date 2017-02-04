@@ -76,6 +76,11 @@ func (d *DataSet) Data() [][]int {
 	return d.data
 }
 
+// Size ..
+func (d *DataSet) Size() int {
+	return len(d.data)
+}
+
 func (d *DataSet) calcCardinality() {
 	d.cardinality = make([]int, len(d.data[0]))
 	for j := 0; j < len(d.data[0]); j++ {
