@@ -36,9 +36,9 @@ var T = characteristic.Tree{
 	L: []int{-1, 2, -1, -1, 0, 2, 1, 2, -1},
 }
 
-func TestNew(t *testing.T) {
+func TestFromCharTree(t *testing.T) {
 	want := &jt
-	got := New(&T, iphi)
+	got := FromCharTree(&T, iphi)
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Got = %v; want %v", got, want)
 	}

@@ -14,18 +14,24 @@ type JTree struct {
 	Children [][]int
 }
 
-// New generates a junction tree form a characteristic tree and an inverse phi array
-func New(T *characteristic.Tree, iphi []int) *JTree {
-	n := len(iphi)
-	k := n - len(T.P) + 1
+// FromCharTree generates a junction tree from a characteristic tree and an inverse phi array
+func FromCharTree(T *characteristic.Tree, iphi []int) *JTree {
+	// add other root's children to the first root child
 	children := characteristic.ChildrenList(T)
 	first := children[0][0]
 	children[first] = append(children[first], children[0][1:]...)
-	jt := JTree{}
+
+	// extract the clique list form the characteristic tree
+	n := len(iphi)
+	k := n - len(T.P) + 1
 	K := characteristic.ExtractCliqueList(T, n, k)
-	queue := []int{first}
+
+	// visit the nodes in BFS order creating the clique with the relabled value
+	// of each variable according to inverse phi
 	index := 0
 	mapIndex := make([]int, len(children))
+	queue := []int{first}
+	jt := new(JTree)
 	for len(queue) > 0 {
 		v := queue[0]
 		mapIndex[v] = index
@@ -46,5 +52,5 @@ func New(T *characteristic.Tree, iphi []int) *JTree {
 			jt.Children[mapIndex[i]][j] = mapIndex[children[i][j]]
 		}
 	}
-	return &jt
+	return jt
 }
