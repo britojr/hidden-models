@@ -5,7 +5,7 @@ import "github.com/britojr/tcc/characteristic"
 
 // Node ...
 type Node struct {
-	cliq, sep []int
+	Cliq, Sep []int
 }
 
 // JuncTree ...
