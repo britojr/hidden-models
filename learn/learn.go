@@ -50,9 +50,18 @@ func (l *Learner) BestJuncTree() *junctree.JuncTree {
 	return bestStruct
 }
 
+// SetTreeWidth ..
+func (l *Learner) SetTreeWidth(k int) {
+	l.treewidth = k
+}
+
+// SetIterations ..
+func (l *Learner) SetIterations(n int) {
+	l.iterations = n
+}
+
 // calcLL calculates the loglikelihood of a junctree for the data
-func (l *Learner) calcLL(jt *junctree.JuncTree) float64 {
-	ll := float64(0.0)
+func (l *Learner) calcLL(jt *junctree.JuncTree) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the separator
 	for _, node := range jt.Nodes {
@@ -71,7 +80,7 @@ func (l *Learner) calcLL(jt *junctree.JuncTree) float64 {
 		}
 	}
 	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
-	return ll
+	return
 }
 
 func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
