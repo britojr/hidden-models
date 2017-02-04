@@ -1,5 +1,4 @@
-// Package counting implements Counting Tables
-package counting
+package bitcounter
 
 import "github.com/willf/bitset"
 

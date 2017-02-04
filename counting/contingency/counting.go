@@ -1,5 +1,4 @@
-// Package counting implements Counting Tables
-package counting
+package contingency
 
 // Table interface for counting tables
 type Table interface {

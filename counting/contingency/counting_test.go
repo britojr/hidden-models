@@ -1,4 +1,4 @@
-package counting
+package contingency
 
 var cardinality = []int{2, 3, 2, 4}
 var dataset = [][]int{
