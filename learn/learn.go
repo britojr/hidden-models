@@ -1,6 +1,8 @@
 package learn
 
 import (
+	"math"
+
 	"github.com/britojr/playgo/counting/bitcounter"
 	"github.com/britojr/playgo/filehandler"
 	"github.com/britojr/playgo/junctree"
@@ -50,11 +52,25 @@ func (l *Learner) BestJuncTree() *junctree.JuncTree {
 
 // calcLL calculates the loglikelihood of a junctree for the data
 func (l *Learner) calcLL(jt *junctree.JuncTree) float64 {
-	ll := 0.0
-	// for each node adds the count of every attribution of the clique
-	for node := range jt.Nodes {
-
+	ll := float64(0.0)
+	// for each node adds the count of every attribution of the clique and
+	// subtracts the count of every attribution of the separator
+	for _, node := range jt.Nodes {
+		r := l.counter.Marginalize(node.Cliq...)
+		next := r.ValueIteratorNonZero()
+		v := next()
+		for v != nil {
+			ll += float64(*v) * math.Log(float64(*v))
+			v = next()
+		}
+		next = r.SumOut(node.Cliq[0]).ValueIteratorNonZero()
+		v = next()
+		for v != nil {
+			ll -= float64(*v) * math.Log(float64(*v))
+			v = next()
+		}
 	}
+	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
 	return ll
 }
 
