@@ -6,9 +6,10 @@ import (
 )
 
 type datapack struct {
-	card   []int
-	lines  [][]int
-	valMap map[int]int
+	card     []int
+	lines    [][]int
+	valMap   map[int]int
+	valSlice []int
 }
 
 var dp1 = datapack{
@@ -38,6 +39,7 @@ var dp1 = datapack{
 		41: 1,
 		43: 1,
 	},
+	[]int{2, 1, 1, 3, 1, 1, 1, 1},
 }
 
 var valTests = []datapack{
@@ -125,6 +127,15 @@ func createValMap(next func() *int) (m map[int]int) {
 	return
 }
 
+func createSliceMap(next func() *int) (m []int) {
+	v := next()
+	for v != nil {
+		m = append(m, *v)
+		v = next()
+	}
+	return
+}
+
 func TestLoadFromData(t *testing.T) {
 	for _, d := range valTests {
 		b := NewBitCounter()
@@ -139,6 +150,17 @@ func TestValueIterator(t *testing.T) {
 		got := createValMap(b.ValueIterator())
 		if !reflect.DeepEqual(d.valMap, got) {
 			t.Errorf("want(%v); got(%v)", d.valMap, got)
+		}
+	}
+}
+
+func TestValueIteratorNonZero(t *testing.T) {
+	for _, d := range valTests {
+		b := NewBitCounter()
+		b.LoadFromData(d.lines, d.card)
+		got := createSliceMap(b.ValueIteratorNonZero())
+		if !reflect.DeepEqual(d.valSlice, got) {
+			t.Errorf("want(%v); got(%v)", d.valSlice, got)
 		}
 	}
 }

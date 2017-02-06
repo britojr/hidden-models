@@ -73,7 +73,7 @@ func (b *BitCounter) ValueIterator() (f func() *int) {
 			return nil
 		}
 		v := b.getCount(val)
-		val = b.nextValuation(val)
+		b.nextValuation(&val)
 		return &v
 	}
 	return
@@ -86,7 +86,7 @@ func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
 		var v int
 		for val != nil && v == 0 {
 			v = b.getCount(val)
-			val = b.nextValuation(val)
+			b.nextValuation(&val)
 		}
 		if v != 0 {
 			return &v
@@ -96,24 +96,20 @@ func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
 	return
 }
 
-func (b *BitCounter) nextValuation(val []int) []int {
+func (b *BitCounter) nextValuation(val *[]int) {
 	i := 0
-	val[i]++
+	(*val)[i]++
 	j, _ := b.vars.NextSet(0)
-	for val[i] == b.getCardinality(int(j)) {
-		val[i] = 0
+	for (*val)[i] == (*b.cardin)[j] {
+		(*val)[i] = 0
 		i++
-		if i == len(val) {
-			return nil
+		if i == len(*val) {
+			*val = nil
+			return
 		}
 		j, _ = b.vars.NextSet(j + 1)
-		val[i]++
+		(*val)[i]++
 	}
-	return val
-}
-
-func (b *BitCounter) getCardinality(x int) int {
-	return len(*b.vals[x])
 }
 
 func (b *BitCounter) getCount(val []int) int {
@@ -124,4 +120,8 @@ func (b *BitCounter) getCount(val []int) int {
 		aux.InPlaceIntersection((*b.vals[j])[val[i]])
 	}
 	return int(aux.Count())
+}
+
+func (b *BitCounter) getCardinality(x int) int {
+	return (*b.cardin)[x]
 }
