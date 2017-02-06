@@ -4,8 +4,9 @@ import "github.com/willf/bitset"
 
 // BitCounter ..
 type BitCounter struct {
-	vars  map[int]*valToLine
-	order []int
+	vars   *bitset.BitSet // wich variables are representend
+	cardin *[]int         // cardinality of all variables
+	vals   []*valToLine   // all the possible values for a variable
 }
 
 type valToLine map[int]*bitset.BitSet
@@ -13,54 +14,60 @@ type valToLine map[int]*bitset.BitSet
 // NewBitCounter creates new BitCounter
 func NewBitCounter() *BitCounter {
 	b := new(BitCounter)
-	b.vars = make(map[int]*valToLine)
-	b.order = make([]int, 0)
 	return b
 }
 
 // LoadFromData initializes the BitCounter from a given dataset
 func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
+	lin, col := len(dataset), len(dataset[0])
+	b.vars = bitset.New(uint(col)).Complement()
+	b.vals = make([]*valToLine, col)
+	aux := append([]int(nil), cardinality...)
+	b.cardin = &aux
 	for i, c := range cardinality {
-		b.order = append(b.order, i)
-		b.vars[i] = new(valToLine)
-		*b.vars[i] = make(map[int]*bitset.BitSet)
+		b.vals[i] = new(valToLine)
+		*b.vals[i] = make(map[int]*bitset.BitSet)
 		for j := 0; j < c; j++ {
-			(*b.vars[i])[j] = bitset.New(uint(len(dataset)))
+			(*b.vals[i])[j] = bitset.New(uint(lin))
 		}
 	}
-	for i := 0; i < len(dataset); i++ {
-		for j := 0; j < len(dataset[0]); j++ {
-			(*b.vars[j])[dataset[i][j]].Set(uint(i))
+	for i := 0; i < lin; i++ {
+		for j := 0; j < col; j++ {
+			(*b.vals[j])[dataset[i][j]].Set(uint(i))
 		}
 	}
 }
 
 // Marginalize ..
 func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
-	r = NewBitCounter()
+	r = b.Clone()
+	auxvars := bitset.New(r.vars.Len())
 	for _, v := range vars {
-		r.vars[v] = b.vars[v]
-		r.order = append(r.order, v)
+		auxvars.Set(uint(v))
 	}
+	r.vars.InPlaceIntersection(auxvars)
 	return
 }
 
 // SumOut ..
 func (b *BitCounter) SumOut(x int) (r *BitCounter) {
-	r = NewBitCounter()
-	for _, v := range b.order {
-		if v == x {
-			continue
-		}
-		r.vars[v] = b.vars[v]
-		r.order = append(r.order, v)
-	}
+	r = b.Clone()
+	r.vars.Clear(uint(x))
+	return
+}
+
+// Clone ..
+func (b *BitCounter) Clone() (r *BitCounter) {
+	r = new(BitCounter)
+	r.cardin = b.cardin
+	r.vals = b.vals
+	r.vars = b.vars.Clone()
 	return
 }
 
 // ValueIterator ..
 func (b *BitCounter) ValueIterator() (f func() *int) {
-	val := make([]int, len(b.order))
+	val := make([]int, b.vars.Count())
 	f = func() *int {
 		if val == nil {
 			return nil
@@ -74,7 +81,7 @@ func (b *BitCounter) ValueIterator() (f func() *int) {
 
 // ValueIteratorNonZero ..
 func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
-	val := make([]int, len(b.order))
+	val := make([]int, b.vars.Count())
 	f = func() *int {
 		var v int
 		for val != nil && v == 0 {
@@ -92,25 +99,29 @@ func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
 func (b *BitCounter) nextValuation(val []int) []int {
 	i := 0
 	val[i]++
-	for val[i] == b.getCardinality(b.order[i]) {
+	j, _ := b.vars.NextSet(0)
+	for val[i] == b.getCardinality(int(j)) {
 		val[i] = 0
 		i++
 		if i == len(val) {
 			return nil
 		}
+		j, _ = b.vars.NextSet(j + 1)
 		val[i]++
 	}
 	return val
 }
 
 func (b *BitCounter) getCardinality(x int) int {
-	return len(*b.vars[x])
+	return len(*b.vals[x])
 }
 
 func (b *BitCounter) getCount(val []int) int {
-	aux := (*b.vars[b.order[0]])[val[0]].Clone()
-	for i, v := range val {
-		aux.InPlaceIntersection((*b.vars[b.order[i]])[v])
+	j, _ := b.vars.NextSet(0)
+	aux := (*b.vals[j])[val[0]].Clone()
+	for i := 1; i < len(val); i++ {
+		j, _ = b.vars.NextSet(j + 1)
+		aux.InPlaceIntersection((*b.vals[j])[val[i]])
 	}
 	return int(aux.Count())
 }
