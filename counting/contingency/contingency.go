@@ -1,29 +1,33 @@
 package contingency
 
+import "github.com/willf/bitset"
+
 // Table is a static implementation of contingency table
 type Table struct {
-	variables   []int
-	occurrences []int
-	cardinality *[]int
+	variables   *bitset.BitSet // wich variables are representend
+	cardinality []int          // cardinality of all variables
+	stride      []int          // stride of all variables
+	occurrences []int          // number of occurrences of each attribution
+	size        int            // number of possible assignments
 }
 
 // NewTable ..
-func NewTable(variables []int, occurrences []int, cardin *[]int) *Table {
+func NewTable(variables *bitset.BitSet, cardinality []int) *Table {
 	t := new(Table)
 	t.variables = variables
-	t.occurrences = occurrences
-	t.cardinality = cardin
+	t.cardinality = cardinality
+
+	var i, j uint
+	i, _ = variables.NextSet(0)
+	t.stride[i] = 1
+	j, ok := variables.NextSet(i + 1)
+	for ok {
+		t.stride[j] = t.stride[i] * t.cardinality[i]
+		i = j
+		j, ok = variables.NextSet(i + 1)
+	}
+	t.size = t.stride[i] * t.cardinality[i]
 	return t
-}
-
-// SetVariables ..
-func (t *Table) SetVariables(vars ...int) {
-	t.variables = append([]int(nil), vars...)
-}
-
-// SetCardinality ..
-func (t *Table) SetCardinality(cardin *[]int) {
-	t.cardinality = cardin
 }
 
 // SetOccurrences ..
@@ -48,6 +52,12 @@ func (t *Table) GetOccurrences() []int {
 
 // SumOut ..
 func (t *Table) SumOut(x int) (r *Table) {
+	assignment = make([]int, t.variables.Count())
+	j := 0
+	for i := 0; l < t.Size(); i++ {
+
+	}
+
 	// TODO: fix and test this sumout
 	stride := 1
 	index := 0
