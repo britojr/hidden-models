@@ -81,7 +81,7 @@ func (b *BitCounter) countAssignment(assig []int, varset *bitset.BitSet) int {
 	return int(aux.Count())
 }
 
-// TODO: revise/remove bellow
+// TODO: revise/remove bellow (deprecation)
 
 // Marginalize ..
 func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {

@@ -15,7 +15,7 @@ type Learner struct {
 	//parameters
 	iterations int
 	treewidth  int
-	n          int
+	n          int // number of variables
 	dataset    *filehandler.DataSet
 	counter    *bitcounter.BitCounter
 }
@@ -65,18 +65,15 @@ func (l *Learner) calcLL(jt *junctree.JuncTree) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the separator
 	for _, node := range jt.Nodes {
-		r := l.counter.Marginalize(node.Cliq...)
-		next := r.ValueIteratorNonZero()
-		v := next()
-		for v != nil {
-			ll += float64(*v) * math.Log(float64(*v))
-			v = next()
+		varset := utils.NewBitSetFromSlice(l.n, node.Cliq)
+		values := l.counter.GetOccurrences(varset)
+		for _, v := range values {
+			ll += float64(v) * math.Log(float64(v))
 		}
-		next = r.SumOut(node.Cliq[0]).ValueIteratorNonZero()
-		v = next()
-		for v != nil {
-			ll -= float64(*v) * math.Log(float64(*v))
-			v = next()
+		varset = utils.NewBitSetFromSlice(l.n, node.Cliq[1:])
+		values = l.counter.GetOccurrences(varset)
+		for _, v := range values {
+			ll -= float64(v) * math.Log(float64(v))
 		}
 	}
 	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))

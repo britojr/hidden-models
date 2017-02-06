@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/willf/bitset"
+	"github.com/britojr/playgo/utils"
 )
 
 type datapack struct {
@@ -166,10 +166,7 @@ func TestGetOccurrences(t *testing.T) {
 	for _, m := range margTests {
 		b := NewBitCounter()
 		b.LoadFromData(m.d.lines, m.d.card)
-		varset := bitset.New(uint(len(m.d.card)))
-		for _, u := range m.in {
-			varset.Set(uint(u))
-		}
+		varset := utils.NewBitSetFromSlice(len(m.d.card), m.in)
 		got := b.GetOccurrences(varset)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)

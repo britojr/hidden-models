@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+
+	"github.com/willf/bitset"
 )
 
 // SliceAtoi creates an int slice from a string slice
@@ -25,6 +27,15 @@ func SliceItoU64(is []int) []uint64 {
 		arr[i] = uint64(v)
 	}
 	return arr
+}
+
+// NewBitSetFromSlice creates new bitset with informed size and elements
+func NewBitSetFromSlice(size int, vars []int) *bitset.BitSet {
+	varset := bitset.New(uint(size))
+	for _, u := range vars {
+		varset.Set(uint(u))
+	}
+	return varset
 }
 
 // ErrCheck validates error and prints a log message
