@@ -18,6 +18,15 @@ func SliceAtoi(ss []string) []int {
 	return arr
 }
 
+// SliceItoU64 creates an uint64 array form an int array
+func SliceItoU64(is []int) []uint64 {
+	arr := make([]uint64, len(is))
+	for i, v := range is {
+		arr[i] = uint64(v)
+	}
+	return arr
+}
+
 // ErrCheck validates error and prints a log message
 func ErrCheck(err error, message string) {
 	if err != nil {

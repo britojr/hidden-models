@@ -3,6 +3,9 @@ package bitcounter
 import (
 	"reflect"
 	"testing"
+
+	"github.com/britojr/playgo/utils"
+	"github.com/willf/bitset"
 )
 
 type datapack struct {
@@ -146,6 +149,17 @@ func TestLoadFromData(t *testing.T) {
 	}
 }
 
+func TestGetOccurrences(t *testing.T) {
+	for _, m := range margTests {
+		b := NewBitCounter()
+		b.LoadFromData(m.d.lines, m.d.card)
+		got := b.GetOccurrences(bitset.From(utils.SliceItoU64(m.in)))
+		if !reflect.DeepEqual(m.outComplete, got) {
+			t.Errorf("want(%v); got(%v)", m.outComplete, got)
+		}
+	}
+}
+
 func TestValueIterator(t *testing.T) {
 	for _, d := range valTests {
 		b := NewBitCounter()
@@ -180,19 +194,6 @@ func TestMarginalize(t *testing.T) {
 	}
 }
 
-/*
-func TestMarginalizeToTable(t *testing.T) {
-	for _, m := range margTests {
-		b := NewBitCounter()
-		b.LoadFromData(m.d.lines, m.d.card)
-		tb := b.MarginalizeToTable(m.in...)
-		got := tb.GetOccurrences()
-		if !reflect.DeepEqual(m.outComplete, got) {
-			t.Errorf("want(%v); got(%v)", m.outComplete, got)
-		}
-	}
-}*/
-
 func TestSumOut(t *testing.T) {
 	for _, s := range sumOutTests {
 		b := NewBitCounter()
@@ -204,3 +205,16 @@ func TestSumOut(t *testing.T) {
 		}
 	}
 }
+
+/*
+func TestMarginalizeToTable(t *testing.T) {
+for _, m := range margTests {
+b := NewBitCounter()
+b.LoadFromData(m.d.lines, m.d.card)
+tb := b.MarginalizeToTable(m.in...)
+got := tb.GetOccurrences()
+if !reflect.DeepEqual(m.outComplete, got) {
+t.Errorf("want(%v); got(%v)", m.outComplete, got)
+}
+}
+}*/
