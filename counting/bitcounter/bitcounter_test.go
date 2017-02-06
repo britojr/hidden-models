@@ -47,9 +47,10 @@ var valTests = []datapack{
 }
 
 type change struct {
-	d   datapack
-	in  []int
-	out map[int]int
+	d           datapack
+	in          []int
+	out         map[int]int
+	outComplete []int
 }
 
 var margTests = []change{
@@ -65,6 +66,7 @@ var margTests = []change{
 			9:  1,
 			11: 1,
 		},
+		[]int{2, 1, 0, 3, 1, 1, 0, 0, 1, 1, 0, 1},
 	},
 }
 
@@ -81,6 +83,7 @@ var sumOutTests = []change{
 			13: 1,
 			15: 1,
 		},
+		[]int{2, 0, 1, 0, 1, 0, 3, 1, 1, 0, 0, 0, 0, 1, 0, 1},
 	},
 }
 
@@ -127,7 +130,7 @@ func createValMap(next func() *int) (m map[int]int) {
 	return
 }
 
-func createSliceMap(next func() *int) (m []int) {
+func createValSlice(next func() *int) (m []int) {
 	v := next()
 	for v != nil {
 		m = append(m, *v)
@@ -158,7 +161,7 @@ func TestValueIteratorNonZero(t *testing.T) {
 	for _, d := range valTests {
 		b := NewBitCounter()
 		b.LoadFromData(d.lines, d.card)
-		got := createSliceMap(b.ValueIteratorNonZero())
+		got := createValSlice(b.ValueIteratorNonZero())
 		if !reflect.DeepEqual(d.valSlice, got) {
 			t.Errorf("want(%v); got(%v)", d.valSlice, got)
 		}
@@ -173,6 +176,18 @@ func TestMarginalize(t *testing.T) {
 		got := createValMap(b.ValueIterator())
 		if !reflect.DeepEqual(m.out, got) {
 			t.Errorf("want(%v); got(%v)", m.out, got)
+		}
+	}
+}
+
+func TestMarginalizeToTable(t *testing.T) {
+	for _, m := range margTests {
+		b := NewBitCounter()
+		b.LoadFromData(m.d.lines, m.d.card)
+		tb := b.MarginalizeToTable(m.in...)
+		got := tb.GetOccurrences()
+		if !reflect.DeepEqual(m.outComplete, got) {
+			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
 	}
 }

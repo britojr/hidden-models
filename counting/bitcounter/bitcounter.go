@@ -1,6 +1,9 @@
 package bitcounter
 
-import "github.com/willf/bitset"
+import (
+	"github.com/britojr/playgo/counting/contingency"
+	"github.com/willf/bitset"
+)
 
 // BitCounter ..
 type BitCounter struct {
@@ -46,6 +49,19 @@ func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
 		auxvars.Set(uint(v))
 	}
 	r.vars.InPlaceIntersection(auxvars)
+	return
+}
+
+// MarginalizeToTable ..
+func (b *BitCounter) MarginalizeToTable(vars ...int) (t *contingency.Table) {
+	r := b.Marginalize(vars...)
+	valoration := make([]int, r.vars.Count())
+	values := []int(nil)
+	for valoration != nil {
+		values = append(values, r.getCount(valoration))
+		r.nextValuation(&valoration)
+	}
+	t = contingency.NewTable(vars, values, r.cardin)
 	return
 }
 
