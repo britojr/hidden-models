@@ -180,6 +180,7 @@ func TestMarginalize(t *testing.T) {
 	}
 }
 
+/*
 func TestMarginalizeToTable(t *testing.T) {
 	for _, m := range margTests {
 		b := NewBitCounter()
@@ -190,7 +191,7 @@ func TestMarginalizeToTable(t *testing.T) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
 	}
-}
+}*/
 
 func TestSumOut(t *testing.T) {
 	for _, s := range sumOutTests {
