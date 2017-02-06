@@ -174,6 +174,11 @@ func TestGetOccurrences(t *testing.T) {
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
+		//roll twice to test cache
+		got = b.GetOccurrences(varset)
+		if !reflect.DeepEqual(m.outComplete, got) {
+			t.Errorf("want(%v); got(%v)", m.outComplete, got)
+		}
 	}
 }
 

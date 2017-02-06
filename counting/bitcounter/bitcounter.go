@@ -4,9 +4,10 @@ import "github.com/willf/bitset"
 
 // BitCounter ..
 type BitCounter struct {
-	vars   *bitset.BitSet // wich variables are representend
-	cardin *[]int         // cardinality of all variables
-	vals   []*valToLine   // all the possible values for a variable
+	vars   *bitset.BitSet   // wich variables are representend
+	cardin *[]int           // cardinality of all variables
+	vals   []*valToLine     // all the possible values for a variable
+	cache  map[string][]int // cached values
 }
 
 type valToLine map[int]*bitset.BitSet
@@ -36,16 +37,20 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 			(*b.vals[j])[dataset[i][j]].Set(uint(i))
 		}
 	}
+	b.cache = make(map[string][]int)
 }
 
 // GetOccurrences ..
 func (b *BitCounter) GetOccurrences(varset *bitset.BitSet) []int {
-	// TODO: add caching
-	v := make([]int, 0)
-	assig := make([]int, varset.Count())
-	for assig != nil {
-		v = append(v, b.countAssignment(assig, varset))
-		b.nextAssignment(&assig, varset)
+	varsetstr := varset.String()
+	v, ok := b.cache[varsetstr]
+	if !ok {
+		assig := make([]int, varset.Count())
+		for assig != nil {
+			v = append(v, b.countAssignment(assig, varset))
+			b.nextAssignment(&assig, varset)
+		}
+		b.cache[varsetstr] = v
 	}
 	return v
 }
