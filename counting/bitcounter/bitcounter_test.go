@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/britojr/playgo/utils"
 	"github.com/willf/bitset"
 )
 
@@ -70,6 +69,20 @@ var margTests = []change{
 			11: 1,
 		},
 		[]int{2, 1, 0, 3, 1, 1, 0, 0, 1, 1, 0, 1},
+	},
+	{
+		dp1, []int{0, 2, 3},
+		map[int]int{
+			0:  2,
+			2:  1,
+			4:  1,
+			6:  3,
+			7:  1,
+			8:  1,
+			13: 1,
+			15: 1,
+		},
+		[]int{2, 0, 1, 0, 1, 0, 3, 1, 1, 0, 0, 0, 0, 1, 0, 1},
 	},
 }
 
@@ -153,7 +166,11 @@ func TestGetOccurrences(t *testing.T) {
 	for _, m := range margTests {
 		b := NewBitCounter()
 		b.LoadFromData(m.d.lines, m.d.card)
-		got := b.GetOccurrences(bitset.From(utils.SliceItoU64(m.in)))
+		varset := bitset.New(uint(len(m.d.card)))
+		for _, u := range m.in {
+			varset.Set(uint(u))
+		}
+		got := b.GetOccurrences(varset)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}

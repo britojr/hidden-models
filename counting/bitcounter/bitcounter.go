@@ -1,8 +1,6 @@
 package bitcounter
 
-import (
-	"github.com/willf/bitset"
-)
+import "github.com/willf/bitset"
 
 // BitCounter ..
 type BitCounter struct {
@@ -42,8 +40,43 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 // GetOccurrences ..
 func (b *BitCounter) GetOccurrences(varset *bitset.BitSet) []int {
-	return nil
+	// TODO: add caching
+	v := make([]int, 0)
+	assig := make([]int, varset.Count())
+	for assig != nil {
+		v = append(v, b.countAssignment(assig, varset))
+		b.nextAssignment(&assig, varset)
+	}
+	return v
 }
+
+func (b *BitCounter) nextAssignment(assig *[]int, varset *bitset.BitSet) {
+	i := 0
+	(*assig)[i]++
+	j, _ := varset.NextSet(0)
+	for (*assig)[i] == (*b.cardin)[j] {
+		(*assig)[i] = 0
+		i++
+		if i >= len(*assig) {
+			*assig = nil
+			return
+		}
+		j, _ = varset.NextSet(j + 1)
+		(*assig)[i]++
+	}
+}
+
+func (b *BitCounter) countAssignment(assig []int, varset *bitset.BitSet) int {
+	j, _ := varset.NextSet(0)
+	aux := (*b.vals[j])[assig[0]].Clone()
+	for i := 1; i < len(assig); i++ {
+		j, _ = varset.NextSet(j + 1)
+		aux.InPlaceIntersection((*b.vals[j])[assig[i]])
+	}
+	return int(aux.Count())
+}
+
+// TODO: revise/remove bellow
 
 // Marginalize ..
 func (b *BitCounter) Marginalize(vars ...int) (r *BitCounter) {
