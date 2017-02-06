@@ -95,6 +95,17 @@ func (b *BitCounter) ValueIterator() (f func() *int) {
 	return
 }
 
+// GetCountSlice ..
+func (b *BitCounter) GetCountSlice() []int {
+	valoration := make([]int, b.vars.Count())
+	values := []int(nil)
+	for valoration != nil {
+		values = append(values, b.getCount(valoration))
+		b.nextValuation(&valoration)
+	}
+	return values
+}
+
 // ValueIteratorNonZero ..
 func (b *BitCounter) ValueIteratorNonZero() (f func() *int) {
 	val := make([]int, b.vars.Count())
