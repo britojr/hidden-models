@@ -37,12 +37,15 @@ func main() {
 	learner.SetTreeWidth(k)
 
 	fmt.Printf("Loading dataset: %v\n", dsfile)
+	start := time.Now()
 	learner.LoadDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
+	elapsed := time.Since(start)
+	fmt.Printf("Time: %v\n", elapsed)
 
 	fmt.Println("Learning junction tree...")
-	start := time.Now()
+	start = time.Now()
 	_, ll := learner.BestJuncTree()
-	elapsed := time.Since(start)
+	elapsed = time.Since(start)
 
-	fmt.Printf("Time: %v, LogLikelihood: %v\n", elapsed, ll)
+	fmt.Printf("Time: %v; LogLikelihood: %v\n", elapsed, ll)
 }
