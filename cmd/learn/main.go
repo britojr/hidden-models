@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/britojr/playgo/filehandler"
-	"github.com/britojr/playgo/learn"
+	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/learn"
 )
 
 func main() {

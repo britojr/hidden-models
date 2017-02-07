@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/britojr/playgo/utils"
+	"github.com/britojr/kbn/utils"
 )
 
 type datapack struct {
@@ -132,29 +132,6 @@ var sumOutTests = []change{
 {0, 1, 1}, //0 2 4 = 6
 */
 
-func createValMap(next func() *int) (m map[int]int) {
-	m = make(map[int]int)
-	v := next()
-	i := 0
-	for v != nil {
-		if *v != 0 {
-			m[i] = *v
-		}
-		v = next()
-		i++
-	}
-	return
-}
-
-func createValSlice(next func() *int) (m []int) {
-	v := next()
-	for v != nil {
-		m = append(m, *v)
-		v = next()
-	}
-	return
-}
-
 func TestLoadFromData(t *testing.T) {
 	for _, d := range valTests {
 		b := NewBitCounter()
@@ -178,62 +155,3 @@ func TestGetOccurrences(t *testing.T) {
 		}
 	}
 }
-
-func TestValueIterator(t *testing.T) {
-	for _, d := range valTests {
-		b := NewBitCounter()
-		b.LoadFromData(d.lines, d.card)
-		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(d.valMap, got) {
-			t.Errorf("want(%v); got(%v)", d.valMap, got)
-		}
-	}
-}
-
-func TestValueIteratorNonZero(t *testing.T) {
-	for _, d := range valTests {
-		b := NewBitCounter()
-		b.LoadFromData(d.lines, d.card)
-		got := createValSlice(b.ValueIteratorNonZero())
-		if !reflect.DeepEqual(d.valSlice, got) {
-			t.Errorf("want(%v); got(%v)", d.valSlice, got)
-		}
-	}
-}
-
-func TestMarginalize(t *testing.T) {
-	for _, m := range margTests {
-		b := NewBitCounter()
-		b.LoadFromData(m.d.lines, m.d.card)
-		b = b.Marginalize(m.in...)
-		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(m.out, got) {
-			t.Errorf("want(%v); got(%v)", m.out, got)
-		}
-	}
-}
-
-func TestSumOut(t *testing.T) {
-	for _, s := range sumOutTests {
-		b := NewBitCounter()
-		b.LoadFromData(s.d.lines, s.d.card)
-		b = b.SumOut(s.in[0])
-		got := createValMap(b.ValueIterator())
-		if !reflect.DeepEqual(s.out, got) {
-			t.Errorf("want(%v); got(%v)", s.out, got)
-		}
-	}
-}
-
-/*
-func TestMarginalizeToTable(t *testing.T) {
-for _, m := range margTests {
-b := NewBitCounter()
-b.LoadFromData(m.d.lines, m.d.card)
-tb := b.MarginalizeToTable(m.in...)
-got := tb.GetOccurrences()
-if !reflect.DeepEqual(m.outComplete, got) {
-t.Errorf("want(%v); got(%v)", m.outComplete, got)
-}
-}
-}*/

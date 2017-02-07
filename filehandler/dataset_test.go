@@ -74,6 +74,17 @@ func TestNewDataSet(t *testing.T) {
 	}
 }
 
+func TestSize(t *testing.T) {
+	for _, f := range testFiles {
+		d := NewDataSet(f.fileName, f.separator, f.headerlns)
+		d.Read()
+		got := d.Size()
+		if !reflect.DeepEqual(len(f.data), got) {
+			t.Errorf("want(%v); got(%v)", len(f.data), got)
+		}
+	}
+}
+
 func TestCardinality(t *testing.T) {
 	for _, f := range testFiles {
 		d := NewDataSet(f.fileName, f.separator, f.headerlns)
@@ -84,6 +95,7 @@ func TestCardinality(t *testing.T) {
 		}
 	}
 }
+
 func TestData(t *testing.T) {
 	for _, f := range testFiles {
 		d := NewDataSet(f.fileName, f.separator, f.headerlns)

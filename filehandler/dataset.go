@@ -7,20 +7,21 @@ import (
 	"os"
 	"strings"
 
-	"github.com/britojr/playgo/utils"
+	"github.com/britojr/kbn/utils"
 )
 
-// HeaderFlags ..
+// HeaderFlags type is used to store the flags indicating the kind header lines the file has
+// each kind of header line must appear in the fixed order of the constants declared bellow
 type HeaderFlags byte
 
 const (
-	// NameHeader ..
+	// NameHeader indicates that there is a line with names of variables
 	NameHeader HeaderFlags = 1 << iota
-	//CardinHeader ..
+	//CardinHeader indicates that there is a line with cardinality of each variable
 	CardinHeader
 )
 
-// DataSet ...
+// DataSet is used  to read a file and store the data
 type DataSet struct {
 	fileName    string
 	delimiter   rune
@@ -31,7 +32,7 @@ type DataSet struct {
 	data        [][]int
 }
 
-// NewDataSet creates new dataset
+// NewDataSet creates new dataset with the given parametes
 func NewDataSet(fileName string, delimiter rune, headerlns HeaderFlags) (d *DataSet) {
 	d = new(DataSet)
 	d.fileName = fileName
@@ -43,7 +44,7 @@ func NewDataSet(fileName string, delimiter rune, headerlns HeaderFlags) (d *Data
 	return
 }
 
-// Read reads the complete file
+// Read reads the complete file and stores the data in memory
 func (d *DataSet) Read() {
 	file := openFile(d.fileName)
 	defer file.Close()
@@ -76,7 +77,7 @@ func (d *DataSet) Data() [][]int {
 	return d.data
 }
 
-// Size ..
+// Size returns the number of lines on the dataset stored
 func (d *DataSet) Size() int {
 	return len(d.data)
 }

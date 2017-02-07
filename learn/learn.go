@@ -3,10 +3,10 @@ package learn
 import (
 	"math"
 
-	"github.com/britojr/playgo/counting/bitcounter"
-	"github.com/britojr/playgo/filehandler"
-	"github.com/britojr/playgo/junctree"
-	"github.com/britojr/playgo/utils"
+	"github.com/britojr/kbn/counting/bitcounter"
+	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/junctree"
+	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/generator"
 )
 
@@ -26,6 +26,16 @@ func New() *Learner {
 	l.iterations = 100
 	l.treewidth = 3
 	return l
+}
+
+// SetTreeWidth ..
+func (l *Learner) SetTreeWidth(k int) {
+	l.treewidth = k
+}
+
+// SetIterations ..
+func (l *Learner) SetIterations(it int) {
+	l.iterations = it
 }
 
 // LoadDataSet ..
@@ -48,16 +58,6 @@ func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
 		}
 	}
 	return bestStruct, bestScore
-}
-
-// SetTreeWidth ..
-func (l *Learner) SetTreeWidth(k int) {
-	l.treewidth = k
-}
-
-// SetIterations ..
-func (l *Learner) SetIterations(it int) {
-	l.iterations = it
 }
 
 // calcLL calculates the loglikelihood of a junctree for the data

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/britojr/playgo/junctree"
+	"github.com/britojr/kbn/junctree"
 	"github.com/britojr/tcc/characteristic"
 )
 
