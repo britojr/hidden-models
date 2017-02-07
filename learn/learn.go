@@ -56,8 +56,8 @@ func (l *Learner) SetTreeWidth(k int) {
 }
 
 // SetIterations ..
-func (l *Learner) SetIterations(n int) {
-	l.iterations = n
+func (l *Learner) SetIterations(it int) {
+	l.iterations = it
 }
 
 // calcLL calculates the loglikelihood of a junctree for the data
@@ -68,12 +68,16 @@ func (l *Learner) calcLL(jt *junctree.JuncTree) (ll float64) {
 		varset := utils.NewBitSetFromSlice(l.n, node.Cliq)
 		values := l.counter.GetOccurrences(varset)
 		for _, v := range values {
-			ll += float64(v) * math.Log(float64(v))
+			if v != 0 {
+				ll += float64(v) * math.Log(float64(v))
+			}
 		}
-		varset = utils.NewBitSetFromSlice(l.n, node.Cliq[1:])
+		varset.Clear(uint(node.Cliq[0]))
 		values = l.counter.GetOccurrences(varset)
 		for _, v := range values {
-			ll -= float64(v) * math.Log(float64(v))
+			if v != 0 {
+				ll -= float64(v) * math.Log(float64(v))
+			}
 		}
 	}
 	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
