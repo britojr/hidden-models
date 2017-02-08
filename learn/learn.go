@@ -60,18 +60,18 @@ func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
 	return bestStruct, bestScore
 }
 
-// calcLL calculates the loglikelihood of a junctree for the data
-func (l *Learner) calcLL(jt *junctree.JuncTree) (ll float64) {
+// calcLL calculates the loglikelihood of a list of cliques
+func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the separator
-	for _, node := range jt.Nodes {
-		values := l.counter.GetOccurrences(node.Cliq)
+	for _, node := range nodelist {
+		values := l.counter.GetOccurrences(node.Clique)
 		for _, v := range values {
 			if v != 0 {
 				ll += float64(v) * math.Log(float64(v))
 			}
 		}
-		values = l.counter.GetOccurrences(node.Sep)
+		values = l.counter.GetOccurrences(node.Separator)
 		for _, v := range values {
 			if v != 0 {
 				ll -= float64(v) * math.Log(float64(v))
@@ -86,6 +86,6 @@ func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
 	T, iphi, err := generator.RandomCharTree(l.n, l.treewidth)
 	utils.ErrCheck(err, "")
 	jt := junctree.FromCharTree(T, iphi)
-	score := l.calcLL(jt)
+	score := l.calcLL(jt.Nodes)
 	return jt, score
 }
