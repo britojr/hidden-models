@@ -151,4 +151,12 @@ func TestGetOccurrences(t *testing.T) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
 	}
+	//empty slice
+	m := margTests[0]
+	b := NewBitCounter()
+	b.LoadFromData(m.d.lines, m.d.card)
+	got := b.GetOccurrences([]int{})
+	if len(got) != 0 {
+		t.Errorf("want(%v); got(%v)", []int{}, got)
+	}
 }

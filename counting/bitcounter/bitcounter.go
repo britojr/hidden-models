@@ -45,7 +45,10 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 // GetOccurrences returns array with the counting of each possible assignment
 // of the given set of variables
-func (b *BitCounter) GetOccurrences(varlist []int) []int {
+func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
+	if len(varlist) <= 0 {
+		return
+	}
 	varset := utils.NewBitSetFromSlice(len(b.cardin), varlist)
 	varsetstring := varset.String()
 	v, ok := b.cache[varsetstring]
@@ -57,7 +60,7 @@ func (b *BitCounter) GetOccurrences(varlist []int) []int {
 		}
 		b.cache[varsetstring] = v
 	}
-	return v
+	return
 }
 
 func (b *BitCounter) nextAssignment(assig *[]int, varset *bitset.BitSet) {
