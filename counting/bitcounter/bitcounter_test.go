@@ -3,8 +3,6 @@ package bitcounter
 import (
 	"reflect"
 	"testing"
-
-	"github.com/britojr/kbn/utils"
 )
 
 type datapack struct {
@@ -143,13 +141,12 @@ func TestGetOccurrences(t *testing.T) {
 	for _, m := range margTests {
 		b := NewBitCounter()
 		b.LoadFromData(m.d.lines, m.d.card)
-		varset := utils.NewBitSetFromSlice(len(m.d.card), m.in)
-		got := b.GetOccurrences(varset)
+		got := b.GetOccurrences(m.in)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
 		//roll twice to test cache
-		got = b.GetOccurrences(varset)
+		got = b.GetOccurrences(m.in)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}

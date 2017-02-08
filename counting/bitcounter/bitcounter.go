@@ -1,6 +1,9 @@
 package bitcounter
 
-import "github.com/willf/bitset"
+import (
+	"github.com/britojr/kbn/utils"
+	"github.com/willf/bitset"
+)
 
 // BitCounter manages the counting occurrences of sets of variables in a dataset
 type BitCounter struct {
@@ -42,7 +45,8 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 // GetOccurrences returns array with the counting of each possible assignment
 // of the given set of variables
-func (b *BitCounter) GetOccurrences(varset *bitset.BitSet) []int {
+func (b *BitCounter) GetOccurrences(varlist []int) []int {
+	varset := utils.NewBitSetFromSlice(len(b.cardin), varlist)
 	varsetstring := varset.String()
 	v, ok := b.cache[varsetstring]
 	if !ok {

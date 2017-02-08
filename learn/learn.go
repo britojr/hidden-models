@@ -65,15 +65,13 @@ func (l *Learner) calcLL(jt *junctree.JuncTree) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the separator
 	for _, node := range jt.Nodes {
-		varset := utils.NewBitSetFromSlice(l.n, node.Cliq)
-		values := l.counter.GetOccurrences(varset)
+		values := l.counter.GetOccurrences(node.Cliq)
 		for _, v := range values {
 			if v != 0 {
 				ll += float64(v) * math.Log(float64(v))
 			}
 		}
-		varset.Clear(uint(node.Cliq[0]))
-		values = l.counter.GetOccurrences(varset)
+		values = l.counter.GetOccurrences(node.Sep)
 		for _, v := range values {
 			if v != 0 {
 				ll -= float64(v) * math.Log(float64(v))
