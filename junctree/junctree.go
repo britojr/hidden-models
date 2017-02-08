@@ -1,11 +1,15 @@
 // Package junctree implements junctiontree
 package junctree
 
-import "github.com/britojr/tcc/characteristic"
+import (
+	"sort"
 
-// Node ...
+	"github.com/britojr/tcc/characteristic"
+)
+
+// Node of a junctree has a clique a separator (intersection with the parent clique)
 type Node struct {
-	Cliq, Sep []int
+	Clique []int
 }
 
 // JuncTree ...
@@ -16,41 +20,64 @@ type JuncTree struct {
 
 // FromCharTree generates a junction tree from a characteristic tree and an inverse phi array
 func FromCharTree(T *characteristic.Tree, iphi []int) *JuncTree {
-	// add other root's children to the first root child
-	children := characteristic.ChildrenList(T)
-	first := children[0][0]
-	children[first] = append(children[first], children[0][1:]...)
-
-	// extract the clique list form the characteristic tree
+	jt := new(JuncTree)
 	n := len(iphi)
 	k := n - len(T.P) + 1
-	K := characteristic.ExtractCliqueList(T, n, k)
 
-	// visit the nodes in BFS order creating the clique with the relabled value
-	// of each variable according to inverse phi
-	index := 0
-	mapIndex := make([]int, len(children))
-	queue := []int{first}
-	jt := new(JuncTree)
-	for len(queue) > 0 {
-		v := queue[0]
-		mapIndex[v] = index
-		queue = queue[1:]
+	// create children matrix
+	children := make([][]int, len(T.P))
+	for i := 0; i < len(T.P); i++ {
+		if T.P[i] != -1 {
+			children[T.P[i]] = append(children[T.P[i]], i)
+		}
+	}
+	jt.Children = children
+
+	jt.Nodes = make([]Node, len(children))
+	jt.Nodes[0].Clique = make([]int, k)
+	// Initialize auxiliar (not relabled) clique matrix
+	K := make([][]int, n-k+1)
+	K[0] = make([]int, k)
+	for i := 0; i < k; i++ {
+		K[0][i] = n - (k - i) + 1
+		jt.Nodes[0].Clique[i] = iphi[K[0][i]-1]
+	}
+
+	// Visit T in BFS order, starting with the children of the root
+	queue := make([]int, n)
+	start, end := 0, 0
+	for i := 0; i < len(children[0]); i++ {
+		queue[end] = children[0][i]
+		end++
+	}
+	for start != end {
+		v := queue[start]
+		start++
+		// update unlabled clique K
+		for i := 0; i < len(K[T.P[v]]); i++ {
+			if i != T.L[v] {
+				K[v] = append(K[v], K[T.P[v]][i])
+			}
+		}
+		if T.P[v] != 0 {
+			K[v] = append(K[v], T.P[v])
+			sort.Ints(K[v])
+		}
+
+		// enqueue the children of v
+		for i := 0; i < len(children[v]); i++ {
+			queue[end] = children[v][i]
+			end++
+		}
+
+		// create the relabled clique
 		clique := make([]int, len(K[v])+1)
 		clique[0] = iphi[v-1]
 		for i := 0; i < len(K[v]); i++ {
 			clique[i+1] = iphi[K[v][i]-1]
 		}
-		jt.Nodes = append(jt.Nodes, Node{clique, clique[1:]})
-		index++
-		queue = append(queue, children[v]...)
+		jt.Nodes[v].Clique = clique
 	}
-	jt.Children = make([][]int, len(children)-1)
-	for i := 1; i < len(children); i++ {
-		jt.Children[mapIndex[i]] = make([]int, len(children[i]))
-		for j := 0; j < len(children[i]); j++ {
-			jt.Children[mapIndex[i]][j] = mapIndex[children[i][j]]
-		}
-	}
+
 	return jt
 }
