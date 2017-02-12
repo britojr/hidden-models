@@ -1,8 +1,9 @@
 package bitcounter
 
 import (
+	"fmt"
+
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/utils"
 	"github.com/willf/bitset"
 )
 
@@ -50,8 +51,7 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	if len(varlist) <= 0 {
 		return
 	}
-	varset := utils.NewBitSetFromSlice(len(b.cardin), varlist)
-	varsetstring := varset.String()
+	varsetstring := fmt.Sprint(varlist)
 	v, ok := b.cache[varsetstring]
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
