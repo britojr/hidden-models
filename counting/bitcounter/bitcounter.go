@@ -1,6 +1,7 @@
 package bitcounter
 
 import (
+	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/utils"
 	"github.com/willf/bitset"
 )
@@ -53,38 +54,20 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	varsetstring := varset.String()
 	v, ok := b.cache[varsetstring]
 	if !ok {
-		assig := make([]int, varset.Count())
+		assig := assignment.New(varlist, b.cardin)
 		for assig != nil {
-			v = append(v, b.countAssignment(assig, varset))
-			b.nextAssignment(&assig, varset)
+			v = append(v, b.countAssignment(assig))
+			assig.Next()
 		}
 		b.cache[varsetstring] = v
 	}
 	return
 }
 
-func (b *BitCounter) nextAssignment(assig *[]int, varset *bitset.BitSet) {
-	i := 0
-	(*assig)[i]++
-	j, _ := varset.NextSet(0)
-	for (*assig)[i] == b.cardin[j] {
-		(*assig)[i] = 0
-		i++
-		if i >= len(*assig) {
-			*assig = nil
-			return
-		}
-		j, _ = varset.NextSet(j + 1)
-		(*assig)[i]++
-	}
-}
-
-func (b *BitCounter) countAssignment(assig []int, varset *bitset.BitSet) int {
-	j, _ := varset.NextSet(0)
-	aux := (*b.values[j])[assig[0]].Clone()
+func (b *BitCounter) countAssignment(assig assignment.Assignment) int {
+	aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
 	for i := 1; i < len(assig); i++ {
-		j, _ = varset.NextSet(j + 1)
-		aux.InPlaceIntersection((*b.values[j])[assig[i]])
+		aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
 	}
 	return int(aux.Count())
 }
