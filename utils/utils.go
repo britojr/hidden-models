@@ -41,9 +41,9 @@ func SliceItoU64(is []int) []uint64 {
 }
 
 // UnionSlice Returns an int slice with the union of both slices given
-func UnionSlice(a []int, b []int) []int {
+func UnionSlice(a []int, b []int, size int) []int {
 	c := make([]int, 0, len(a)+len(b))
-	varset := bitset.New(0)
+	varset := bitset.New(uint(size))
 	SetFromSlice(varset, a)
 	SetFromSlice(varset, b)
 	v, ok := varset.NextSet(0)
