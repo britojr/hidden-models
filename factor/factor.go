@@ -40,7 +40,7 @@ func (f *Factor) Get(assig assignment.Assignment) float64 {
 func (f *Factor) Product(g *Factor) *Factor {
 	h := new(Factor)
 	h.cardin = f.cardin
-	h.varlist = utils.UnionSlice(f.varlist, g.varlist)
+	h.varlist = utils.UnionSlice(f.varlist, g.varlist, len(f.cardin))
 	h.stride = make(map[int]int)
 	h.stride[h.varlist[0]] = 1
 	for i := 1; i < len(h.varlist); i++ {
@@ -76,9 +76,13 @@ func (f *Factor) SumOut(x int) *Factor {
 	c := f.cardin[x]
 	s := f.stride[x]
 	sp := c * s
+	index := 0
 	for k := 0; k < len(f.values); k += sp {
 		for i := 0; i < s; i++ {
-
+			for j := 0; j < c; j++ {
+				h.values[index] += f.values[k+i+(j*s)]
+			}
+			index++
 		}
 	}
 	return h

@@ -97,7 +97,7 @@ func TestSumOut(t *testing.T) {
 		i := 0
 		for assig != nil {
 			v := got.Get(assig)
-			if v != w.values[i] {
+			if !utils.FuzzyEqual(v, w.values[i]) {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
 			}
 			assig.Next()
