@@ -4,10 +4,21 @@ package utils
 import (
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 
 	"github.com/willf/bitset"
 )
+
+const epslon = 1e-10
+
+// FuzzyEqual compares float numbers with a tolerance
+func FuzzyEqual(a, b float64) bool {
+	if math.Abs(a-b) < epslon {
+		return true
+	}
+	return false
+}
 
 // SliceAtoi creates an int slice from a string slice
 func SliceAtoi(ss []string) []int {
@@ -29,13 +40,25 @@ func SliceItoU64(is []int) []uint64 {
 	return arr
 }
 
-// NewBitSetFromSlice creates new bitset with informed size and elements
-func NewBitSetFromSlice(size int, vars []int) *bitset.BitSet {
-	varset := bitset.New(uint(size))
+// UnionSlice Returns an int slice with the union of both slices given
+func UnionSlice(a []int, b []int) []int {
+	c := make([]int, 0, len(a)+len(b))
+	varset := bitset.New(0)
+	SetFromSlice(varset, a)
+	SetFromSlice(varset, b)
+	v, ok := varset.NextSet(0)
+	for ok {
+		c = append(c, int(v))
+		v, ok = varset.NextSet(v + 1)
+	}
+	return c
+}
+
+// SetFromSlice ..
+func SetFromSlice(varset *bitset.BitSet, vars []int) {
 	for _, u := range vars {
 		varset.Set(uint(u))
 	}
-	return varset
 }
 
 // ErrCheck validates error and prints a log message
