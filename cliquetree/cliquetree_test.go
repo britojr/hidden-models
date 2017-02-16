@@ -3,7 +3,9 @@ package cliquetree
 import (
 	"testing"
 
+	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/utils"
 )
 
 type factorStruct struct {
@@ -99,8 +101,14 @@ func TestIterativeCalibration(t *testing.T) {
 	calculateCalibrated()
 	for i, f := range cal {
 		got := c.Calibrated(i)
-		if !f.Equals(got) {
-			t.Errorf("want(%v); got(%v)", f, got)
+		assig := assignment.New(f.Variables(), cardin)
+		for assig != nil {
+			u := f.Get(assig)
+			v := got.Get(assig)
+			if !utils.FuzzyEqual(u, v) {
+				t.Errorf("want(%v); got(%v)", u, v)
+			}
+			assig.Next()
 		}
 	}
 }
