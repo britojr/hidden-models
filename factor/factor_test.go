@@ -1,6 +1,7 @@
 package factor
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
@@ -69,6 +70,16 @@ func TestNew(t *testing.T) {
 			}
 			assig.Next()
 			i++
+		}
+	}
+}
+
+func TestVariables(t *testing.T) {
+	for _, w := range tests {
+		f := New(w.varlist, w.cardin, w.values)
+		got := f.Variables()
+		if !reflect.DeepEqual(w.varlist, got) {
+			t.Errorf("want(%v); got(%v)", w.varlist, got)
 		}
 	}
 }

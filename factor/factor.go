@@ -27,6 +27,11 @@ func New(varlist []int, cardin []int, values []float64) *Factor {
 	return f
 }
 
+// Variables ..
+func (f *Factor) Variables() []int {
+	return f.varlist
+}
+
 // Get ..
 func (f *Factor) Get(assig assignment.Assignment) float64 {
 	x := 0
