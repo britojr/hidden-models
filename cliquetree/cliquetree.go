@@ -2,11 +2,16 @@ package cliquetree
 
 import (
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/utils"
 	"github.com/willf/bitset"
 )
 
 // CliqueTree ..
-type CliqueTree []struct {
+type CliqueTree struct {
+	nodes []node
+}
+
+type node struct {
 	varset        *bitset.BitSet
 	neighbours    []int
 	initialPot    *factor.Factor
@@ -15,20 +20,34 @@ type CliqueTree []struct {
 
 // New ..
 func New(n int) *CliqueTree {
-
+	c := new(CliqueTree)
+	c.nodes = make([]node, n)
+	return c
 }
 
 // SetClique ..
-func SetClique(i int, varlist []int) {
-
+func (c *CliqueTree) SetClique(i int, varlist []int) {
+	c.nodes[i].varset = bitset.New(0)
+	utils.SetFromSlice(c.nodes[i].varset, varlist)
 }
 
 // SetNeighbours ..
-func SetNeighbours(i int, neighbours []int) {
-
+func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
+	c.nodes[i].neighbours = neighbours
 }
 
 // SetPotential ..
-func SetPotential(i int, potential *factor.Factor) {
+func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
+	c.nodes[i].initialPot = potential
+	c.nodes[i].calibratedPot = potential
+}
+
+// Calibrated ..
+func (c *CliqueTree) Calibrated(i int) *factor.Factor {
+	return c.nodes[i].calibratedPot
+}
+
+// IterativeCalibration ..
+func (c *CliqueTree) IterativeCalibration() {
 
 }
