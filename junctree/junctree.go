@@ -7,10 +7,10 @@ import (
 	"github.com/britojr/tcc/characteristic"
 )
 
-// Node of a junctree has a clique a separator (intersection with the parent clique)
+// Node of a junctree has a clique a Sepset (intersection with the parent clique)
 type Node struct {
-	Clique    []int
-	Separator []int
+	Clique []int
+	Sepset []int
 }
 
 // JuncTree ...
@@ -78,7 +78,7 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *JuncTree {
 			clique[i+1] = iphi[K[v][i]-1]
 		}
 		jt.Nodes[v].Clique = clique
-		jt.Nodes[v].Separator = clique[1:]
+		jt.Nodes[v].Sepset = clique[1:]
 	}
 
 	return jt

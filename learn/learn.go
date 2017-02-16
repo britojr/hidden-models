@@ -63,7 +63,7 @@ func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
 // calcLL calculates the loglikelihood of a list of cliques
 func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
-	// subtracts the count of every attribution of the separator
+	// subtracts the count of every attribution of the Sepset
 	for _, node := range nodelist {
 		values := l.counter.GetOccurrences(node.Clique)
 		for _, v := range values {
@@ -71,7 +71,7 @@ func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
 				ll += float64(v) * math.Log(float64(v))
 			}
 		}
-		values = l.counter.GetOccurrences(node.Separator)
+		values = l.counter.GetOccurrences(node.Sepset)
 		for _, v := range values {
 			if v != 0 {
 				ll -= float64(v) * math.Log(float64(v))

@@ -9,15 +9,15 @@ import (
 
 var jt = JuncTree{
 	[]Node{
-		{Clique: []int{1, 2, 8}, Separator: []int(nil)},
-		{Clique: []int{0, 4, 7, 1}, Separator: []int{4, 7, 1}},
-		{Clique: []int{10, 1, 2, 8}, Separator: []int{1, 2, 8}},
-		{Clique: []int{9, 1, 2, 8}, Separator: []int{1, 2, 8}},
-		{Clique: []int{3, 10, 2, 8}, Separator: []int{10, 2, 8}},
-		{Clique: []int{4, 7, 1, 2}, Separator: []int{7, 1, 2}},
-		{Clique: []int{5, 7, 1, 8}, Separator: []int{7, 1, 8}},
-		{Clique: []int{6, 0, 4, 7}, Separator: []int{0, 4, 7}},
-		{Clique: []int{7, 1, 2, 8}, Separator: []int{1, 2, 8}},
+		{Clique: []int{1, 2, 8}, Sepset: []int(nil)},
+		{Clique: []int{0, 4, 7, 1}, Sepset: []int{4, 7, 1}},
+		{Clique: []int{10, 1, 2, 8}, Sepset: []int{1, 2, 8}},
+		{Clique: []int{9, 1, 2, 8}, Sepset: []int{1, 2, 8}},
+		{Clique: []int{3, 10, 2, 8}, Sepset: []int{10, 2, 8}},
+		{Clique: []int{4, 7, 1, 2}, Sepset: []int{7, 1, 2}},
+		{Clique: []int{5, 7, 1, 8}, Sepset: []int{7, 1, 8}},
+		{Clique: []int{6, 0, 4, 7}, Sepset: []int{0, 4, 7}},
+		{Clique: []int{7, 1, 2, 8}, Sepset: []int{1, 2, 8}},
 	},
 	[][]int{
 		{2, 3, 8},
@@ -45,10 +45,10 @@ func TestFromCharTree(t *testing.T) {
 		if !reflect.DeepEqual(got.Nodes[i].Clique, want.Nodes[i].Clique) {
 			t.Errorf("Clique[%v]; Got: %v; Want: %v", i, got.Nodes[i].Clique, want.Nodes[i].Clique)
 		}
-		if !reflect.DeepEqual(got.Nodes[i].Separator, want.Nodes[i].Separator) {
-			t.Errorf("Separator[%v]; Got: %v; Want: %v", i, got.Nodes[i].Separator, want.Nodes[i].Separator)
+		if !reflect.DeepEqual(got.Nodes[i].Sepset, want.Nodes[i].Sepset) {
+			t.Errorf("Sepset[%v]; Got: %v; Want: %v", i, got.Nodes[i].Sepset, want.Nodes[i].Sepset)
 		}
-		if !reflect.DeepEqual(got.Nodes[i].Separator, want.Nodes[i].Separator) {
+		if !reflect.DeepEqual(got.Nodes[i].Sepset, want.Nodes[i].Sepset) {
 			t.Errorf("Children[%v]; Got: %v; Want: %v", i, got.Children[i], want.Children[i])
 		}
 	}

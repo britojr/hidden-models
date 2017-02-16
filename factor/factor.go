@@ -8,7 +8,7 @@ import (
 // Factor ..
 type Factor struct {
 	cardin  []int
-	varlist []int
+	varlist []int // list of variables starting from the lowest stride
 	stride  map[int]int
 	values  []float64
 }
