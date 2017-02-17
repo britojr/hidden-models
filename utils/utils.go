@@ -54,6 +54,22 @@ func UnionSlice(a []int, b []int, size int) []int {
 	return c
 }
 
+// SetSubtract Returns a Slice with the result of subtraction A - B
+func SetSubtract(a, b *bitset.BitSet) []int {
+	return SliceFromSet(a.Difference(b))
+}
+
+// SliceFromSet ..
+func SliceFromSet(varset *bitset.BitSet) []int {
+	c := make([]int, 0, varset.Count())
+	v, ok := varset.NextSet(0)
+	for ok {
+		c = append(c, int(v))
+		v, ok = varset.NextSet(v + 1)
+	}
+	return c
+}
+
 // SetFromSlice ..
 func SetFromSlice(varset *bitset.BitSet, vars []int) {
 	for _, u := range vars {
