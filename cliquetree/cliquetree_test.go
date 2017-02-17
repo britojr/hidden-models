@@ -13,7 +13,8 @@ type factorStruct struct {
 	values  []float64
 }
 
-var cardin = []int{2, 2, 2, 2, 2, 2, 2}
+//                 A, B, C, D, E, F, G, H, I, J, K, L
+var cardin = []int{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}
 var fAB = factorStruct{
 	varlist: []int{0, 1},
 	values:  []float64{0.5, 0.1, 0.7, 0.2},
@@ -39,6 +40,39 @@ var fADG = factorStruct{
 	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
 }
 
+var fBFH = factorStruct{
+	varlist: []int{1, 5, 7},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fBFL = factorStruct{
+	varlist: []int{1, 5, 11},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fFHL = factorStruct{
+	varlist: []int{5, 7, 11},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fAGI = factorStruct{
+	varlist: []int{0, 6, 8},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fADI = factorStruct{
+	varlist: []int{0, 3, 8},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fADGI = factorStruct{
+	varlist: []int{0, 3, 6, 8},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7, 0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fADGK = factorStruct{
+	varlist: []int{0, 3, 6, 10},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7, 0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+var fAGIK = factorStruct{
+	varlist: []int{0, 6, 8, 10},
+	values:  []float64{0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7, 0.2, 0.75, 0.66, 0.2, 0.41, 0.19, 0.3, 0.7},
+}
+
 var factorList = []factorStruct{fAB, fABC, fABD, fABE, fBDF, fADG}
 var adjList = [][]int{
 	[]int{1, 2, 3},
@@ -50,6 +84,34 @@ var adjList = [][]int{
 }
 
 var cal []*factor.Factor
+
+var benchTest = []struct {
+	fl  []factorStruct
+	adj [][]int
+}{
+	{factorList, adjList},
+	{
+		[]factorStruct{
+			fABD, fBFH, fBFL, fFHL, fAGI, fADI, fADG,
+			fBDF, fAB, fABC, fADGI, fABE, fADGK, fAGIK},
+		[][]int{
+			[]int{8, 7, 6},
+			[]int{7, 2, 3},
+			[]int{1},
+			[]int{1},
+			[]int{6},
+			[]int{6},
+			[]int{4, 5, 10, 0},
+			[]int{0, 1},
+			[]int{0, 9, 11},
+			[]int{8},
+			[]int{12, 13, 6},
+			[]int{8},
+			[]int{10},
+			[]int{10},
+		},
+	},
+}
 
 func calculateCalibrated() {
 	cal = make([]*factor.Factor, len(factorList))
@@ -81,7 +143,7 @@ func calculateCalibrated() {
 		Product(p[2].Product(p[4].SumOut(5).Product(p[0]).Product(p[1].SumOut(2)).Product(p[3].SumOut(4))).SumOut(1))
 }
 
-func initCliqueTree(factorList []factorStruct) *CliqueTree {
+func initCliqueTree(factorList []factorStruct, adjList [][]int) *CliqueTree {
 	c := New(len(factorList))
 	for i, f := range factorList {
 		c.SetClique(i, f.varlist)
@@ -101,7 +163,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestUpDownCalibration(t *testing.T) {
-	c := initCliqueTree(factorList)
+	c := initCliqueTree(factorList, adjList)
 	c.UpDownCalibration()
 	calculateCalibrated()
 	for i, f := range cal {
@@ -119,7 +181,7 @@ func TestUpDownCalibration(t *testing.T) {
 }
 
 func TestIterativeCalibration(t *testing.T) {
-	c := initCliqueTree(factorList)
+	c := initCliqueTree(factorList, adjList)
 	c.IterativeCalibration()
 	calculateCalibrated()
 	for i, f := range cal {
@@ -137,17 +199,27 @@ func TestIterativeCalibration(t *testing.T) {
 }
 
 func BenchmarkUpDownCalibration(b *testing.B) {
-	c := initCliqueTree(factorList)
+	ctrees := make([]*CliqueTree, 0)
+	for _, bt := range benchTest {
+		ctrees = append(ctrees, initCliqueTree(bt.fl, bt.adj))
+	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c.UpDownCalibration()
+		for _, c := range ctrees {
+			c.UpDownCalibration()
+		}
 	}
 }
 
 func BenchmarkIterativeCalibration(b *testing.B) {
-	c := initCliqueTree(factorList)
+	ctrees := make([]*CliqueTree, 0)
+	for _, bt := range benchTest {
+		ctrees = append(ctrees, initCliqueTree(bt.fl, bt.adj))
+	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		c.IterativeCalibration()
+		for _, c := range ctrees {
+			c.IterativeCalibration()
+		}
 	}
 }
