@@ -57,93 +57,79 @@ func (c *CliqueTree) Calibrated(i int) *factor.Factor {
 func (c *CliqueTree) UpDownCalibration() {
 	send = make([]*factor.Factor, len(c.nodes))
 	receive = make([]*factor.Factor, len(c.nodes))
-	n := len(c.nodes[0].neighbours)
-	p := make([]*factor.Factor, n+1)
-	q := make([]*factor.Factor, n-1)
-	msg := make([]*factor.Factor, n)
+	prev = make([][]*factor.Factor, len(c.nodes))
+	post = make([][]*factor.Factor, len(c.nodes))
+	root := 0
 
-	p[0] = c.nodes[0].initialPot
-	for i, ch := range c.nodes[0].neighbours {
-		msg[i] = c.upwardmessage(ch, 0)
-		p[i+1] = p[i].Product(msg[i])
-	}
-	c.nodes[0].calibratedPot = p[n]
-
-	q[n-2] = msg[n-1]
-	for i := n - 3; i >= 0; i-- {
-		q[i] = q[i+1].Product(msg[i+1])
-	}
-
-	for i := 0; i < n; i++ {
-		m := p[i]
-		if i != n-1 {
-			m = m.Product(q[i])
-		}
-		ch := c.nodes[0].neighbours[i]
-		diff := utils.SetSubtract(c.nodes[0].varset, c.nodes[ch].varset)
-		for _, x := range diff {
-			m = m.SumOut(x)
-		}
-		c.downwardmessage(0, ch, m)
-	}
+	c.upwardmessage(root, -1)
+	c.downwardmessage(-1, root)
 }
 
-func (c *CliqueTree) downwardmessage(pa, j int, pm *factor.Factor) {
-	n := len(c.nodes[j].neighbours)
-	p := make([]*factor.Factor, n+1)
-	q := make([]*factor.Factor, n-1)
-	msg := make([]*factor.Factor, n)
-
-	p[0] = c.nodes[j].initialPot
-	for i, ch := range c.nodes[j].neighbours {
-		if ch != pa {
-			msg[i] = send[ch]
-		} else {
-			msg[i] = pm
-		}
-		p[i+1] = p[i].Product(msg[i])
-	}
-	c.nodes[j].calibratedPot = p[n]
-
-	if n > 1 {
-		q[n-2] = msg[n-1]
-		for i := n - 3; i >= 0; i-- {
-			q[i] = q[i+1].Product(msg[i+1])
-		}
-	}
-
-	for i := 0; i < n; i++ {
-		ch := c.nodes[j].neighbours[i]
-		if ch == pa {
-			continue
-		}
-		m := p[i]
-		if i != n-1 {
-			m = m.Product(q[i])
-		}
-		diff := utils.SetSubtract(c.nodes[j].varset, c.nodes[ch].varset)
-		for _, x := range diff {
-			m = m.SumOut(x)
-		}
-		c.downwardmessage(j, ch, m)
-	}
-}
-
-func (c *CliqueTree) upwardmessage(i, pa int) *factor.Factor {
-	msg := c.nodes[i].initialPot
-	if len(c.nodes[i].neighbours) > 1 {
-		for _, ne := range c.nodes[i].neighbours {
+func (c *CliqueTree) upwardmessage(v, pa int) {
+	prev[v] = make([]*factor.Factor, 1, len(c.nodes[v].neighbours)+1)
+	prev[v][0] = c.nodes[v].initialPot
+	if len(c.nodes[v].neighbours) > 1 {
+		for _, ne := range c.nodes[v].neighbours {
 			if ne != pa {
-				msg = msg.Product(c.upwardmessage(ne, i))
+				c.upwardmessage(ne, v)
+				prev[v] = append(prev[v], send[ne].Product(prev[v][len(prev[v])-1]))
 			}
 		}
 	}
-	diff := utils.SetSubtract(c.nodes[i].varset, c.nodes[pa].varset)
-	for _, x := range diff {
-		msg = msg.SumOut(x)
+	if pa != -1 {
+		msg := prev[v][len(prev[v])-1]
+		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[pa].varset)
+		for _, x := range diff {
+			msg = msg.SumOut(x)
+		}
+		send[v] = msg
 	}
-	send[i] = msg
-	return msg
+}
+
+func (c *CliqueTree) downwardmessage(pa, v int) {
+	c.nodes[v].calibratedPot = prev[v][len(prev[v])-1]
+	n := len(c.nodes[v].neighbours)
+	if pa != -1 {
+		c.nodes[v].calibratedPot = c.nodes[v].calibratedPot.Product(receive[v])
+		n--
+	}
+	if len(c.nodes[v].neighbours) == 1 && pa != -1 {
+		return
+	}
+
+	post[v] = make([]*factor.Factor, n)
+	i := len(post[v]) - 1
+	post[v][i] = receive[v]
+	i--
+	for k := len(c.nodes[v].neighbours) - 1; k >= 0 && i >= 0; k-- {
+		ch := c.nodes[v].neighbours[k]
+		if ch == pa {
+			continue
+		}
+		post[v][i] = send[ch]
+		if post[v][i+1] != nil {
+			post[v][i] = post[v][i].Product(post[v][i+1])
+		}
+		i--
+	}
+
+	k := 0
+	for _, ch := range c.nodes[v].neighbours {
+		if ch == pa {
+			continue
+		}
+		msg := prev[v][k]
+		if post[v][k] != nil {
+			msg = msg.Product(post[v][k])
+		}
+		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[ch].varset)
+		for _, x := range diff {
+			msg = msg.SumOut(x)
+		}
+		receive[ch] = msg
+		c.downwardmessage(v, ch)
+		k++
+	}
 }
 
 // IterativeCalibration ..
