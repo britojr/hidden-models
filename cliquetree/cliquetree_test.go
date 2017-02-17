@@ -118,14 +118,6 @@ func TestUpDownCalibration(t *testing.T) {
 	}
 }
 
-// func BenchmarkUpDownCalibration(b *testing.B) {
-// 	big := NewBig()
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		big.Len()
-// 	}
-// }
-
 func TestIterativeCalibration(t *testing.T) {
 	c := initCliqueTree(factorList)
 	c.IterativeCalibration()
@@ -141,5 +133,21 @@ func TestIterativeCalibration(t *testing.T) {
 			}
 			assig.Next()
 		}
+	}
+}
+
+func BenchmarkUpDownCalibration(b *testing.B) {
+	c := initCliqueTree(factorList)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.UpDownCalibration()
+	}
+}
+
+func BenchmarkIterativeCalibration(b *testing.B) {
+	c := initCliqueTree(factorList)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.IterativeCalibration()
 	}
 }
