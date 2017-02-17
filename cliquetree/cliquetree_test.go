@@ -81,6 +81,16 @@ func calculateCalibrated() {
 		Product(p[2].Product(p[4].SumOut(5).Product(p[0]).Product(p[1].SumOut(2)).Product(p[3].SumOut(4))).SumOut(1))
 }
 
+func initCliqueTree(factorList []factorStruct) *CliqueTree {
+	c := New(len(factorList))
+	for i, f := range factorList {
+		c.SetClique(i, f.varlist)
+		c.SetNeighbours(i, adjList[i])
+		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
+	}
+	return c
+}
+
 func TestNew(t *testing.T) {
 	c := New(len(factorList))
 	for i, f := range factorList {
@@ -91,12 +101,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestUpDownCalibration(t *testing.T) {
-	c := New(len(factorList))
-	for i, f := range factorList {
-		c.SetClique(i, f.varlist)
-		c.SetNeighbours(i, adjList[i])
-		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
-	}
+	c := initCliqueTree(factorList)
 	c.UpDownCalibration()
 	calculateCalibrated()
 	for i, f := range cal {
@@ -113,13 +118,16 @@ func TestUpDownCalibration(t *testing.T) {
 	}
 }
 
+// func BenchmarkUpDownCalibration(b *testing.B) {
+// 	big := NewBig()
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		big.Len()
+// 	}
+// }
+
 func TestIterativeCalibration(t *testing.T) {
-	c := New(len(factorList))
-	for i, f := range factorList {
-		c.SetClique(i, f.varlist)
-		c.SetNeighbours(i, adjList[i])
-		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
-	}
+	c := initCliqueTree(factorList)
 	c.IterativeCalibration()
 	calculateCalibrated()
 	for i, f := range cal {
