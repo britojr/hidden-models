@@ -112,3 +112,26 @@ func TestUpDownCalibration(t *testing.T) {
 		}
 	}
 }
+
+func TestIterativeCalibration(t *testing.T) {
+	c := New(len(factorList))
+	for i, f := range factorList {
+		c.SetClique(i, f.varlist)
+		c.SetNeighbours(i, adjList[i])
+		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
+	}
+	c.IterativeCalibration()
+	calculateCalibrated()
+	for i, f := range cal {
+		got := c.Calibrated(i)
+		assig := assignment.New(f.Variables(), cardin)
+		for assig != nil {
+			u := f.Get(assig)
+			v := got.Get(assig)
+			if !utils.FuzzyEqual(u, v) {
+				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
+			}
+			assig.Next()
+		}
+	}
+}
