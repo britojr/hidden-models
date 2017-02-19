@@ -9,10 +9,10 @@ import (
 
 // BitCounter manages the counting occurrences of sets of variables in a dataset
 type BitCounter struct {
-	varset *bitset.BitSet   // wich variables are representend
-	cardin []int            // cardinality of each variable
-	values []*valToLine     // all assignable values for each variable
-	cache  map[string][]int // cached occurence counting slices for different varsets
+	varlist []int            // wich variables are representend
+	cardin  []int            // cardinality of each variable
+	values  []*valToLine     // all assignable values for each variable
+	cache   map[string][]int // cached occurence counting slices for different varlists
 }
 
 type valToLine map[int]*bitset.BitSet
@@ -25,8 +25,6 @@ func NewBitCounter() *BitCounter {
 // LoadFromData initializes the BitCounter from a given dataset and cardinality array
 func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 	lin, col := len(dataset), len(dataset[0])
-	// varset containing all variables
-	b.varset = bitset.New(uint(col)).Complement()
 	b.values = make([]*valToLine, col)
 	b.cardin = append([]int(nil), cardinality...)
 	for i, c := range cardinality {
@@ -41,8 +39,14 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 			(*b.values[j])[dataset[i][j]].Set(uint(i))
 		}
 	}
+	// varlist containing all variables
+	/*b.varlist = make([]int, col)
+	for i := range b.varlist{
+		b.varlist[i] = i
+	}*/
 	// initialize empty cache
 	b.cache = make(map[string][]int)
+
 }
 
 // GetOccurrences returns array with the counting of each possible assignment
@@ -51,15 +55,15 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	if len(varlist) <= 0 {
 		return
 	}
-	varsetstring := fmt.Sprint(varlist)
-	v, ok := b.cache[varsetstring]
+	strvarlist := fmt.Sprint(varlist)
+	v, ok := b.cache[strvarlist]
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
 		for assig != nil {
 			v = append(v, b.CountAssignment(assig))
 			assig.Next()
 		}
-		b.cache[varsetstring] = v
+		b.cache[strvarlist] = v
 	}
 	return
 }
