@@ -1,6 +1,10 @@
 package bitset
 
-import "math/big"
+import (
+	"math/big"
+
+	"github.com/cznic/mathutil"
+)
 
 // BitSet is a set of bits
 type BitSet struct {
@@ -39,5 +43,22 @@ func (b *BitSet) Test(i int) bool {
 
 // Count returns the number of bits that are set
 func (b *BitSet) Count() int {
-	return 0
+	return mathutil.PopCountBigInt(b.s)
+}
+
+// Clone returns a copy of the bitset
+func (b *BitSet) Clone() *BitSet {
+	q := New()
+	q.s.Set(b.s)
+	return q
+}
+
+// Equal compares two bitsets
+func (b *BitSet) Equal(q *BitSet) bool {
+	return b.s.Cmp(q.s) == 0
+}
+
+// Intersection ..
+func (b *BitSet) Intersection(q *BitSet) {
+	b.s.And(b.s, q.s)
 }

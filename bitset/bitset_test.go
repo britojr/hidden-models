@@ -54,3 +54,16 @@ func TestCount(t *testing.T) {
 		t.Errorf("Wrong BitSet counting")
 	}
 }
+
+func TestClone(t *testing.T) {
+	b := New()
+	b.Set(100)
+	b.Set(20)
+	c := b.Clone()
+	if b == c {
+		t.Errorf("Clone returned the same pointer")
+	}
+	if !b.Equal(c) {
+		t.Errorf("Didn't copy the correct value")
+	}
+}
