@@ -1,43 +1,56 @@
 package bitset
 
-import "math/big"
+import "github.com/willf/bitset"
 
 // BitSet is a set of bits
 type BitSet struct {
-	s *big.Int
+	*bitset.BitSet
 }
 
-// New creates new bitset pointer
-func New() *BitSet {
-	b := &BitSet{new(big.Int)}
+// New creates new bitset pointer with optional hint size
+func New(size ...uint) *BitSet {
+	var x uint
+	if len(size) != 0 {
+		x = size[0]
+	}
+	b := &BitSet{bitset.New(x)}
 	return b
 }
 
-// Set sets the ith bit to true
-func (b *BitSet) Set(i int) {
-	// (*big.Int)(b).SetBit((*big.Int)(b), i, 1)
-	b.s.SetBit(b.s, i, 1)
+/* add these functions
+// UnionSlice Returns an int slice with the union of both slices given
+func UnionSlice(a []int, b []int, size int) []int {
+	c := make([]int, 0, len(a)+len(b))
+	varset := bitset.New(uint(size))
+	SetFromSlice(varset, a)
+	SetFromSlice(varset, b)
+	v, ok := varset.NextSet(0)
+	for ok {
+		c = append(c, int(v))
+		v, ok = varset.NextSet(v + 1)
+	}
+	return c
 }
 
-// Clear clears the ith bit
-func (b *BitSet) Clear(i int) {
-	// (*big.Int)(b).SetBit((*big.Int)(b), i, 0)
-	b.s.SetBit(b.s, i, 0)
+// SetSubtract Returns a Slice with the result of subtraction A - B
+func SetSubtract(a, b *bitset.BitSet) []int {
+	return SliceFromSet(a.Difference(b))
 }
 
-// Get returns the value (0 or 1) o the ith bit
-func (b *BitSet) Get(i int) int {
-	// return int((*big.Int)(b).Bit(i))
-	return int(b.s.Bit(i))
+// SliceFromSet ..
+func SliceFromSet(varset *bitset.BitSet) []int {
+	c := make([]int, 0, varset.Count())
+	v, ok := varset.NextSet(0)
+	for ok {
+		c = append(c, int(v))
+		v, ok = varset.NextSet(v + 1)
+	}
+	return c
 }
 
-// Test returns true if ith bit is set and false otherwise
-func (b *BitSet) Test(i int) bool {
-	// return (*big.Int)(b).Bit(i) == 1
-	return b.s.Bit(i) == 1
-}
-
-// Count returns the number of bits that are set
-func (b *BitSet) Count() int {
-	return 0
-}
+// SetFromSlice ..
+func SetFromSlice(varset *bitset.BitSet, vars []int) {
+	for _, u := range vars {
+		varset.Set(uint(u))
+	}
+}*/
