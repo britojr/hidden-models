@@ -39,7 +39,6 @@ func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
 	c.nodes[i].initialPot = potential
-	c.nodes[i].calibratedPot = potential
 }
 
 // Calibrated ..
