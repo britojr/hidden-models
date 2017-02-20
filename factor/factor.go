@@ -95,6 +95,7 @@ func (f *Factor) SumOutOne(x int) *Factor {
 
 // SumOut ..
 func (f *Factor) SumOut(vars []int) *Factor {
+	// TODO: create better implementation for SumOut and Marginalize
 	q := f
 	for _, x := range vars {
 		q = q.SumOutOne(x)
@@ -104,6 +105,7 @@ func (f *Factor) SumOut(vars []int) *Factor {
 
 // Marginalize ..
 func (f *Factor) Marginalize(vars []int) *Factor {
+	// TODO: create better implementation for SumOut and Marginalize
 	diff := utils.SliceDifference(f.varlist, vars, uint(len(f.cardin)))
 	q := f
 	for _, x := range diff {
