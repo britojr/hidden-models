@@ -52,7 +52,7 @@ var tests = []testStruct{
 	f012,
 }
 
-var sumOutTests = []testStruct{
+var sumOutOneTests = []testStruct{
 	f012_0,
 	f012_1,
 	f012_2,
@@ -100,10 +100,10 @@ func TestProduct(t *testing.T) {
 	}
 }
 
-func TestSumOut(t *testing.T) {
+func TestSumOutOne(t *testing.T) {
 	a := New(f012.varlist, f012.cardin, f012.values)
-	for i, w := range sumOutTests {
-		got := a.SumOut(i)
+	for i, w := range sumOutOneTests {
+		got := a.SumOutOne(i)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
 		for assig != nil {

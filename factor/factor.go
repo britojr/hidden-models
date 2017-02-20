@@ -45,7 +45,7 @@ func (f *Factor) Get(assig assignment.Assignment) float64 {
 func (f *Factor) Product(g *Factor) *Factor {
 	h := new(Factor)
 	h.cardin = f.cardin
-	h.varlist = utils.UnionSlice(f.varlist, g.varlist, len(f.cardin))
+	h.varlist = utils.SliceUnion(f.varlist, g.varlist, uint(len(f.cardin)))
 	h.stride = make(map[int]int)
 	h.stride[h.varlist[0]] = 1
 	for i := 1; i < len(h.varlist); i++ {
@@ -61,8 +61,8 @@ func (f *Factor) Product(g *Factor) *Factor {
 	return h
 }
 
-// SumOut ..
-func (f *Factor) SumOut(x int) *Factor {
+// SumOutOne ..
+func (f *Factor) SumOutOne(x int) *Factor {
 	h := new(Factor)
 	h.cardin = f.cardin
 	h.varlist = make([]int, 0, len(f.varlist)-1)
@@ -91,4 +91,23 @@ func (f *Factor) SumOut(x int) *Factor {
 		}
 	}
 	return h
+}
+
+// SumOut ..
+func (f *Factor) SumOut(vars []int) *Factor {
+	q := f
+	for _, x := range vars {
+		q = q.SumOutOne(x)
+	}
+	return q
+}
+
+// Marginalize ..
+func (f *Factor) Marginalize(vars []int) *Factor {
+	diff := utils.SliceDifference(f.varlist, vars, uint(len(f.cardin)))
+	q := f
+	for _, x := range diff {
+		q = q.SumOutOne(x)
+	}
+	return q
 }
