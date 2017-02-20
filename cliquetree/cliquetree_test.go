@@ -120,27 +120,27 @@ func calculateCalibrated() {
 		p = append(p, factor.New(f.varlist, cardin, f.values))
 	}
 	//AB
-	cal[0] = p[0].Product(p[1].SumOut(2)).
-		Product(p[2].Product(p[4].SumOut(5).Product(p[5].SumOut(6))).SumOut(3)).
-		Product(p[3].SumOut(4))
+	cal[0] = p[0].Product(p[1].SumOutOne(2)).
+		Product(p[2].Product(p[4].SumOutOne(5).Product(p[5].SumOutOne(6))).SumOutOne(3)).
+		Product(p[3].SumOutOne(4))
 	//ABC
 	cal[1] = p[1].Product(p[0]).
-		Product(p[2].Product(p[4].SumOut(5).Product(p[5].SumOut(6))).SumOut(3)).
-		Product(p[3].SumOut(4))
+		Product(p[2].Product(p[4].SumOutOne(5).Product(p[5].SumOutOne(6))).SumOutOne(3)).
+		Product(p[3].SumOutOne(4))
 	//ABD
-	cal[2] = p[2].Product(p[4].SumOut(5)).
-		Product(p[5].SumOut(6)).
-		Product(p[0].Product(p[1].SumOut(2).Product(p[3].SumOut(4))))
+	cal[2] = p[2].Product(p[4].SumOutOne(5)).
+		Product(p[5].SumOutOne(6)).
+		Product(p[0].Product(p[1].SumOutOne(2).Product(p[3].SumOutOne(4))))
 	//ABE
 	cal[3] = p[3].Product(p[0]).
-		Product(p[1].SumOut(2)).
-		Product(p[2].Product(p[4].SumOut(5).Product(p[5].SumOut(6))).SumOut(3))
+		Product(p[1].SumOutOne(2)).
+		Product(p[2].Product(p[4].SumOutOne(5).Product(p[5].SumOutOne(6))).SumOutOne(3))
 	//BDF
 	cal[4] = p[4].
-		Product(p[2].Product(p[5].SumOut(6).Product(p[0]).Product(p[1].SumOut(2)).Product(p[3].SumOut(4))).SumOut(0))
+		Product(p[2].Product(p[5].SumOutOne(6).Product(p[0]).Product(p[1].SumOutOne(2)).Product(p[3].SumOutOne(4))).SumOutOne(0))
 	//ADG
 	cal[5] = p[5].
-		Product(p[2].Product(p[4].SumOut(5).Product(p[0]).Product(p[1].SumOut(2)).Product(p[3].SumOut(4))).SumOut(1))
+		Product(p[2].Product(p[4].SumOutOne(5).Product(p[0]).Product(p[1].SumOutOne(2)).Product(p[3].SumOutOne(4))).SumOutOne(1))
 }
 
 func initCliqueTree(factorList []factorStruct, adjList [][]int) *CliqueTree {

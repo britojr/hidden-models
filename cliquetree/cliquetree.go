@@ -12,10 +12,10 @@ type CliqueTree struct {
 }
 
 type node struct {
-	varset        *bitset.BitSet
-	neighbours    []int
-	initialPot    *factor.Factor
-	calibratedPot *factor.Factor
+	varset        *bitset.BitSet // wich variables participate on this clique
+	neighbours    []int          // cliques that are adjacent to this one
+	initialPot    *factor.Factor // initial clique potential
+	calibratedPot *factor.Factor // calibrated potential
 }
 
 var send, receive []*factor.Factor
@@ -32,9 +32,8 @@ func New(n int) *CliqueTree {
 
 // SetClique ..
 func (c *CliqueTree) SetClique(i int, varlist []int) {
-	// TODO: give hint size for the bitset
-	c.nodes[i].varset = bitset.New(0)
-	utils.SetFromSlice(c.nodes[i].varset, varlist)
+	c.nodes[i].varset = utils.NewBitSet()
+	utils.SetSlice(c.nodes[i].varset, varlist)
 }
 
 // SetNeighbours ..
@@ -78,9 +77,10 @@ func (c *CliqueTree) upwardmessage(v, pa int) {
 	}
 	if pa != -1 {
 		msg := prev[v][len(prev[v])-1]
-		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[pa].varset)
+		diff := utils.SliceFromBitSet(c.nodes[v].varset.Difference(c.nodes[pa].varset))
+		//diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[pa].varset)
 		for _, x := range diff {
-			msg = msg.SumOut(x)
+			msg = msg.SumOutOne(x)
 		}
 		send[v] = msg
 	}
@@ -122,9 +122,10 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		if post[v][k] != nil {
 			msg = msg.Product(post[v][k])
 		}
-		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[ch].varset)
+		diff := utils.SliceFromBitSet(c.nodes[v].varset.Difference(c.nodes[ch].varset))
+		//diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[ch].varset)
 		for _, x := range diff {
-			msg = msg.SumOut(x)
+			msg = msg.SumOutOne(x)
 		}
 		receive[ch] = msg
 		c.downwardmessage(v, ch)
@@ -156,9 +157,10 @@ func (c *CliqueTree) upmessage(v int) {
 	}
 	if parent[v] != -1 {
 		msg := prev[v][len(prev[v])-1]
-		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[parent[v]].varset)
+		diff := utils.SliceFromBitSet(c.nodes[v].varset.Difference(c.nodes[parent[v]].varset))
+		//diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[parent[v]].varset)
 		for _, x := range diff {
-			msg = msg.SumOut(x)
+			msg = msg.SumOutOne(x)
 		}
 		send[v] = msg
 	}
@@ -188,9 +190,10 @@ func (c *CliqueTree) downmessage(v int) {
 		if post[v][k] != nil {
 			msg = msg.Product(post[v][k])
 		}
-		diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[ch].varset)
+		diff := utils.SliceFromBitSet(c.nodes[v].varset.Difference(c.nodes[ch].varset))
+		// diff := utils.SetSubtract(c.nodes[v].varset, c.nodes[ch].varset)
 		for _, x := range diff {
-			msg = msg.SumOut(x)
+			msg = msg.SumOutOne(x)
 		}
 		receive[ch] = msg
 	}
