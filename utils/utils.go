@@ -20,6 +20,14 @@ func FuzzyEqual(a, b float64) bool {
 	return false
 }
 
+// ErrCheck validates error and prints a log message
+func ErrCheck(err error, message string) {
+	if err != nil {
+		log.Printf("%v: err(%v)\n", message, err)
+		panic(err)
+	}
+}
+
 // SliceAtoi creates an int slice from a string slice
 func SliceAtoi(ss []string) []int {
 	arr := make([]int, len(ss))
@@ -40,47 +48,62 @@ func SliceItoU64(is []int) []uint64 {
 	return arr
 }
 
-// UnionSlice Returns an int slice with the union of both slices given
-func UnionSlice(a []int, b []int, size int) []int {
-	c := make([]int, 0, len(a)+len(b))
-	varset := bitset.New(uint(size))
-	SetFromSlice(varset, a)
-	SetFromSlice(varset, b)
-	v, ok := varset.NextSet(0)
-	for ok {
-		c = append(c, int(v))
-		v, ok = varset.NextSet(v + 1)
-	}
-	return c
-}
-
-// SetSubtract Returns a Slice with the result of subtraction A - B
-func SetSubtract(a, b *bitset.BitSet) []int {
-	return SliceFromSet(a.Difference(b))
-}
-
-// SliceFromSet ..
-func SliceFromSet(varset *bitset.BitSet) []int {
-	c := make([]int, 0, varset.Count())
-	v, ok := varset.NextSet(0)
-	for ok {
-		c = append(c, int(v))
-		v, ok = varset.NextSet(v + 1)
-	}
-	return c
-}
-
-// SetFromSlice ..
-func SetFromSlice(varset *bitset.BitSet, vars []int) {
-	for _, u := range vars {
-		varset.Set(uint(u))
+// SetSlice sets all the bits given on the slice
+func SetSlice(b *bitset.BitSet, varlist []int) {
+	for _, u := range varlist {
+		b.Set(uint(u))
 	}
 }
 
-// ErrCheck validates error and prints a log message
-func ErrCheck(err error, message string) {
-	if err != nil {
-		log.Printf("%v: err(%v)\n", message, err)
-		panic(err)
+// ClearSlice clears all the bits given on the slice
+func ClearSlice(b *bitset.BitSet, varlist []int) {
+	for _, u := range varlist {
+		b.Clear(uint(u))
 	}
+}
+
+// SliceFromBitSet returns the corresponding int slice from a set
+func SliceFromBitSet(b *bitset.BitSet) []int {
+	s := make([]int, 0, b.Count())
+	for i, ok := b.NextSet(0); ok; i, ok = b.NextSet(i + 1) {
+		s = append(s, int(i))
+	}
+	return s
+}
+
+// ListIntersection creates an intersection of a list of sets
+func ListIntersection(setlist []*bitset.BitSet) *bitset.BitSet {
+	if len(setlist) == 0 {
+		panic("empty list has no intersection")
+	}
+	r := setlist[0].Clone()
+	for i := 1; i < len(setlist); i++ {
+		r.InPlaceIntersection(setlist[i])
+	}
+	return r
+}
+
+// NewBitSet creates new bitset pointer with optional hint size
+func NewBitSet(size ...uint) *bitset.BitSet {
+	var x uint
+	if len(size) != 0 {
+		x = size[0]
+	}
+	return bitset.New(x)
+}
+
+// SliceUnion returns the union of slices
+func SliceUnion(l1, l2 []int, size ...uint) []int {
+	b := NewBitSet(size...)
+	SetSlice(b, l1)
+	SetSlice(b, l2)
+	return SliceFromBitSet(b)
+}
+
+// SliceDifference returns the difference of slices (l1 and not l2)
+func SliceDifference(l1, l2 []int, size ...uint) []int {
+	b := NewBitSet(size...)
+	SetSlice(b, l1)
+	ClearSlice(b, l2)
+	return SliceFromBitSet(b)
 }
