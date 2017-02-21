@@ -8,7 +8,7 @@ import (
 	"github.com/britojr/kbn/filehandler"
 )
 
-var maxiterations = 100
+var maxiterations = 10
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
