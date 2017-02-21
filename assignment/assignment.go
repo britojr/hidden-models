@@ -45,3 +45,16 @@ func (a Assignment) Var(i int) int {
 func (a Assignment) Value(i int) int {
 	return a[i].value
 }
+
+// Consistent returns true if the current assignment is consistent with a given valoration
+func (a Assignment) Consistent(values []int) bool {
+	for _, v := range a {
+		if v.variable >= len(values) || values[v.variable] == -1 {
+			continue
+		}
+		if values[v.variable] != v.value {
+			return false
+		}
+	}
+	return true
+}

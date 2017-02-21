@@ -10,7 +10,8 @@ type CliqueTree struct {
 type node struct {
 	varlist       []int          // wich variables participate on this clique
 	neighbours    []int          // cliques that are adjacent to this one
-	initialPot    *factor.Factor // initial clique potential
+	origPot       *factor.Factor // original clique potential
+	initialPot    *factor.Factor // initial clique potential for calibration
 	calibratedPot *factor.Factor // calibrated potential
 }
 
@@ -38,11 +39,15 @@ func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
 
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
+	c.nodes[i].origPot = potential
 	c.nodes[i].initialPot = potential
 }
 
 // Calibrated ..
 func (c *CliqueTree) Calibrated(i int) *factor.Factor {
+	if c.nodes[i].calibratedPot == nil {
+		panic("Clique tree wasn't calibrated")
+	}
 	return c.nodes[i].calibratedPot
 }
 
@@ -115,6 +120,15 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		k++
 	}
 }
+
+// RestrictByEvidence applies an evidence tuple to each potential on the clique tree
+func (c *CliqueTree) RestrictByEvidence(evidence []int) {
+	for _, v := range c.nodes {
+		v.initialPot = v.origPot.Restrict(evidence)
+	}
+}
+
+// TODO: remove this
 
 // IterativeCalibration ..
 func (c *CliqueTree) IterativeCalibration() {

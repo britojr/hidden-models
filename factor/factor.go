@@ -27,6 +27,24 @@ func New(varlist []int, cardin []int, values []float64) *Factor {
 	return f
 }
 
+// NewUniform creates a factor with values uniformly distributed
+func NewUniform(varlist []int, cardin []int) *Factor {
+	f := new(Factor)
+	f.cardin = cardin
+	f.varlist = varlist
+	f.stride = make(map[int]int)
+	f.stride[varlist[0]] = 1
+	for i := 1; i < len(varlist); i++ {
+		f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
+	}
+	size := f.cardin[f.varlist[len(f.varlist)-1]] * f.stride[f.varlist[len(f.varlist)-1]]
+	f.values = make([]float64, size)
+	for i := range f.values {
+		f.values[i] = 1.0 / float64(size)
+	}
+	return f
+}
+
 // Variables ..
 func (f *Factor) Variables() []int {
 	return f.varlist
@@ -112,4 +130,21 @@ func (f *Factor) Marginalize(vars []int) *Factor {
 		q = q.SumOutOne(x)
 	}
 	return q
+}
+
+// Restrict mutes out every value that is not consistent with a given evidence tuple
+func (f *Factor) Restrict(evid []int) *Factor {
+	h := new(Factor)
+	h.cardin = f.cardin
+	h.varlist = f.varlist
+	h.stride = f.stride
+	h.values = make([]float64, len(f.values))
+	assig := assignment.New(h.varlist, h.cardin)
+	for i := range h.values {
+		if assig.Consistent(evid) {
+			h.values[i] = f.values[i]
+		}
+		assig.Next()
+	}
+	return h
 }
