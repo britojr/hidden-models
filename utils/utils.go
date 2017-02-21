@@ -48,6 +48,28 @@ func SliceItoU64(is []int) []uint64 {
 	return arr
 }
 
+// SliceItoF64 creates an float64 array from an int array
+func SliceItoF64(is []int) []float64 {
+	arr := make([]float64, len(is))
+	for i, v := range is {
+		arr[i] = float64(v)
+	}
+	return arr
+}
+
+// SliceSplit creates two slices a with elements < n and b with elements >=n
+func SliceSplit(s []int, n int) ([]int, []int) {
+	a, b := make([]int, 0, len(s)), make([]int, 0, len(s))
+	for _, v := range s {
+		if v < n {
+			a = append(a, v)
+		} else {
+			b = append(b, v)
+		}
+	}
+	return a, b
+}
+
 // SetSlice sets all the bits given on the slice
 func SetSlice(b *bitset.BitSet, varlist []int) {
 	for _, u := range varlist {
