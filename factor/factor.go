@@ -79,6 +79,20 @@ func (f *Factor) Get(assig assignment.Assignment) float64 {
 	return f.values[x]
 }
 
+// Set a value to the current assignment
+func (f *Factor) Set(assig assignment.Assignment, v float64) {
+	x := 0
+	for i := range assig {
+		x += assig.Value(i) * f.stride[assig.Var(i)]
+	}
+	f.values[x] = v
+}
+
+// SetValues ..
+func (f *Factor) SetValues(values []float64) {
+	f.values = values
+}
+
 // Add add a value to the current assignment
 func (f *Factor) Add(assig assignment.Assignment, v float64) {
 	x := 0
