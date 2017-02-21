@@ -12,6 +12,7 @@ var maxiterations = 100
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
+	// TODO: replace maxiterations for convergence test
 	for i := 0; i < maxiterations; i++ {
 		newpot := expectationStep(ct, ds)
 		ct.SetAllPotentials(newpot)

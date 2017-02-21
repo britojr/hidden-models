@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/britojr/kbn/assignment"
+	"github.com/britojr/kbn/utils"
 	"github.com/willf/bitset"
 )
 
@@ -70,14 +71,16 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 
 // CountAssignment returns the number of occurrences of an specific assignment
 func (b *BitCounter) CountAssignment(assig assignment.Assignment) int {
-	// setlist := make([]*bitset.BitSet, len(assig))
-	// for i := range assig {
-	// 	setlist[i] = (*b.values[assig.Var(i)])[assig.Value(i)]
-	// }
-	// return int(bitsetutils.ListIntersection(setlist).Count())
-	aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
-	for i := 1; i < len(assig); i++ {
-		aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
+	setlist := make([]*bitset.BitSet, 0, len(assig))
+	for i := range assig {
+		if assig.Var(i) < len(b.cardin) {
+			setlist = append(setlist, (*b.values[assig.Var(i)])[assig.Value(i)])
+		}
 	}
-	return int(aux.Count())
+	return int(utils.ListIntersection(setlist).Count())
+	// aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
+	// for i := 1; i < len(assig); i++ {
+	// 	aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
+	// }
+	// return int(aux.Count())
 }

@@ -25,7 +25,7 @@ func New(varlist []int, cardinality []int) Assignment {
 func (a *Assignment) Next() {
 	i := 0
 	(*a)[i].value++
-	for (*a)[i].value == (*a)[i].card {
+	for (*a)[i].value >= (*a)[i].card {
 		(*a)[i].value = 0
 		i++
 		if i >= len(*a) {
