@@ -15,7 +15,9 @@ func New(varlist []int, cardinality []int) Assignment {
 	a := make(Assignment, len(varlist))
 	for i, v := range varlist {
 		a[i].variable = v
-		a[i].card = cardinality[v]
+		if v < len(cardinality) {
+			a[i].card = cardinality[v]
+		}
 	}
 	return a
 }
