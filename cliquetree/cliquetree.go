@@ -27,6 +27,11 @@ func New(n int) *CliqueTree {
 	return c
 }
 
+// Size returns the number of cliques
+func (c *CliqueTree) Size() int {
+	return len(c.nodes)
+}
+
 // SetClique ..
 func (c *CliqueTree) SetClique(i int, varlist []int) {
 	c.nodes[i].varlist = varlist
@@ -41,6 +46,19 @@ func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
 	c.nodes[i].origPot = potential
 	c.nodes[i].initialPot = potential
+}
+
+// SetAllPotentials ..
+func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
+	for i, potential := range potentials {
+		c.nodes[i].origPot = potential
+		c.nodes[i].initialPot = potential
+	}
+}
+
+// GetPotential ..
+func (c *CliqueTree) GetPotential(i int) *factor.Factor {
+	return c.nodes[i].origPot
 }
 
 // Calibrated ..

@@ -45,9 +45,29 @@ func NewUniform(varlist []int, cardin []int) *Factor {
 	return f
 }
 
+// NewZeroes creates a factor with zero values
+func NewZeroes(varlist []int, cardin []int) *Factor {
+	f := new(Factor)
+	f.cardin = cardin
+	f.varlist = varlist
+	f.stride = make(map[int]int)
+	f.stride[varlist[0]] = 1
+	for i := 1; i < len(varlist); i++ {
+		f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
+	}
+	size := f.cardin[f.varlist[len(f.varlist)-1]] * f.stride[f.varlist[len(f.varlist)-1]]
+	f.values = make([]float64, size)
+	return f
+}
+
 // Variables ..
 func (f *Factor) Variables() []int {
 	return f.varlist
+}
+
+// Cardinality ..
+func (f *Factor) Cardinality() []int {
+	return f.cardin
 }
 
 // Get ..
@@ -57,6 +77,15 @@ func (f *Factor) Get(assig assignment.Assignment) float64 {
 		x += assig.Value(i) * f.stride[assig.Var(i)]
 	}
 	return f.values[x]
+}
+
+// Add add a value to the current assignment
+func (f *Factor) Add(assig assignment.Assignment, v float64) {
+	x := 0
+	for i := range assig {
+		x += assig.Value(i) * f.stride[assig.Var(i)]
+	}
+	f.values[x] += v
 }
 
 // Product ..
@@ -147,4 +176,15 @@ func (f *Factor) Restrict(evid []int) *Factor {
 		assig.Next()
 	}
 	return h
+}
+
+// Normalize normalizes the factor so all values sum to 1
+func (f *Factor) Normalize() {
+	var tot float64
+	for i := range f.values {
+		tot += f.values[i]
+	}
+	for i := range f.values {
+		f.values[i] /= tot
+	}
 }
