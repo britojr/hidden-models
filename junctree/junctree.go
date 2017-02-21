@@ -15,8 +15,8 @@ type Node struct {
 
 // JuncTree ...
 type JuncTree struct {
-	Nodes    []Node
-	Children [][]int
+	Nodes []Node
+	Adj   [][]int
 }
 
 // FromCharTree generates a junction tree from a characteristic tree and an inverse phi array
@@ -32,7 +32,7 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *JuncTree {
 			children[T.P[i]] = append(children[T.P[i]], i)
 		}
 	}
-	jt.Children = children
+	jt.Adj = children
 
 	jt.Nodes = make([]Node, len(children))
 	jt.Nodes[0].Clique = make([]int, k)
@@ -79,6 +79,13 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *JuncTree {
 		}
 		jt.Nodes[v].Clique = clique
 		jt.Nodes[v].Sepset = clique[1:]
+	}
+
+	// add parents to adjacency list
+	for i := 0; i < len(T.P); i++ {
+		if T.P[i] != -1 {
+			jt.Adj[i] = append(jt.Adj[i], T.P[i])
+		}
 	}
 
 	return jt
