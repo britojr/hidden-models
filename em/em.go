@@ -2,6 +2,8 @@
 package em
 
 import (
+	"fmt"
+
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
@@ -14,6 +16,8 @@ var maxiterations = 10
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
 	// TODO: replace maxiterations for convergence test
 	for i := 0; i < maxiterations; i++ {
+		fmt.Printf("expect-step %v:\n", i)
+		fmt.Printf("%v\n", ct.GetPotential(0))
 		newpot := expectationStep(ct, ds)
 		ct.SetAllPotentials(newpot)
 	}

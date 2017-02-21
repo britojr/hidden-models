@@ -1,6 +1,7 @@
 package learn
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -116,14 +117,31 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 		ct.SetClique(i, n.Clique)
 		ct.SetNeighbours(i, jt.Adj[i])
 	}
+	temp := l.counter.GetOccurrences(ct.Clique(0))
+	tempf := utils.SliceItoF64(temp)
+	fmt.Printf("occur for clique(%v): %v\n", ct.Clique(0), temp)
+	fmt.Printf("float: %v\n", tempf)
+	var tot float64
+	for _, v := range tempf {
+		tot += v
+	}
+	for i := range tempf {
+		tempf[i] /= tot
+	}
+	fmt.Printf("norm: %v\n", tempf)
 
 	// initialize clique tree potentials
 	for i := 0; i < ct.Size(); i++ {
 		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
-		observed, hidden := utils.SliceSplit(ct.Clique(i), l.n)
-		f := factor.New(observed, cardin, values)
-		g := factor.NewUniform(hidden, cardin)
-		ct.SetPotential(i, f.Product(g))
+		if l.hidden > 0 {
+			// TODO: change this to avoid this new allocations
+			observed, hidden := utils.SliceSplit(ct.Clique(i), l.n)
+			f := factor.New(observed, cardin, values)
+			g := factor.NewUniform(hidden, cardin)
+			ct.SetPotential(i, f.Product(g))
+		} else {
+			ct.SetPotential(i, factor.New(ct.Clique(i), cardin, values))
+		}
 	}
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)
