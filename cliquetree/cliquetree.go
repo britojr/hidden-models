@@ -37,6 +37,11 @@ func (c *CliqueTree) SetClique(i int, varlist []int) {
 	c.nodes[i].varlist = varlist
 }
 
+// Clique ..
+func (c *CliqueTree) Clique(i int) []int {
+	return c.nodes[i].varlist
+}
+
 // SetNeighbours ..
 func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
 	c.nodes[i].neighbours = neighbours
