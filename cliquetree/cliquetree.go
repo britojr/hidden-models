@@ -66,6 +66,11 @@ func (c *CliqueTree) GetPotential(i int) *factor.Factor {
 	return c.nodes[i].origPot
 }
 
+// GetInitPotential ..
+func (c *CliqueTree) GetInitPotential(i int) *factor.Factor {
+	return c.nodes[i].initialPot
+}
+
 // Calibrated ..
 func (c *CliqueTree) Calibrated(i int) *factor.Factor {
 	if c.nodes[i].calibratedPot == nil {
@@ -146,8 +151,8 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 
 // RestrictByEvidence applies an evidence tuple to each potential on the clique tree
 func (c *CliqueTree) RestrictByEvidence(evidence []int) {
-	for _, v := range c.nodes {
-		v.initialPot = v.origPot.Restrict(evidence)
+	for i := range c.nodes {
+		c.nodes[i].initialPot = c.nodes[i].origPot.Restrict(evidence)
 	}
 }
 
