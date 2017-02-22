@@ -27,8 +27,8 @@ func New(varlist []int, cardin []int, values []float64) *Factor {
 	return f
 }
 
-// NewUniform creates a factor with values uniformly distributed
-func NewUniform(varlist []int, cardin []int) *Factor {
+// NewFactor creates a factor with zero values
+func NewFactor(varlist []int, cardin []int) *Factor {
 	f := new(Factor)
 	f.cardin = cardin
 	f.varlist = varlist
@@ -39,25 +39,26 @@ func NewUniform(varlist []int, cardin []int) *Factor {
 	}
 	size := f.cardin[f.varlist[len(f.varlist)-1]] * f.stride[f.varlist[len(f.varlist)-1]]
 	f.values = make([]float64, size)
-	for i := range f.values {
-		f.values[i] = 1.0 / float64(size)
-	}
 	return f
 }
 
-// NewZeroes creates a factor with zero values
-func NewZeroes(varlist []int, cardin []int) *Factor {
-	f := new(Factor)
-	f.cardin = cardin
-	f.varlist = varlist
-	f.stride = make(map[int]int)
-	f.stride[varlist[0]] = 1
-	for i := 1; i < len(varlist); i++ {
-		f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
-	}
-	size := f.cardin[f.varlist[len(f.varlist)-1]] * f.stride[f.varlist[len(f.varlist)-1]]
-	f.values = make([]float64, size)
+// Clone returns a copy of the current factor
+func (f *Factor) Clone() *Factor {
+	g := NewFactor(f.varlist, f.cardin)
+	g.values = append([]float64(nil), f.values...)
 	return f
+}
+
+// SetValues ..
+func (f *Factor) SetValues(values []float64) {
+	f.values = values
+}
+
+// SetUniform changes factor value to uniformly distributed
+func (f *Factor) SetUniform() {
+	for i := range f.values {
+		f.values[i] = 1.0 / float64(len(f.values))
+	}
 }
 
 // Variables ..
@@ -86,11 +87,6 @@ func (f *Factor) Set(assig assignment.Assignment, v float64) {
 		x += assig.Value(i) * f.stride[assig.Var(i)]
 	}
 	f.values[x] = v
-}
-
-// SetValues ..
-func (f *Factor) SetValues(values []float64) {
-	f.values = values
 }
 
 // Add add a value to the current assignment

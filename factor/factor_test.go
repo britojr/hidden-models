@@ -116,3 +116,66 @@ func TestSumOutOne(t *testing.T) {
 		}
 	}
 }
+
+var testRestrict = []struct {
+	varlist    []int
+	cardin     []int
+	values     []float64
+	evid       []int
+	restricted []float64
+}{
+	{
+		varlist:    []int{0, 1},
+		cardin:     []int{2, 2},
+		values:     []float64{0.1, 0.2, 0.3, 0.4},
+		evid:       []int{1, 0},
+		restricted: []float64{0.0, 0.2, 0.0, 0.0},
+	},
+	{
+		varlist:    []int{1, 3},
+		cardin:     []int{2, 2, 2, 2},
+		values:     []float64{0.1, 0.2, 0.3, 0.4},
+		evid:       []int{0, 1, 0},
+		restricted: []float64{0.0, 0.2, 0.0, 0.4},
+	},
+}
+
+func TestRestrict(t *testing.T) {
+	for _, v := range testRestrict {
+		f := New(v.varlist, v.cardin, v.values)
+		f = f.Restrict(v.evid)
+		if !reflect.DeepEqual(v.restricted, f.values) {
+			t.Errorf("want %v, got %v", v.restricted, f.values)
+		}
+	}
+}
+
+var testNormalize = []struct {
+	varlist    []int
+	cardin     []int
+	values     []float64
+	normalized []float64
+}{
+	{
+		varlist:    []int{0, 1},
+		cardin:     []int{2, 2},
+		values:     []float64{10, 20, 30, 40},
+		normalized: []float64{0.1, 0.2, 0.3, 0.4},
+	},
+	{
+		varlist:    []int{1, 3, 5},
+		cardin:     []int{2, 2, 2, 2, 2, 2},
+		values:     []float64{10, 20, 30, 40, 50, 60, 70, 80},
+		normalized: []float64{1.0 / 36, 2.0 / 36, 3.0 / 36, 4.0 / 36, 5.0 / 36, 6.0 / 36, 7.0 / 36, 8.0 / 36},
+	},
+}
+
+func TestNormalize(t *testing.T) {
+	for _, v := range testNormalize {
+		f := New(v.varlist, v.cardin, v.values)
+		f.Normalize()
+		if !reflect.DeepEqual(v.normalized, f.values) {
+			t.Errorf("want %v, got %v", v.normalized, f.values)
+		}
+	}
+}
