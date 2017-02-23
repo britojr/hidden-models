@@ -2,13 +2,15 @@
 package em
 
 import (
+	"fmt"
+
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
 )
 
-var maxiterations = 10
+var maxiterations = 1
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
@@ -30,8 +32,25 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 
 	// calculate probability of every instance
 	for _, m := range ds.Data() {
+		fmt.Printf("line: %v\n", m)
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("%v\n", ct.GetPotential(i))
+			break
+		}
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("%v\n", ct.GetInitPotential(i))
+			break
+		}
 		ct.RestrictByEvidence(m)
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("%v\n", ct.GetInitPotential(i))
+			break
+		}
 		ct.UpDownCalibration()
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("%v\n", ct.Calibrated(i))
+			break
+		}
 		for i := range count {
 			f := ct.Calibrated(i)
 			f.Normalize()

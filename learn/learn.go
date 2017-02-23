@@ -1,7 +1,9 @@
 package learn
 
 import (
+	"fmt"
 	"math"
+	"reflect"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
@@ -121,9 +123,12 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 	for i := 0; i < ct.Size(); i++ {
 		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
 		var f *factor.Factor
+		var observed, hidden []int
 		if l.hidden > 0 {
 			// TODO: change this to avoid this new allocations
-			observed, hidden := utils.SliceSplit(ct.Clique(i), l.n)
+			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
+		}
+		if len(hidden) > 0 {
 			g := factor.NewFactor(hidden, cardin)
 			g.SetUniform()
 			f = factor.New(observed, cardin, values).Product(g)
@@ -133,30 +138,30 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 		ct.SetPotential(i, f)
 	}
 	//TODO: remove
-	// count := make([]*factor.Factor, ct.Size())
-	// for i := range count {
-	// 	count[i] = ct.GetPotential(i).Clone()
-	// }
-	// fmt.Println("Initial clique tree")
-	// for i := 0; i < ct.Size(); i++ {
-	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
-	// }
-	// fmt.Println("==========================================")
+	count := make([]*factor.Factor, ct.Size())
+	for i := range count {
+		count[i] = ct.GetPotential(i).Clone()
+	}
+	fmt.Println("Initial clique tree")
+	for i := 0; i < ct.Size(); i++ {
+		fmt.Printf("%v\n", ct.GetInitPotential(i))
+	}
+	fmt.Println("==========================================")
 
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)
 
 	//TODO: remove
-	// fmt.Println("==========================================")
-	// fmt.Println("Clique tree post EM")
-	// for i := 0; i < ct.Size(); i++ {
-	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
-	// }
-	// for i := range count {
-	// 	if !reflect.DeepEqual(count[i], ct.GetPotential(i)) {
-	// 		fmt.Printf("diff >>>>>>>>>>>>>>>>>>>:\n%v\n%v\n", count[i], ct.GetPotential(i))
-	// 	}
-	// }
+	fmt.Println("==========================================")
+	fmt.Println("Clique tree post EM")
+	for i := 0; i < ct.Size(); i++ {
+		fmt.Printf("%v\n", ct.GetInitPotential(i))
+	}
+	for i := range count {
+		if !reflect.DeepEqual(count[i], ct.GetPotential(i)) {
+			fmt.Printf("diff >>>>>>>>>>>>>>>>>>>:\n%v\n%v\n", count[i], ct.GetPotential(i))
+		}
+	}
 
 	// return learned structure
 	return ct

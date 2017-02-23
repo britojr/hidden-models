@@ -14,6 +14,7 @@ type BitCounter struct {
 	cardin  []int            // cardinality of each variable
 	values  []*valToLine     // all assignable values for each variable
 	cache   map[string][]int // cached occurence counting slices for different varlists
+	lines   int              // number of lines in the dataset
 }
 
 type valToLine map[int]*bitset.BitSet
@@ -40,6 +41,7 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 			(*b.values[j])[dataset[i][j]].Set(uint(i))
 		}
 	}
+	b.lines = lin
 	// varlist containing all variables
 	/*b.varlist = make([]int, col)
 	for i := range b.varlist{
@@ -77,7 +79,11 @@ func (b *BitCounter) CountAssignment(assig assignment.Assignment) int {
 			setlist = append(setlist, (*b.values[assig.Var(i)])[assig.Value(i)])
 		}
 	}
-	return int(utils.ListIntersection(setlist).Count())
+	if len(setlist) > 0 {
+		return int(utils.ListIntersection(setlist).Count())
+	}
+	// TODO: what to send when the clique is all of hidden variables?
+	return b.lines
 	// aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
 	// for i := 1; i < len(assig); i++ {
 	// 	aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
