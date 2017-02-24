@@ -1,6 +1,9 @@
 package factor
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/utils"
 )
@@ -59,6 +62,15 @@ func (f *Factor) SetUniform() {
 	for i := range f.values {
 		f.values[i] = 1.0 / float64(len(f.values))
 	}
+}
+
+// SetRandom sets the factor with random values
+func (f *Factor) SetRandom() {
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range f.values {
+		f.values[i] = rand.Float64()
+	}
+	f.Normalize()
 }
 
 // Variables ..

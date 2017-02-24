@@ -103,6 +103,37 @@ func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
 	return jt, score
 }
 
+// CreateUniformPortentials ..
+func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []int) []*factor.Factor {
+	factors := make([]*factor.Factor, ct.Size())
+	for i := range factors {
+		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
+		var observed, hidden []int
+		if l.hidden > 0 {
+			// TODO: change this to avoid this new allocations
+			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
+		}
+		if len(hidden) > 0 {
+			g := factor.NewFactor(hidden, cardin)
+			g.SetUniform()
+			factors[i] = factor.New(observed, cardin, values).Product(g)
+		} else {
+			factors[i] = factor.New(ct.Clique(i), cardin, values)
+		}
+	}
+	return factors
+}
+
+// CreateRandomPortentials ..
+func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []int) []*factor.Factor {
+	factors := make([]*factor.Factor, ct.Size())
+	for i := range factors {
+		factors[i] = factor.NewFactor(ct.Clique(i), cardin)
+		factors[i].SetRandom()
+	}
+	return factors
+}
+
 // OptimizeParameters ..
 func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTree {
 	// extend cardinality to hidden variables
@@ -120,46 +151,35 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 	}
 
 	// initialize clique tree potentials
-	for i := 0; i < ct.Size(); i++ {
-		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
-		var f *factor.Factor
-		var observed, hidden []int
-		if l.hidden > 0 {
-			// TODO: change this to avoid this new allocations
-			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
-		}
-		if len(hidden) > 0 {
-			g := factor.NewFactor(hidden, cardin)
-			g.SetUniform()
-			f = factor.New(observed, cardin, values).Product(g)
-		} else {
-			f = factor.New(ct.Clique(i), cardin, values)
-		}
-		ct.SetPotential(i, f)
-	}
+	factors := l.CreateRandomPortentials(ct, cardin)
+	// factors := l.CreateUniformPortentials(ct, cardin)
+	ct.SetAllPotentials(factors)
+
 	//TODO: remove
-	count := make([]*factor.Factor, ct.Size())
-	for i := range count {
-		count[i] = ct.GetPotential(i).Clone()
-	}
-	fmt.Println("Initial clique tree")
-	for i := 0; i < ct.Size(); i++ {
-		fmt.Printf("%v\n", ct.GetInitPotential(i))
-	}
-	fmt.Println("==========================================")
+	// count := make([]*factor.Factor, ct.Size())
+	// for i := range count {
+	// 	count[i] = ct.GetPotential(i).Clone()
+	// }
+	count := l.CreateUniformPortentials(ct, cardin)
+	// fmt.Println("Initial clique tree")
+	// for i := 0; i < ct.Size(); i++ {
+	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
+	// }
+	// fmt.Println("==========================================")
 
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)
 
 	//TODO: remove
-	fmt.Println("==========================================")
-	fmt.Println("Clique tree post EM")
-	for i := 0; i < ct.Size(); i++ {
-		fmt.Printf("%v\n", ct.GetInitPotential(i))
-	}
+	// fmt.Println("==========================================")
+	// fmt.Println("Clique tree post EM")
+	// for i := 0; i < ct.Size(); i++ {
+	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
+	// }
 	for i := range count {
 		if !reflect.DeepEqual(count[i], ct.GetPotential(i)) {
 			fmt.Printf("diff >>>>>>>>>>>>>>>>>>>:\n%v\n%v\n", count[i], ct.GetPotential(i))
+			break
 		}
 	}
 
