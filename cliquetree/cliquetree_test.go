@@ -1,11 +1,13 @@
 package cliquetree
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/utils"
+	"github.com/britojr/tcc/characteristic"
 )
 
 type factorStruct struct {
@@ -180,24 +182,6 @@ func TestUpDownCalibration(t *testing.T) {
 	}
 }
 
-func TestIterativeCalibration(t *testing.T) {
-	c := initCliqueTree(factorList, adjList)
-	c.IterativeCalibration()
-	calculateCalibrated()
-	for i, f := range cal {
-		got := c.Calibrated(i)
-		assig := assignment.New(f.Variables(), cardin)
-		for assig != nil {
-			u := f.Get(assig)
-			v := got.Get(assig)
-			if !utils.FuzzyEqual(u, v) {
-				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
-			}
-			assig.Next()
-		}
-	}
-}
-
 func BenchmarkUpDownCalibration(b *testing.B) {
 	ctrees := make([]*CliqueTree, 0)
 	for _, bt := range benchTest {
@@ -211,15 +195,72 @@ func BenchmarkUpDownCalibration(b *testing.B) {
 	}
 }
 
-func BenchmarkIterativeCalibration(b *testing.B) {
-	ctrees := make([]*CliqueTree, 0)
-	for _, bt := range benchTest {
-		ctrees = append(ctrees, initCliqueTree(bt.fl, bt.adj))
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, c := range ctrees {
-			c.IterativeCalibration()
+var testFromCharTree = []struct {
+	iphi             []int
+	chartree         characteristic.Tree
+	cliques, sepsets [][]int
+	adj              [][]int
+	parent           []int
+}{
+	{
+		iphi: []int{0, 10, 9, 3, 4, 5, 6, 7, 1, 2, 8},
+		chartree: characteristic.Tree{
+			P: []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
+			L: []int{-1, 2, -1, -1, 0, 2, 1, 2, -1},
+		},
+		cliques: [][]int{
+			{1, 2, 8},
+			{0, 4, 7, 1},
+			{10, 1, 2, 8},
+			{9, 1, 2, 8},
+			{3, 10, 2, 8},
+			{4, 7, 1, 2},
+			{5, 7, 1, 8},
+			{6, 0, 4, 7},
+			{7, 1, 2, 8},
+		},
+		sepsets: [][]int{
+			[]int(nil),
+			{4, 7, 1},
+			{1, 2, 8},
+			{1, 2, 8},
+			{10, 2, 8},
+			{7, 1, 2},
+			{7, 1, 8},
+			{0, 4, 7},
+			{1, 2, 8},
+		},
+		adj: [][]int{
+			{2, 3, 8},
+			{7, 5},
+			{4, 0},
+			{0},
+			{2},
+			{1, 8},
+			{8},
+			{1},
+			{5, 6, 0},
+		},
+		parent: []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
+	},
+}
+
+func TestFromCharTree(t *testing.T) {
+	for _, v := range testFromCharTree {
+		got := FromCharTree(&v.chartree, v.iphi)
+		for i := 0; i < got.Size(); i++ {
+			if !reflect.DeepEqual(got.Clique(i), v.cliques[i]) {
+				t.Errorf("Clique[%v]; Got: %v; Want: %v", i, got.Clique(i), v.cliques[i])
+			}
+			if !reflect.DeepEqual(got.SepSet(i), v.sepsets[i]) {
+				t.Errorf("Sepset[%v]; Got: %v; Want: %v", i, got.SepSet(i), v.sepsets[i])
+			}
+			if !reflect.DeepEqual(got.nodes[i].neighbours, v.adj[i]) {
+				t.Errorf("Adj[%v]; Got: %v; Want: %v", i, got.nodes[i].neighbours, v.adj[i])
+			}
+			if got.parent[i] != v.parent[i] {
+				t.Errorf("parent[%v]; Got: %v; Want: %v", i, got.parent[i], v.parent[i])
+			}
 		}
 	}
 }
