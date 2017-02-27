@@ -63,7 +63,11 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
 		for assig != nil {
-			v = append(v, b.CountAssignment(assig))
+			if count, ok := b.CountAssignment(assig); ok {
+				v = append(v, count)
+			} else {
+				return
+			}
 			assig.Next()
 		}
 		b.cache[strvarlist] = v
@@ -72,7 +76,7 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 }
 
 // CountAssignment returns the number of occurrences of an specific assignment
-func (b *BitCounter) CountAssignment(assig assignment.Assignment) int {
+func (b *BitCounter) CountAssignment(assig assignment.Assignment) (int, bool) {
 	setlist := make([]*bitset.BitSet, 0, len(assig))
 	for i := range assig {
 		if assig.Var(i) < len(b.cardin) {
@@ -80,10 +84,11 @@ func (b *BitCounter) CountAssignment(assig assignment.Assignment) int {
 		}
 	}
 	if len(setlist) > 0 {
-		return int(utils.ListIntersection(setlist).Count())
+		return int(utils.ListIntersection(setlist).Count()), true
 	}
 	// TODO: what to send when the clique is all of hidden variables?
-	return b.lines
+	return -1, false
+	//return b.lines
 	// aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
 	// for i := 1; i < len(assig); i++ {
 	// 	aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
