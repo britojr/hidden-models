@@ -1,0 +1,96 @@
+package utils
+
+import (
+	"reflect"
+	"sort"
+	"testing"
+)
+
+var testFuzzyEqual = []struct {
+	a, b  float64
+	equal bool
+}{
+	{0.1, 0.2, false},
+	{0, 0, true},
+	{0.0002, 0.0002, true},
+	{1.0005, 1.0005 + (epslon / 2.0), true},
+	{0.0005, 0.0005 + epslon, false},
+}
+
+func TestFuzzyEqual(t *testing.T) {
+	for _, v := range testFuzzyEqual {
+		got := FuzzyEqual(v.a, v.b)
+		if got != v.equal {
+			t.Errorf("%v == %v : got %v, want %v", v.a, v.b, got, v.equal)
+		}
+	}
+}
+
+var testSliceSplit = []struct {
+	slice []int
+	n     int
+	a, b  []int
+}{
+	{[]int{3, 4, 8, 9, 1, 6, 2, 0}, 6, []int{3, 4, 1, 2, 0}, []int{8, 9, 6}},
+	{[]int{3, 4, 8, 9, 1, 6, 2, 0}, 0, []int{}, []int{3, 4, 8, 9, 1, 6, 2, 0}},
+	{[]int{3, 4, 8}, 9, []int{3, 4, 8}, []int{}},
+	{[]int{8}, 8, []int{}, []int{8}},
+	{[]int{}, 8, []int{}, []int{}},
+}
+
+func TestSliceSplit(t *testing.T) {
+	for _, v := range testSliceSplit {
+		a, b := SliceSplit(v.slice, v.n)
+		if !reflect.DeepEqual(a, v.a) {
+			t.Errorf("got %v, want %v", a, v.a)
+		}
+		if !reflect.DeepEqual(b, v.b) {
+			t.Errorf("got %v, want %v", b, v.b)
+		}
+	}
+
+}
+
+var testSliceUnion = []struct {
+	a, b, res []int
+}{
+	{[]int{}, []int{}, []int{}},
+	{[]int{}, []int{1}, []int{1}},
+	{[]int{1}, []int{}, []int{1}},
+	{[]int{1}, []int{1}, []int{1}},
+	{[]int{2}, []int{1}, []int{1, 2}},
+	{[]int{6, 4, 2, 8}, []int{8, 9, 3, 1, 2}, []int{1, 2, 3, 4, 6, 8, 9}},
+}
+
+func TestSliceUnion(t *testing.T) {
+	for _, v := range testSliceUnion {
+		got := SliceUnion(v.a, v.b)
+		sort.Ints(got)
+		if !reflect.DeepEqual(got, v.res) {
+			t.Errorf("got %v want %v", got, v.res)
+		}
+	}
+}
+
+var testSliceDifference = []struct {
+	a, b, res []int
+}{
+	{[]int{}, []int{}, []int{}},
+	{[]int{}, []int{1}, []int{}},
+	{[]int{1}, []int{}, []int{1}},
+	{[]int{1}, []int{1}, []int{}},
+	{[]int{2}, []int{1}, []int{2}},
+	{[]int{6, 4, 2, 8}, []int{8, 9, 3, 1, 2}, []int{4, 6}},
+	{[]int{5, 7}, []int{7, 5, 6}, []int{}},
+	{[]int{5, 7}, []int{1, 2, 3}, []int{5, 7}},
+}
+
+func TestSliceDifference(t *testing.T) {
+	for _, v := range testSliceDifference {
+		got := SliceDifference(v.a, v.b)
+		sort.Ints(got)
+		if !reflect.DeepEqual(got, v.res) {
+			t.Errorf("got %v want %v", got, v.res)
+		}
+	}
+}
