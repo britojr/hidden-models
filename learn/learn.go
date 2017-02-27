@@ -60,11 +60,11 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	l.n = len(l.dataset.Cardinality())
 }
 
-// BestJuncTree ..
-func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
-	bestStruct, bestScore := l.newRandomStruct()
+// GuessStructure tries a number of random structures and choses the best one and its log-likelihood
+func (l *Learner) GuessStructure() (*cliquetree.CliqueTree, float64) {
+	bestStruct, bestScore := l.randomStruct()
 	for i := 1; i < l.iterations; i++ {
-		currStruct, currScore := l.newRandomStruct()
+		currStruct, currScore := l.randomStruct()
 		if currScore > bestScore {
 			bestScore = currScore
 			bestStruct = currStruct
@@ -73,18 +73,27 @@ func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
 	return bestStruct, bestScore
 }
 
-// calcLL calculates the loglikelihood of a list of cliques
-func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
+// creates a new cliquetree from a randomized chartree and calculates its log-likelihood
+func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
+	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
+	utils.ErrCheck(err, "")
+	ct := cliquetree.FromCharTree(T, iphi)
+	score := l.loglikelihood(ct)
+	return ct, score
+}
+
+// loglikelihood calculates the log-likelihood of a list of cliques
+func (l *Learner) loglikelihood(ct *cliquetree.CliqueTree) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
-	// subtracts the count of every attribution of the Sepset
-	for _, node := range nodelist {
-		values := l.counter.GetOccurrences(node.Clique)
+	// subtracts the count of every attribution of the sepset
+	for i := 0; i < ct.Size(); i++ {
+		values := l.counter.GetOccurrences(ct.Clique(i))
 		for _, v := range values {
 			if v != 0 {
 				ll += float64(v) * math.Log(float64(v))
 			}
 		}
-		values = l.counter.GetOccurrences(node.Sepset)
+		values = l.counter.GetOccurrences(ct.SepSet(i))
 		for _, v := range values {
 			if v != 0 {
 				ll -= float64(v) * math.Log(float64(v))
@@ -93,14 +102,6 @@ func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
 	}
 	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
 	return
-}
-
-func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
-	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
-	utils.ErrCheck(err, "")
-	jt := junctree.FromCharTree(T, iphi)
-	score := l.calcLL(jt.Nodes)
-	return jt, score
 }
 
 // CreateUniformPortentials ..
@@ -185,4 +186,49 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 
 	// return learned structure
 	return ct
+}
+
+// TODO: remove bellow
+
+// BestJuncTree ..
+func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
+	bestStruct, bestScore := l.newRandomStruct()
+	for i := 1; i < l.iterations; i++ {
+		currStruct, currScore := l.newRandomStruct()
+		if currScore > bestScore {
+			bestScore = currScore
+			bestStruct = currStruct
+		}
+	}
+	return bestStruct, bestScore
+}
+
+// calcLL calculates the loglikelihood of a list of cliques
+func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
+	// for each node adds the count of every attribution of the clique and
+	// subtracts the count of every attribution of the Sepset
+	for _, node := range nodelist {
+		values := l.counter.GetOccurrences(node.Clique)
+		for _, v := range values {
+			if v != 0 {
+				ll += float64(v) * math.Log(float64(v))
+			}
+		}
+		values = l.counter.GetOccurrences(node.Sepset)
+		for _, v := range values {
+			if v != 0 {
+				ll -= float64(v) * math.Log(float64(v))
+			}
+		}
+	}
+	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
+	return
+}
+
+func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
+	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
+	utils.ErrCheck(err, "")
+	jt := junctree.FromCharTree(T, iphi)
+	score := l.calcLL(jt.Nodes)
+	return jt, score
 }
