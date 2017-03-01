@@ -233,6 +233,12 @@ func (f *Factor) Normalize() {
 func MaxDifference(f, g []*Factor) float64 {
 	var diff float64
 	for i := range f {
+		if f[i] == nil && g[i] == nil {
+			continue
+		}
+		if !(f[i] != nil && g[i] != nil) {
+			return 1
+		}
 		q := f[i].Values()
 		for j, v := range g[i].Values() {
 			if d := math.Abs(q[j] - v); d > diff {

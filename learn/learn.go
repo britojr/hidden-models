@@ -115,20 +115,25 @@ func (l *Learner) loglikelihood(ct *cliquetree.CliqueTree) (ll float64) {
 func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []int) []*factor.Factor {
 	factors := make([]*factor.Factor, ct.Size())
 	for i := range factors {
-		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
 		var observed, hidden []int
 		if l.hidden > 0 {
-			// TODO: change this to avoid this new allocations
 			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
-		}
-		if len(hidden) > 0 {
-			g := factor.NewFactor(hidden, cardin)
-			g.SetUniform()
-			factors[i] = factor.New(observed, cardin, values).Product(g)
 		} else {
-			factors[i] = factor.New(ct.Clique(i), cardin, values)
+			observed = ct.Clique(i)
 		}
-		factors[i].Normalize()
+		if len(observed) > 0 {
+			values := utils.SliceItoF64(l.counter.GetOccurrences(observed))
+			factors[i] = factor.New(observed, cardin, values)
+			if len(hidden) > 0 {
+				g := factor.NewFactor(hidden, cardin)
+				g.SetUniform()
+				factors[i] = factors[i].Product(g)
+			}
+			factors[i].Normalize()
+		} else {
+			factors[i] = factor.NewFactor(hidden, cardin)
+			factors[i].SetUniform()
+		}
 	}
 	return factors
 }
@@ -165,6 +170,8 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	diff := factor.MaxDifference(uniform, ct.BkpPotentialList())
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
+	} else {
+		fmt.Printf(" > Is uniform: maxdiff = %v\n", diff)
 	}
 }
 
@@ -173,25 +180,30 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	initialCount := make([]*factor.Factor, ct.Size())
 	sumOutHidden := make([]*factor.Factor, ct.Size())
 	for i := range initialCount {
-		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
 		var observed, hidden []int
 		if l.hidden > 0 {
 			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
-		}
-		if len(hidden) > 0 {
-			sumOutHidden[i] = ct.GetBkpPotential(i).SumOut(hidden)
 		} else {
-			sumOutHidden[i] = ct.GetBkpPotential(i)
+			observed = ct.Clique(i)
 		}
-		initialCount[i] = factor.New(observed, l.cardin, values)
+		if len(observed) > 0 {
+			values := utils.SliceItoF64(l.counter.GetOccurrences(observed))
+			sumOutHidden[i] = ct.GetBkpPotential(i)
+			if len(hidden) > 0 {
+				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
+			}
+			initialCount[i] = factor.New(observed, l.cardin, values)
+		}
 	}
 
 	diff := factor.MaxDifference(initialCount, sumOutHidden)
 	if diff > 0 {
 		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
-			fmt.Println("Significant!")
+			fmt.Println("Significant difference!")
 		}
+	} else {
+		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
 	}
 }
 

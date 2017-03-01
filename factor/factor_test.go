@@ -228,6 +228,40 @@ var testMaxDifference = []struct {
 		},
 		maxdiff: 0.001,
 	},
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		alist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{},
+			{11, 21, 31, 0.8, 0.005},
+		},
+		blist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{},
+			{11, 21, 31, 0.8, 0.004},
+		},
+		maxdiff: 0.001,
+	},
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		alist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{},
+			{11, 21, 31, 0.8, 0.005},
+		},
+		blist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{11, 21, 31, 0.8, 0.004},
+			{11, 21, 31, 0.8, 0.004},
+		},
+		maxdiff: 1,
+	},
 }
 
 func TestMaxDifference(t *testing.T) {
@@ -235,8 +269,13 @@ func TestMaxDifference(t *testing.T) {
 		f := make([]*Factor, len(v.alist))
 		g := make([]*Factor, len(v.alist))
 		for i := range f {
-			f[i] = New(v.varlist, v.cardin, v.alist[i])
-			g[i] = New(v.varlist, v.cardin, v.blist[i])
+			if len(v.alist[i]) > 0 {
+				f[i] = New(v.varlist, v.cardin, v.alist[i])
+			}
+			if len(v.blist[i]) > 0 {
+				g[i] = New(v.varlist, v.cardin, v.blist[i])
+			}
+
 		}
 		got := MaxDifference(f, g)
 		if v.maxdiff != got {
