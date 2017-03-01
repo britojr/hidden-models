@@ -64,6 +64,7 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	for i := l.n; i < len(l.cardin); i++ {
 		l.cardin[i] = l.hiddencard
 	}
+	fmt.Printf("Variables: %v, Instances: %v\n", l.n, len(l.dataset.Data()))
 }
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
@@ -144,8 +145,8 @@ func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []in
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	// initialize clique tree potentials
-	ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
-	// ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
+	// ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
+	ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
 
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)
