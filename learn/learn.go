@@ -128,6 +128,7 @@ func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []i
 		} else {
 			factors[i] = factor.New(ct.Clique(i), cardin, values)
 		}
+		factors[i].Normalize()
 	}
 	return factors
 }
@@ -173,22 +174,22 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	sumOutHidden := make([]*factor.Factor, ct.Size())
 	for i := range initialCount {
 		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
-		var hidden []int
+		var observed, hidden []int
 		if l.hidden > 0 {
-			_, hidden = utils.SliceSplit(ct.Clique(i), l.n)
+			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
 		}
 		if len(hidden) > 0 {
 			sumOutHidden[i] = ct.GetBkpPotential(i).SumOut(hidden)
 		} else {
 			sumOutHidden[i] = ct.GetBkpPotential(i)
 		}
-		initialCount[i] = factor.New(ct.Clique(i), l.cardin, values)
+		initialCount[i] = factor.New(observed, l.cardin, values)
 	}
 
 	diff := factor.MaxDifference(initialCount, sumOutHidden)
 	if diff > 0 {
 		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
-		if diff > 1e-5 {
+		if diff > 1e-6 {
 			fmt.Println("Significant!")
 		}
 	}

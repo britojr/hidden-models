@@ -24,9 +24,11 @@ func New(varlist []int, cardin []int, values []float64) *Factor {
 	f.varlist = varlist
 	f.values = values
 	f.stride = make(map[int]int)
-	f.stride[varlist[0]] = 1
-	for i := 1; i < len(varlist); i++ {
-		f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
+	if len(varlist) > 0 {
+		f.stride[varlist[0]] = 1
+		for i := 1; i < len(varlist); i++ {
+			f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
+		}
 	}
 	return f
 }

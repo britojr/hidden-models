@@ -2,7 +2,8 @@
 package em
 
 import (
-	"github.com/britojr/kbn/assignment"
+	"fmt"
+
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
@@ -10,16 +11,20 @@ import (
 
 var maxiterations = 100
 
-const epslon = 1e-4
+const epslon = 1e-3
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
 	// TODO: replace maxiterations for convergence test
 	//for i := 0; i < maxiterations; i++ {
-	for {
+	for i := 0; ; i++ {
 		newpot := expectationStep(ct, ds)
+		for j := range newpot {
+			newpot[j].Normalize()
+		}
 		if factor.MaxDifference(ct.BkpPotentialList(), newpot) < epslon {
-			//ct.SetAllPotentials(newpot)
+			ct.SetAllPotentials(newpot)
+			fmt.Printf("Converged in %v iterations\n", i)
 			break
 		}
 		ct.SetAllPotentials(newpot)
@@ -39,12 +44,9 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 		ct.RestrictByEvidence(m)
 		ct.UpDownCalibration()
 		for i := range count {
-			f := ct.Calibrated(i)
-			f.Normalize()
-			assig := assignment.New(f.Variables(), f.Cardinality())
-			for assig != nil {
-				count[i].Add(assig, f.Get(assig))
-				assig.Next()
+			ct.Calibrated(i).Normalize()
+			for j, v := range ct.Calibrated(i).Values() {
+				count[i].Values()[j] = v
 			}
 		}
 	}
