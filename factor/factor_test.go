@@ -179,3 +179,68 @@ func TestNormalize(t *testing.T) {
 		}
 	}
 }
+
+var testMaxDifference = []struct {
+	varlist []int
+	cardin  []int
+	alist   [][]float64
+	blist   [][]float64
+	maxdiff float64
+}{
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		alist: [][]float64{
+			{11, 21, 31, 41, 51, 61, 71, 81},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+		},
+		blist: [][]float64{
+			{11, 21, 31, 41, 51, 61, 71, 81},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+		},
+		maxdiff: 0,
+	},
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		alist: [][]float64{
+			{11, 21, 31, 41, 51, 61, 71, 81},
+			{10, 20, 30, 40, 50, 60, 72, 80},
+		},
+		blist: [][]float64{
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+		},
+		maxdiff: 2,
+	},
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		alist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{11, 21, 31, 0.8, 0.005},
+		},
+		blist: [][]float64{
+			{11, 21, 31, 0.8, 0.005},
+			{10, 20, 30, 40, 50, 60, 70, 80},
+			{11, 21, 31, 0.8, 0.004},
+		},
+		maxdiff: 0.001,
+	},
+}
+
+func TestMaxDifference(t *testing.T) {
+	for _, v := range testMaxDifference {
+		f := make([]*Factor, len(v.alist))
+		g := make([]*Factor, len(v.alist))
+		for i := range f {
+			f[i] = New(v.varlist, v.cardin, v.alist[i])
+			g[i] = New(v.varlist, v.cardin, v.blist[i])
+		}
+		got := MaxDifference(f, g)
+		if v.maxdiff != got {
+			t.Errorf("want %v, got %v", v.maxdiff, got)
+		}
+	}
+}
