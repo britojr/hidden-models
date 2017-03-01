@@ -1,6 +1,7 @@
 package factor
 
 import (
+	"math"
 	"math/rand"
 	"time"
 
@@ -100,6 +101,11 @@ func (f *Factor) Get(assig assignment.Assignment) float64 {
 		x += assig.Value(i) * f.stride[assig.Var(i)]
 	}
 	return f.values[x]
+}
+
+// Values ..
+func (f *Factor) Values() []float64 {
+	return f.values
 }
 
 // Set a value to the current assignment
@@ -219,4 +225,18 @@ func (f *Factor) Normalize() {
 	for i := range f.values {
 		f.values[i] /= tot
 	}
+}
+
+// MaxDifference calculates the max difference between two lists of factors
+func MaxDifference(f, g []*Factor) float64 {
+	var diff float64
+	for i := range f {
+		q := f[i].Values()
+		for j, v := range g[i].Values() {
+			if d := math.Abs(q[j] - v); d > diff {
+				diff = d
+			}
+		}
+	}
+	return diff
 }

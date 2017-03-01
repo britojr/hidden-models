@@ -10,11 +10,18 @@ import (
 
 var maxiterations = 100
 
+const epslon = 1e-4
+
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
 	// TODO: replace maxiterations for convergence test
-	for i := 0; i < maxiterations; i++ {
+	//for i := 0; i < maxiterations; i++ {
+	for {
 		newpot := expectationStep(ct, ds)
+		if factor.MaxDifference(ct.BkpPotentialList(), newpot) < epslon {
+			//ct.SetAllPotentials(newpot)
+			break
+		}
 		ct.SetAllPotentials(newpot)
 	}
 }

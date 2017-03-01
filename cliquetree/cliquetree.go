@@ -80,6 +80,15 @@ func (c *CliqueTree) GetBkpPotential(i int) *factor.Factor {
 	return c.nodes[i].origPot
 }
 
+// BkpPotentialList returns a list with all the original potentials
+func (c *CliqueTree) BkpPotentialList() []*factor.Factor {
+	f := make([]*factor.Factor, c.Size())
+	for i := range f {
+		f[i] = c.GetBkpPotential(i)
+	}
+	return f
+}
+
 // GetPotential ..
 func (c *CliqueTree) GetPotential(i int) *factor.Factor {
 	return c.nodes[i].currPot

@@ -3,7 +3,6 @@ package learn
 import (
 	"fmt"
 	"math"
-	"reflect"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
@@ -23,8 +22,9 @@ type Learner struct {
 	n          int // number of variables
 	dataset    *filehandler.DataSet
 	counter    *bitcounter.BitCounter
-	hidden     int // number of hidden variables
-	hiddencard int // default cardinality of the hidden variables
+	hidden     int   // number of hidden variables
+	hiddencard int   // default cardinality of the hidden variables
+	cardin     []int // cardinality slice
 }
 
 // New ..
@@ -58,6 +58,12 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	l.counter = bitcounter.NewBitCounter()
 	l.counter.LoadFromData(l.dataset.Data(), l.dataset.Cardinality())
 	l.n = len(l.dataset.Cardinality())
+	// extend cardinality to hidden variables
+	l.cardin = make([]int, l.n+l.hidden)
+	copy(l.cardin, l.dataset.Cardinality())
+	for i := l.n; i < len(l.cardin); i++ {
+		l.cardin[i] = l.hiddencard
+	}
 }
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
@@ -137,42 +143,52 @@ func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []in
 
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
-	// extend cardinality to hidden variables
-	cardin := make([]int, l.n+l.hidden)
-	copy(cardin, l.dataset.Cardinality())
-	for i := l.n; i < len(cardin); i++ {
-		cardin[i] = l.hiddencard
-	}
-
 	// initialize clique tree potentials
-	// ct.SetAllPotentials(l.CreateUniformPortentials(ct, cardin))
-	ct.SetAllPotentials(l.CreateRandomPortentials(ct, cardin))
-
-	//TODO: remove
-	// count := make([]*factor.Factor, ct.Size())
-	// for i := range count {
-	// 	count[i] = ct.GetPotential(i).Clone()
-	// }
-	count := l.CreateUniformPortentials(ct, cardin)
-	// fmt.Println("Initial clique tree")
-	// for i := 0; i < ct.Size(); i++ {
-	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
-	// }
-	// fmt.Println("==========================================")
+	ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
+	// ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
 
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)
 
-	//TODO: remove
-	// fmt.Println("==========================================")
-	// fmt.Println("Clique tree post EM")
-	// for i := 0; i < ct.Size(); i++ {
-	// 	fmt.Printf("%v\n", ct.GetInitPotential(i))
-	// }
-	for i := range count {
-		if !reflect.DeepEqual(count[i], ct.GetPotential(i)) {
-			fmt.Printf("diff >>>>>>>>>>>>>>>>>>>:\n%v\n%v\n", count[i], ct.GetPotential(i))
-			break
+	// check resulting parameters TODO: remove
+	// check if they are uniform
+	l.checkUniform(ct)
+	// check if after summing out the hidden variables they are the same as initial count
+	l.checkWithInitialCount(ct)
+}
+
+func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
+	fmt.Println("checkUniform")
+	uniform := l.CreateUniformPortentials(ct, l.cardin)
+	diff := factor.MaxDifference(uniform, ct.BkpPotentialList())
+	if diff > 0 {
+		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
+	}
+}
+
+func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
+	fmt.Println("checkWithInitialCount")
+	initialCount := make([]*factor.Factor, ct.Size())
+	sumOutHidden := make([]*factor.Factor, ct.Size())
+	for i := range initialCount {
+		values := utils.SliceItoF64(l.counter.GetOccurrences(ct.Clique(i)))
+		var hidden []int
+		if l.hidden > 0 {
+			_, hidden = utils.SliceSplit(ct.Clique(i), l.n)
+		}
+		if len(hidden) > 0 {
+			sumOutHidden[i] = ct.GetBkpPotential(i).SumOut(hidden)
+		} else {
+			sumOutHidden[i] = ct.GetBkpPotential(i)
+		}
+		initialCount[i] = factor.New(ct.Clique(i), l.cardin, values)
+	}
+
+	diff := factor.MaxDifference(initialCount, sumOutHidden)
+	if diff > 0 {
+		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
+		if diff > 1e-5 {
+			fmt.Println("Significant!")
 		}
 	}
 }
