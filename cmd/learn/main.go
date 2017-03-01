@@ -45,15 +45,15 @@ func main() {
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 
-	fmt.Println("Learning junction tree...")
+	fmt.Println("Learning structure...")
 	start = time.Now()
-	jt, ll := learner.BestJuncTree()
+	ct, ll := learner.GuessStructure()
 	elapsed = time.Since(start)
 	fmt.Printf("Time: %v; LogLikelihood: %v\n", elapsed, ll)
 
 	fmt.Println("Learning parameters...")
 	start = time.Now()
-	ct := learner.OptimizeParameters(jt)
+	learner.OptimizeParameters(ct)
 	elapsed = time.Since(start)
 	fmt.Printf("Time: %v; CT: %v\n", elapsed, ct.Size())
 

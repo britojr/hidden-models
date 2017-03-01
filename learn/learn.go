@@ -104,7 +104,7 @@ func (l *Learner) loglikelihood(ct *cliquetree.CliqueTree) (ll float64) {
 	return
 }
 
-// CreateUniformPortentials ..
+// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
 func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []int) []*factor.Factor {
 	factors := make([]*factor.Factor, ct.Size())
 	for i := range factors {
@@ -125,7 +125,7 @@ func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []i
 	return factors
 }
 
-// CreateRandomPortentials ..
+// CreateRandomPortentials creates a list of clique tree potentials with random values
 func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []int) []*factor.Factor {
 	factors := make([]*factor.Factor, ct.Size())
 	for i := range factors {
@@ -135,8 +135,8 @@ func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []in
 	return factors
 }
 
-// OptimizeParameters ..
-func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTree {
+// OptimizeParameters optimize the clique tree parameters
+func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	// extend cardinality to hidden variables
 	cardin := make([]int, l.n+l.hidden)
 	copy(cardin, l.dataset.Cardinality())
@@ -144,17 +144,9 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 		cardin[i] = l.hiddencard
 	}
 
-	// initialize clique tree TODO: fix redundant code merge junctree on clique tree
-	ct := cliquetree.New(len(jt.Nodes))
-	for i, n := range jt.Nodes {
-		ct.SetClique(i, n.Clique)
-		ct.SetNeighbours(i, jt.Adj[i])
-	}
-
 	// initialize clique tree potentials
-	factors := l.CreateRandomPortentials(ct, cardin)
-	// factors := l.CreateUniformPortentials(ct, cardin)
-	ct.SetAllPotentials(factors)
+	// ct.SetAllPotentials(l.CreateUniformPortentials(ct, cardin))
+	ct.SetAllPotentials(l.CreateRandomPortentials(ct, cardin))
 
 	//TODO: remove
 	// count := make([]*factor.Factor, ct.Size())
@@ -183,9 +175,6 @@ func (l *Learner) OptimizeParameters(jt *junctree.JuncTree) *cliquetree.CliqueTr
 			break
 		}
 	}
-
-	// return learned structure
-	return ct
 }
 
 // TODO: remove bellow

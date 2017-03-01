@@ -45,6 +45,16 @@ func NewFactor(varlist []int, cardin []int) *Factor {
 	return f
 }
 
+// ClearCopy creates a copy factor with zero values
+func (f *Factor) ClearCopy() *Factor {
+	h := new(Factor)
+	h.cardin = f.cardin
+	h.varlist = f.varlist
+	h.stride = f.stride
+	h.values = make([]float64, len(f.values))
+	return h
+}
+
 // Clone returns a copy of the current factor
 func (f *Factor) Clone() *Factor {
 	g := NewFactor(f.varlist, f.cardin)
