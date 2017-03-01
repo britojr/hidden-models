@@ -9,24 +9,23 @@ import (
 	"github.com/britojr/kbn/filehandler"
 )
 
-var maxiterations = 100
+var maxiterations = 20
 
-const epslon = 1e-3
+const epslon = 1e-6
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
 	// TODO: replace maxiterations for convergence test
 	//for i := 0; i < maxiterations; i++ {
-	for i := 0; ; i++ {
+	// for i := 1; ; i++ {
+	diff := epslon + 1
+	for i := 1; i <= maxiterations && diff >= epslon; i++ {
+		fmt.Printf("Iteration: %v\n", i)
 		newpot := expectationStep(ct, ds)
 		for j := range newpot {
 			newpot[j].Normalize()
 		}
-		if factor.MaxDifference(ct.BkpPotentialList(), newpot) < epslon {
-			ct.SetAllPotentials(newpot)
-			fmt.Printf("Converged in %v iterations\n", i)
-			break
-		}
+		diff = factor.MaxDifference(ct.BkpPotentialList(), newpot)
 		ct.SetAllPotentials(newpot)
 	}
 }
