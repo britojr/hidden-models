@@ -123,10 +123,10 @@ func SliceFromBitSet(b *bitset.BitSet) []int {
 	return s
 }
 
-// ListIntersection creates an intersection of a list of sets
+// ListIntersection creates an intersection of a list of bitsets
 func ListIntersection(setlist []*bitset.BitSet) *bitset.BitSet {
 	if len(setlist) == 0 {
-		panic("empty list has no intersection")
+		return NewBitSet()
 	}
 	r := setlist[0].Clone()
 	for i := 1; i < len(setlist); i++ {

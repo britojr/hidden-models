@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/willf/bitset"
 )
 
 var testFuzzyEqual = []struct {
@@ -164,6 +166,54 @@ func TestNormalizeIntSlice(t *testing.T) {
 		got := NormalizeIntSlice(v.values)
 		if !reflect.DeepEqual(v.normalized, got) {
 			t.Errorf("want %v, got %v", v.normalized, got)
+		}
+	}
+}
+
+var testListIntersection = []struct {
+	list   [][]int
+	result []int
+}{
+	{
+		[][]int{
+			{3, 5, 7},
+			{3, 4, 5, 0},
+			{2, 1, 5, 0, 3},
+		},
+		[]int{3, 5},
+	},
+	{
+		[][]int{
+			{1, 9, 7},
+			{7, 3},
+			{8, 8, 7},
+			{9, 7},
+		},
+		[]int{7},
+	},
+	{
+		[][]int{
+			{7, 3},
+		},
+		[]int{3, 7},
+	},
+	{
+		[][]int{},
+		[]int{},
+	},
+}
+
+func TestListIntersection(t *testing.T) {
+	for _, v := range testListIntersection {
+		setlist := make([]*bitset.BitSet, len(v.list))
+		for i := range v.list {
+			setlist[i] = NewBitSet()
+			SetSlice(setlist[i], v.list[i])
+		}
+		b := ListIntersection(setlist)
+		got := SliceFromBitSet(b)
+		if !reflect.DeepEqual(v.result, got) {
+			t.Errorf("want %v,  got %v", v.result, got)
 		}
 	}
 }
