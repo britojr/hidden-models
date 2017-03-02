@@ -9,7 +9,6 @@ import (
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
-	"github.com/britojr/kbn/junctree"
 	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/generator"
 )
@@ -231,49 +230,4 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	} else {
 		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
 	}
-}
-
-// TODO: remove bellow
-
-// BestJuncTree ..
-func (l *Learner) BestJuncTree() (*junctree.JuncTree, float64) {
-	bestStruct, bestScore := l.newRandomStruct()
-	for i := 1; i < l.iterations; i++ {
-		currStruct, currScore := l.newRandomStruct()
-		if currScore > bestScore {
-			bestScore = currScore
-			bestStruct = currStruct
-		}
-	}
-	return bestStruct, bestScore
-}
-
-// calcLL calculates the loglikelihood of a list of cliques
-func (l *Learner) calcLL(nodelist []junctree.Node) (ll float64) {
-	// for each node adds the count of every attribution of the clique and
-	// subtracts the count of every attribution of the Sepset
-	for _, node := range nodelist {
-		values := l.counter.GetOccurrences(node.Clique)
-		for _, v := range values {
-			if v != 0 {
-				ll += float64(v) * math.Log(float64(v))
-			}
-		}
-		values = l.counter.GetOccurrences(node.Sepset)
-		for _, v := range values {
-			if v != 0 {
-				ll -= float64(v) * math.Log(float64(v))
-			}
-		}
-	}
-	ll -= float64(l.dataset.Size()) * math.Log(float64(l.dataset.Size()))
-	return
-}
-
-func (l *Learner) newRandomStruct() (*junctree.JuncTree, float64) {
-	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
-	utils.ErrCheck(err, "")
-	jt := junctree.FromCharTree(T, iphi)
-	score := l.calcLL(jt.Nodes)
-	return jt, score
 }
