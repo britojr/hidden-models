@@ -220,13 +220,7 @@ func (f *Factor) Restrict(evid []int) *Factor {
 
 // Normalize normalizes the factor so all values sum to 1
 func (f *Factor) Normalize() {
-	var tot float64
-	for i := range f.values {
-		tot += f.values[i]
-	}
-	for i := range f.values {
-		f.values[i] /= tot
-	}
+	utils.NormalizeSlice(f.values)
 }
 
 // MaxDifference calculates the max difference between two lists of factors

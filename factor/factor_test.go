@@ -186,6 +186,12 @@ var testNormalize = []struct {
 		values:     []float64{},
 		normalized: []float64{},
 	},
+	{
+		varlist:    []int{1},
+		cardin:     []int{2, 2},
+		values:     []float64{0, 0.0},
+		normalized: []float64{0, 0},
+	},
 }
 
 func TestNormalize(t *testing.T) {
