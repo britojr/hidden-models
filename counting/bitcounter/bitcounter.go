@@ -10,11 +10,10 @@ import (
 
 // BitCounter manages the counting occurrences of sets of variables in a dataset
 type BitCounter struct {
-	varlist []int            // wich variables are representend
-	cardin  []int            // cardinality of each variable
-	values  []*valToLine     // all assignable values for each variable
-	cache   map[string][]int // cached occurence counting slices for different varlists
-	lines   int              // number of lines in the dataset
+	cardin []int            // cardinality of each variable
+	values []*valToLine     // all assignable values for each variable
+	cache  map[string][]int // cached occurence counting slices for different varlists
+	lines  int              // number of lines in the dataset
 }
 
 type valToLine map[int]*bitset.BitSet
@@ -42,11 +41,6 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 		}
 	}
 	b.lines = lin
-	// varlist containing all variables
-	/*b.varlist = make([]int, col)
-	for i := range b.varlist{
-		b.varlist[i] = i
-	}*/
 	// initialize empty cache
 	b.cache = make(map[string][]int)
 
