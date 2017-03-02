@@ -25,6 +25,8 @@ type Learner struct {
 	hidden     int   // number of hidden variables
 	hiddencard int   // default cardinality of the hidden variables
 	cardin     []int // cardinality slice
+	norm       bool
+	initpot    int
 }
 
 // New ..
@@ -33,6 +35,8 @@ func New() *Learner {
 	l.iterations = 100
 	l.treewidth = 3
 	l.hiddencard = 2
+	l.norm = true
+	l.initpot = 1
 	return l
 }
 
@@ -49,6 +53,16 @@ func (l *Learner) SetIterations(it int) {
 // SetHiddenVars ..
 func (l *Learner) SetHiddenVars(h int) {
 	l.hidden = h
+}
+
+// SetNorm ..
+func (l *Learner) SetNorm(norm bool) {
+	l.norm = norm
+}
+
+// SetInitPot ..
+func (l *Learner) SetInitPot(initpot int) {
+	l.initpot = initpot
 }
 
 // LoadDataSet ..
@@ -133,6 +147,7 @@ func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []i
 		} else {
 			factors[i] = factor.NewFactor(hidden, cardin)
 			factors[i].SetUniform()
+			fmt.Printf(" >> Factor %v: has only hidden variables\n", i)
 		}
 	}
 	return factors
@@ -151,11 +166,14 @@ func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []in
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	// initialize clique tree potentials
-	ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
-	// ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
+	if l.initpot == 1 {
+		ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
+	} else {
+		ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
+	}
 
 	// call EM until convergence
-	em.ExpectationMaximization(ct, l.dataset)
+	em.ExpectationMaximization(ct, l.dataset, l.norm)
 
 	// check resulting parameters TODO: remove
 	// check if they are uniform
@@ -170,6 +188,9 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	diff := factor.MaxDifference(uniform, ct.BkpPotentialList())
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
+		if diff > 1e-6 {
+			fmt.Println(" !! Significant difference!")
+		}
 	} else {
 		fmt.Printf(" > Is uniform: maxdiff = %v\n", diff)
 	}
@@ -193,13 +214,15 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
 			}
 			initialCount[i] = factor.New(observed, l.cardin, values)
+			initialCount[i].Normalize()
+			sumOutHidden[i].Normalize()
 		}
 	}
 
 	diff := factor.MaxDifference(initialCount, sumOutHidden)
 	if diff > 0 {
 		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
-		if diff > 1e-6 {
+		if diff > 1 {
 			fmt.Println("Significant difference!")
 		}
 	} else {
