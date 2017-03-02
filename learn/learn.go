@@ -151,8 +151,8 @@ func (l *Learner) CreateRandomPortentials(ct *cliquetree.CliqueTree, cardin []in
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	// initialize clique tree potentials
-	// ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
-	ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
+	ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
+	// ct.SetAllPotentials(l.CreateRandomPortentials(ct, l.cardin))
 
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset)

@@ -22,9 +22,9 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet)
 	for i := 1; i <= maxiterations && diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
 		newpot := expectationStep(ct, ds)
-		for j := range newpot {
-			newpot[j].Normalize()
-		}
+		// for j := range newpot {
+		// 	newpot[j].Normalize()
+		// }
 		diff = factor.MaxDifference(ct.BkpPotentialList(), newpot)
 		ct.SetAllPotentials(newpot)
 	}
