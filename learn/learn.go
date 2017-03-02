@@ -108,13 +108,13 @@ func (l *Learner) loglikelihood(ct *cliquetree.CliqueTree) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the sepset
 	for i := 0; i < ct.Size(); i++ {
-		values := l.counter.GetOccurrences(ct.Clique(i))
+		values := utils.NormalizeIntSlice(l.counter.GetOccurrences(ct.Clique(i)))
 		for _, v := range values {
 			if v != 0 {
 				ll += float64(v) * math.Log(float64(v))
 			}
 		}
-		values = l.counter.GetOccurrences(ct.SepSet(i))
+		values = utils.NormalizeIntSlice(l.counter.GetOccurrences(ct.SepSet(i)))
 		for _, v := range values {
 			if v != 0 {
 				ll -= float64(v) * math.Log(float64(v))
@@ -172,6 +172,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 		ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
 	}
 
+	fmt.Printf("Initial param: %v (%v)=0\n", ct.GetBkpPotential(0).Values()[0], ct.GetBkpPotential(0).Variables())
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset, l.norm)
 
@@ -185,6 +186,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
 	uniform := l.CreateUniformPortentials(ct, l.cardin)
+	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	diff := factor.MaxDifference(uniform, ct.BkpPotentialList())
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
@@ -219,10 +221,11 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		}
 	}
 
+	fmt.Printf("IniCount param: %v (%v)=0\n", initialCount[0].Values()[0], initialCount[0].Variables())
 	diff := factor.MaxDifference(initialCount, sumOutHidden)
 	if diff > 0 {
 		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
-		if diff > 1 {
+		if diff > 1e-6 {
 			fmt.Println("Significant difference!")
 		}
 	} else {
