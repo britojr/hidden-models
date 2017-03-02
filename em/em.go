@@ -10,15 +10,15 @@ import (
 	"github.com/britojr/kbn/filehandler"
 )
 
-var maxiterations = 5
+var miniterations = 5
 
 const epslon = 1e-16
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, norm bool) {
-	// TODO: replace maxiterations for convergence test
+	// TODO: remove miniterations
 	diff := epslon + 1
-	for i := 1; i <= maxiterations || diff >= epslon; i++ {
+	for i := 1; i <= miniterations || diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
 		newpot := expectationStep(ct, ds)
 		if norm {
