@@ -33,18 +33,68 @@ func New(varlist []int, cardin []int, values []float64) *Factor {
 	return f
 }
 
+func makeStride(varlist, cardin []int) map[int]int {
+	stride := make(map[int]int)
+	if len(varlist) > 0 {
+		stride[varlist[0]] = 1
+		for i := 1; i < len(varlist); i++ {
+			stride[varlist[i]] = cardin[varlist[i-1]] * stride[varlist[i-1]]
+		}
+	}
+	return stride
+}
+
 // NewFactor creates a factor with zero values
 func NewFactor(varlist []int, cardin []int) *Factor {
 	f := new(Factor)
 	f.cardin = cardin
 	f.varlist = varlist
-	f.stride = make(map[int]int)
-	f.stride[varlist[0]] = 1
-	for i := 1; i < len(varlist); i++ {
-		f.stride[varlist[i]] = cardin[varlist[i-1]] * f.stride[varlist[i-1]]
-	}
+	f.stride = makeStride(varlist, cardin)
 	size := f.cardin[f.varlist[len(f.varlist)-1]] * f.stride[f.varlist[len(f.varlist)-1]]
 	f.values = make([]float64, size)
+	return f
+}
+
+// Variables ..
+func (f *Factor) Variables() []int {
+	return f.varlist
+}
+
+// Cardinality ..
+func (f *Factor) Cardinality() []int {
+	return f.cardin
+}
+
+// Values ..
+func (f *Factor) Values() []float64 {
+	return f.values
+}
+
+// Get ..
+func (f *Factor) Get(assig assignment.Assignment) float64 {
+	return f.values[assig.Index(f.stride)]
+}
+
+// SetValues ..
+func (f *Factor) SetValues(values []float64) {
+	f.values = values
+}
+
+// SetUniform changes factor value to uniformly distributed
+func (f *Factor) SetUniform() *Factor {
+	for i := range f.values {
+		f.values[i] = 1.0 / float64(len(f.values))
+	}
+	return f
+}
+
+// SetRandom sets the factor with random values
+func (f *Factor) SetRandom() *Factor {
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range f.values {
+		f.values[i] = rand.Float64()
+	}
+	utils.NormalizeSlice(f.values)
 	return f
 }
 
@@ -60,72 +110,22 @@ func (f *Factor) ClearCopy() *Factor {
 
 // Clone returns a copy of the current factor
 func (f *Factor) Clone() *Factor {
-	g := NewFactor(f.varlist, f.cardin)
-	g.values = append([]float64(nil), f.values...)
-	return f
-}
-
-// SetValues ..
-func (f *Factor) SetValues(values []float64) {
-	f.values = values
-}
-
-// SetUniform changes factor value to uniformly distributed
-func (f *Factor) SetUniform() {
-	for i := range f.values {
-		f.values[i] = 1.0 / float64(len(f.values))
-	}
-}
-
-// SetRandom sets the factor with random values
-func (f *Factor) SetRandom() {
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := range f.values {
-		f.values[i] = rand.Float64()
-	}
-	f.Normalize()
-}
-
-// Variables ..
-func (f *Factor) Variables() []int {
-	return f.varlist
-}
-
-// Cardinality ..
-func (f *Factor) Cardinality() []int {
-	return f.cardin
-}
-
-// Get ..
-func (f *Factor) Get(assig assignment.Assignment) float64 {
-	x := 0
-	for i := range assig {
-		x += assig.Value(i) * f.stride[assig.Var(i)]
-	}
-	return f.values[x]
-}
-
-// Values ..
-func (f *Factor) Values() []float64 {
-	return f.values
+	h := new(Factor)
+	h.cardin = f.cardin
+	h.varlist = f.varlist
+	h.stride = f.stride
+	h.values = append([]float64(nil), f.values...)
+	return h
 }
 
 // Set a value to the current assignment
 func (f *Factor) Set(assig assignment.Assignment, v float64) {
-	x := 0
-	for i := range assig {
-		x += assig.Value(i) * f.stride[assig.Var(i)]
-	}
-	f.values[x] = v
+	f.values[assig.Index(f.stride)] = v
 }
 
 // Add add a value to the current assignment
 func (f *Factor) Add(assig assignment.Assignment, v float64) {
-	x := 0
-	for i := range assig {
-		x += assig.Value(i) * f.stride[assig.Var(i)]
-	}
-	f.values[x] += v
+	f.values[assig.Index(f.stride)] += v
 }
 
 // Product ..
@@ -133,17 +133,18 @@ func (f *Factor) Product(g *Factor) *Factor {
 	h := new(Factor)
 	h.cardin = f.cardin
 	h.varlist = utils.SliceUnion(f.varlist, g.varlist, uint(len(f.cardin)))
-	h.stride = make(map[int]int)
-	h.stride[h.varlist[0]] = 1
-	for i := 1; i < len(h.varlist); i++ {
-		h.stride[h.varlist[i]] = h.cardin[h.varlist[i-1]] * h.stride[h.varlist[i-1]]
-	}
-	size := h.cardin[h.varlist[len(h.varlist)-1]] * h.stride[h.varlist[len(h.varlist)-1]]
-	h.values = make([]float64, size)
-	assig := assignment.New(h.varlist, h.cardin)
-	for i := 0; i < size; i++ {
-		h.values[i] = f.Get(assig) * g.Get(assig)
-		assig.Next()
+	h.stride = makeStride(h.varlist, h.cardin)
+	if len(h.varlist) > 0 {
+		size := h.cardin[h.varlist[len(h.varlist)-1]] * h.stride[h.varlist[len(h.varlist)-1]]
+		h.values = make([]float64, size)
+		assig := assignment.New(h.varlist, h.cardin)
+		for i := 0; i < size; i++ {
+			h.values[i] = f.Get(assig) * g.Get(assig)
+			assig.Next()
+		}
+	} else {
+		h.values = make([]float64, 1)
+		h.values[0] = f.values[0] * g.values[0]
 	}
 	return h
 }
@@ -158,12 +159,11 @@ func (f *Factor) SumOutOne(x int) *Factor {
 			h.varlist = append(h.varlist, v)
 		}
 	}
-	h.stride = make(map[int]int)
-	h.stride[h.varlist[0]] = 1
-	for i := 1; i < len(h.varlist); i++ {
-		h.stride[h.varlist[i]] = h.cardin[h.varlist[i-1]] * h.stride[h.varlist[i-1]]
+	h.stride = makeStride(h.varlist, h.cardin)
+	size := 1
+	if len(h.varlist) > 0 {
+		size = h.cardin[h.varlist[len(h.varlist)-1]] * h.stride[h.varlist[len(h.varlist)-1]]
 	}
-	size := h.cardin[h.varlist[len(h.varlist)-1]] * h.stride[h.varlist[len(h.varlist)-1]]
 	h.values = make([]float64, size)
 	c := f.cardin[x]
 	s := f.stride[x]
