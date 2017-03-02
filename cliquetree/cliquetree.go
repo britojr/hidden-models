@@ -109,6 +109,13 @@ func (c *CliqueTree) Calibrated(i int) *factor.Factor {
 	return c.nodes[i].calibratedPot
 }
 
+// LoadCalibration ..
+func (c *CliqueTree) LoadCalibration() {
+	for i := range c.nodes {
+		c.nodes[i].calibratedPot = c.nodes[i].currPot
+	}
+}
+
 // UpDownCalibration ..
 func (c *CliqueTree) UpDownCalibration() {
 	c.send = make([]*factor.Factor, len(c.nodes))
