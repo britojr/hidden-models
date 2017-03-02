@@ -48,6 +48,15 @@ func (a Assignment) Value(i int) int {
 	return a[i].value
 }
 
+// Index calculates the corresponding index given a stride
+func (a Assignment) Index(stride map[int]int) int {
+	x := 0
+	for i := range a {
+		x += a[i].value * stride[a[i].variable]
+	}
+	return x
+}
+
 // Consistent returns true if the current assignment is consistent with a given valoration
 func (a Assignment) Consistent(values []int) bool {
 	for _, v := range a {

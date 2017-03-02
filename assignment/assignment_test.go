@@ -96,3 +96,46 @@ func TestConsistent(t *testing.T) {
 		}
 	}
 }
+
+var testIndex = []struct {
+	varlist []int
+	cardin  []int
+	values  []int
+	stride  map[int]int
+	result  int
+}{
+	{
+		[]int{0, 1},
+		[]int{2, 2},
+		[]int{0, 1},
+		map[int]int{0: 1, 1: 2},
+		2,
+	},
+	{
+		[]int{0, 1, 2},
+		[]int{2, 3, 2},
+		[]int{0, 2, 1},
+		map[int]int{0: 1, 1: 2},
+		4,
+	},
+	{
+		[]int{0, 1, 2},
+		[]int{2, 3, 2},
+		[]int{0, 2, 1},
+		map[int]int{1: 2, 2: 6},
+		10,
+	},
+}
+
+func TestIndex(t *testing.T) {
+	for _, v := range testIndex {
+		a := New(v.varlist, v.cardin)
+		for i, k := range v.values {
+			a[i].value = k
+		}
+		got := a.Index(v.stride)
+		if got != v.result {
+			t.Errorf("want %v, got %v", v.result, got)
+		}
+	}
+}
