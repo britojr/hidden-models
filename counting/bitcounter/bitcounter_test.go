@@ -160,3 +160,55 @@ func TestGetOccurrences(t *testing.T) {
 		t.Errorf("want(%v); got(%v)", []int{}, got)
 	}
 }
+
+var testGetOccurrences = []struct {
+	data    [][]int
+	cardin  []int
+	varlist []int
+	result  []int
+}{
+	{
+		[][]int{
+			{0, 0},
+			{1, 0},
+			{0, 1},
+			{1, 0},
+		},
+		[]int{2, 2},
+		[]int{0},
+		[]int{2, 2},
+	},
+	{
+		[][]int{
+			{0, 0},
+			{1, 0},
+			{0, 1},
+			{1, 0},
+		},
+		[]int{2, 2},
+		[]int{1},
+		[]int{3, 1},
+	},
+	{
+		[][]int{
+			{0, 0},
+			{1, 0},
+			{0, 1},
+			{1, 0},
+		},
+		[]int{2, 2},
+		[]int{3},
+		[]int(nil),
+	},
+}
+
+func TestGetOccurrences_2(t *testing.T) {
+	for _, v := range testGetOccurrences {
+		b := NewBitCounter()
+		b.LoadFromData(v.data, v.cardin)
+		got := b.GetOccurrences(v.varlist)
+		if !reflect.DeepEqual(v.result, got) {
+			t.Errorf("want(%v); got(%v)", v.result, got)
+		}
+	}
+}

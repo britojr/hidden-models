@@ -82,10 +82,6 @@ func (b *BitCounter) CountAssignment(assig assignment.Assignment) (int, bool) {
 	}
 	// TODO: what to send when the clique is all of hidden variables?
 	return -1, false
-	//return b.lines
-	// aux := (*b.values[assig.Var(0)])[assig.Value(0)].Clone()
-	// for i := 1; i < len(assig); i++ {
-	// 	aux.InPlaceIntersection((*b.values[assig.Var(i)])[assig.Value(i)])
-	// }
-	// return int(aux.Count())
+	//return b.lines, false
+	//return 0, false
 }
