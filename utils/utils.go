@@ -84,6 +84,36 @@ func ClearSlice(b *bitset.BitSet, varlist []int) {
 	}
 }
 
+// NormalizeSlice normalizes the slice so all values sum to one
+func NormalizeSlice(values []float64) {
+	var sum float64
+	for _, v := range values {
+		sum += v
+	}
+	if sum == 0 {
+		return
+	}
+	for i, v := range values {
+		values[i] = v / sum
+	}
+}
+
+// NormalizeIntSlice create a new normalized slice from an int slice
+func NormalizeIntSlice(values []int) []float64 {
+	var sum float64
+	for _, v := range values {
+		sum += float64(v)
+	}
+	norm := make([]float64, len(values))
+	if sum == 0 {
+		return norm
+	}
+	for i, v := range values {
+		norm[i] = float64(v) / sum
+	}
+	return norm
+}
+
 // SliceFromBitSet returns the corresponding int slice from a set
 func SliceFromBitSet(b *bitset.BitSet) []int {
 	s := make([]int, 0, b.Count())

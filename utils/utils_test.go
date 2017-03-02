@@ -94,3 +94,76 @@ func TestSliceDifference(t *testing.T) {
 		}
 	}
 }
+
+var testNormalizeSlice = []struct {
+	values, normalized []float64
+}{
+	{
+		[]float64{0.15, 0.25, 0.35, 0.25},
+		[]float64{0.15, 0.25, 0.35, 0.25},
+	},
+	{
+		[]float64{15, 25, 35, 25},
+		[]float64{0.15, 0.25, 0.35, 0.25},
+	},
+	{
+		[]float64{10, 20, 30, 40, 50, 60, 70, 80},
+		[]float64{1.0 / 36, 2.0 / 36, 3.0 / 36, 4.0 / 36, 5.0 / 36, 6.0 / 36, 7.0 / 36, 8.0 / 36},
+	},
+	{
+		[]float64{0.15},
+		[]float64{1},
+	},
+	{
+		[]float64{},
+		[]float64{},
+	},
+	{
+		[]float64{0, 0, 0},
+		[]float64{0, 0, 0},
+	},
+}
+
+func TestNormalizeSlice(t *testing.T) {
+	for _, v := range testNormalizeSlice {
+		NormalizeSlice(v.values)
+		if !reflect.DeepEqual(v.values, v.normalized) {
+			t.Errorf("want %v, got %v", v.normalized, v.values)
+		}
+	}
+}
+
+var testNormalizeIntSlice = []struct {
+	values     []int
+	normalized []float64
+}{
+	{
+		[]int{15, 25, 35, 25},
+		[]float64{0.15, 0.25, 0.35, 0.25},
+	},
+	{
+		[]int{10, 20, 30, 40, 50, 60, 70, 80},
+		[]float64{1.0 / 36, 2.0 / 36, 3.0 / 36, 4.0 / 36, 5.0 / 36, 6.0 / 36, 7.0 / 36, 8.0 / 36},
+	},
+	{
+		[]int{15},
+		[]float64{1},
+	},
+	{
+		[]int{},
+		[]float64{},
+	},
+	{
+		[]int{0, 0, 0},
+		[]float64{0, 0, 0},
+	},
+}
+
+func TestNormalizeIntSlice(t *testing.T) {
+	for _, v := range testNormalizeIntSlice {
+		got := NormalizeIntSlice(v.values)
+		if !reflect.DeepEqual(v.normalized, got) {
+			t.Errorf("want %v, got %v", v.normalized, got)
+		}
+	}
+}
