@@ -1,6 +1,8 @@
 package factor
 
 import (
+	"errors"
+	"math"
 	"reflect"
 	"testing"
 
@@ -210,6 +212,7 @@ var testMaxDifference = []struct {
 	alist   [][]float64
 	blist   [][]float64
 	maxdiff float64
+	err     error
 }{
 	{
 		varlist: []int{1, 3, 5},
@@ -284,7 +287,7 @@ var testMaxDifference = []struct {
 			{11, 21, 31, 0.8, 0.004},
 			{11, 21, 31, 0.8, 0.004},
 		},
-		maxdiff: 1,
+		err: errors.New("incompatible list of factors"),
 	},
 }
 
@@ -301,9 +304,17 @@ func TestMaxDifference(t *testing.T) {
 			}
 
 		}
-		got := MaxDifference(f, g)
-		if v.maxdiff != got {
-			t.Errorf("want %v, got %v", v.maxdiff, got)
+		got, i, j, err := MaxDifference(f, g)
+		if (v.err != nil && err == nil) || (v.err == nil && err != nil) {
+			t.Errorf("want %v, got %v", v.err, err)
+		}
+		if err == nil {
+			if v.maxdiff != got {
+				t.Errorf("want %v, got %v", v.maxdiff, got)
+			}
+			if math.Abs(f[i].Values()[j]-g[i].Values()[j]) != got {
+				t.Errorf("want %v, got %v", math.Abs(f[i].Values()[j]-g[i].Values()[j]), got)
+			}
 		}
 	}
 }

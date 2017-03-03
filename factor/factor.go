@@ -1,6 +1,7 @@
 package factor
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"time"
@@ -224,21 +225,22 @@ func (f *Factor) Normalize() {
 }
 
 // MaxDifference calculates the max difference between two lists of factors
-func MaxDifference(f, g []*Factor) float64 {
-	var diff float64
+func MaxDifference(f, g []*Factor) (diff float64, num, val int, err error) {
 	for i := range f {
 		if f[i] == nil && g[i] == nil {
 			continue
 		}
 		if !(f[i] != nil && g[i] != nil) {
-			return 1
+			err = errors.New("incompatible list of factors")
+			return
 		}
 		q := f[i].Values()
 		for j, v := range g[i].Values() {
 			if d := math.Abs(q[j] - v); d > diff {
 				diff = d
+				num, val = i, j
 			}
 		}
 	}
-	return diff
+	return
 }

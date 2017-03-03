@@ -186,7 +186,9 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
 	uniform := l.CreateUniformPortentials(ct, l.cardin)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
-	diff := factor.MaxDifference(uniform, ct.BkpPotentialList())
+	diff, i, j, err := factor.MaxDifference(uniform, ct.BkpPotentialList())
+	utils.ErrCheck(err, "")
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.GetBkpPotential(i).Values()[j])
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
@@ -221,11 +223,14 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	}
 
 	fmt.Printf("IniCount param: %v (%v)=0\n", initialCount[0].Values()[0], initialCount[0].Variables())
-	diff := factor.MaxDifference(initialCount, sumOutHidden)
+	fmt.Printf("sumOut param: %v (%v)=0\n", sumOutHidden[0].Values()[0], sumOutHidden[0].Variables())
+	diff, i, j, err := factor.MaxDifference(initialCount, sumOutHidden)
+	utils.ErrCheck(err, "")
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, initialCount[i].Values()[j], i, j, sumOutHidden[i].Values()[j])
 	if diff > 0 {
 		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
-			fmt.Println("Significant difference!")
+			fmt.Println(" >> Significant difference!")
 		}
 	} else {
 		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)

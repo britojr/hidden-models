@@ -8,6 +8,7 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/utils"
 )
 
 var miniterations = 5
@@ -18,6 +19,7 @@ const epslon = 1e-16
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, norm bool) {
 	// TODO: remove miniterations
 	diff := epslon + 1
+	var err error
 	for i := 1; i <= miniterations || diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
 		newpot := expectationStep(ct, ds)
@@ -27,7 +29,8 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
 			}
 		}
 		fmt.Printf("Count param: %v (%v)=0\n", newpot[0].Values()[0], newpot[0].Variables())
-		diff = factor.MaxDifference(ct.BkpPotentialList(), newpot)
+		diff, _, _, err = factor.MaxDifference(ct.BkpPotentialList(), newpot)
+		utils.ErrCheck(err, "")
 		fmt.Printf("current diff: %v\n", diff)
 		ct.SetAllPotentials(newpot)
 	}
