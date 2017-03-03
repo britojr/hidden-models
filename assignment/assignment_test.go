@@ -19,10 +19,10 @@ func TestNew(t *testing.T) {
 	for _, v := range testNew {
 		assig := New(v.varlist, cardin)
 		for i := range v.varlist {
-			if assig.Var(i) != v.varlist[i] {
+			if assig.Variables()[i] != v.varlist[i] {
 				t.Errorf("Missing variables on assignment: %v", v.varlist[i])
 			}
-			if assig.Value(i) != v.values[i] {
+			if assig.Values()[i] != v.values[i] {
 				t.Errorf("Initialized with wrong value: %v", v.values[i])
 			}
 		}
@@ -41,6 +41,7 @@ var testNext = []struct {
 	{[]int{0, 1, 2}, 1, []int{1, 0, 0}},
 	{[]int{3, 7, 10}, 7, []int{1, 1, 1}},
 	{[]int{6, 2, 11, 9}, 14, []int{0, 1, 1, 1}},
+	{[]int{}, 1, []int{}},
 }
 
 func TestNext(t *testing.T) {
@@ -60,8 +61,8 @@ func TestNext(t *testing.T) {
 	}
 	assig := New([]int{0}, []int{2})
 	assig.Next()
-	assig.Next()
-	if assig != nil {
+	hasnext := assig.Next()
+	if hasnext {
 		t.Errorf("Want end of assig, got %v", assig)
 	}
 
@@ -125,13 +126,20 @@ var testIndex = []struct {
 		map[int]int{1: 2, 2: 6},
 		10,
 	},
+	{
+		[]int{},
+		[]int{2, 2, 2},
+		[]int{},
+		map[int]int{1: 2, 2: 6},
+		0,
+	},
 }
 
 func TestIndex(t *testing.T) {
 	for _, v := range testIndex {
 		a := New(v.varlist, v.cardin)
 		for i, k := range v.values {
-			a[i].value = k
+			a.values[i] = k
 		}
 		got := a.Index(v.stride)
 		if got != v.result {

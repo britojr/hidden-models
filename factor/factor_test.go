@@ -65,12 +65,14 @@ func TestNew(t *testing.T) {
 		got := New(w.varlist, w.cardin, w.values)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
-		for assig != nil {
+		for {
 			v := got.Get(assig)
 			if v != w.values[i] {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
 			}
-			assig.Next()
+			if hasnext := assig.Next(); !hasnext {
+				break
+			}
 			i++
 		}
 	}
@@ -92,12 +94,14 @@ func TestProduct(t *testing.T) {
 	got := a.Product(b)
 	assig := assignment.New(f012.varlist, f012.cardin)
 	i := 0
-	for assig != nil {
+	for {
 		v := got.Get(assig)
 		if !utils.FuzzyEqual(v, f012.values[i]) {
 			t.Errorf("want(%v); got(%v)", f012.values[i], v)
 		}
-		assig.Next()
+		if hasnext := assig.Next(); !hasnext {
+			break
+		}
 		i++
 	}
 }
@@ -108,12 +112,14 @@ func TestSumOutOne(t *testing.T) {
 		got := a.SumOutOne(i)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
-		for assig != nil {
+		for {
 			v := got.Get(assig)
 			if !utils.FuzzyEqual(v, w.values[i]) {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
 			}
-			assig.Next()
+			if hasnext := assig.Next(); !hasnext {
+				break
+			}
 			i++
 		}
 	}

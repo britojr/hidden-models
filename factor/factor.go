@@ -72,7 +72,7 @@ func (f *Factor) Values() []float64 {
 }
 
 // Get ..
-func (f *Factor) Get(assig assignment.Assignment) float64 {
+func (f *Factor) Get(assig *assignment.Assignment) float64 {
 	return f.values[assig.Index(f.stride)]
 }
 
@@ -120,12 +120,12 @@ func (f *Factor) Clone() *Factor {
 }
 
 // Set a value to the current assignment
-func (f *Factor) Set(assig assignment.Assignment, v float64) {
+func (f *Factor) Set(assig *assignment.Assignment, v float64) {
 	f.values[assig.Index(f.stride)] = v
 }
 
 // Add add a value to the current assignment
-func (f *Factor) Add(assig assignment.Assignment, v float64) {
+func (f *Factor) Add(assig *assignment.Assignment, v float64) {
 	f.values[assig.Index(f.stride)] += v
 }
 

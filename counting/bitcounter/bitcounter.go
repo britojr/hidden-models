@@ -56,13 +56,15 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	v, ok := b.cache[strvarlist]
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
-		for assig != nil {
+		for {
 			if count, ok := b.CountAssignment(assig); ok {
 				v = append(v, count)
 			} else {
 				return
 			}
-			assig.Next()
+			if hasnext := assig.Next(); !hasnext {
+				break
+			}
 		}
 		b.cache[strvarlist] = v
 	}
@@ -70,9 +72,9 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 }
 
 // CountAssignment returns the number of occurrences of an specific assignment
-func (b *BitCounter) CountAssignment(assig assignment.Assignment) (int, bool) {
-	setlist := make([]*bitset.BitSet, 0, len(assig))
-	for i := range assig {
+func (b *BitCounter) CountAssignment(assig *assignment.Assignment) (int, bool) {
+	setlist := make([]*bitset.BitSet, 0, len(assig.Variables()))
+	for i := range assig.Variables() {
 		if assig.Var(i) < len(b.cardin) {
 			setlist = append(setlist, (*b.values[assig.Var(i)])[assig.Value(i)])
 		}

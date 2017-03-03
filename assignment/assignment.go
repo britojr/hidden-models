@@ -1,69 +1,82 @@
 package assignment
 
 // Assignment is used to create and iterate through variable assignments
-type Assignment []struct {
-	variable int
-	value    int
-	card     int
+type Assignment struct {
+	varlist []int // list of variables
+	values  []int // value[i] = value of the ith variable
+	card    []int // card[i] = cardinality of ith variable
 }
 
 // New assignment creates a new assignment with the specified order of the variables
-func New(varlist []int, cardinality []int) Assignment {
-	if len(varlist) == 0 {
-		return nil
+func New(varlist []int, cardinality []int) *Assignment {
+	a := &Assignment{
+		varlist: varlist,
+		values:  make([]int, len(varlist)),
+		card:    make([]int, len(varlist)),
 	}
-	a := make(Assignment, len(varlist))
 	for i, v := range varlist {
-		a[i].variable = v
 		if v < len(cardinality) {
-			a[i].card = cardinality[v]
+			a.card[i] = cardinality[v]
 		}
 	}
 	return a
 }
 
 // Next creates the next valuation for the assignment
-// or returns nil after the last possible value
-func (a *Assignment) Next() {
-	i := 0
-	(*a)[i].value++
-	for (*a)[i].value >= (*a)[i].card {
-		(*a)[i].value = 0
-		i++
-		if i >= len(*a) {
-			*a = nil
-			return
-		}
-		(*a)[i].value++
+// or returns false after the last possible value
+func (a *Assignment) Next() bool {
+	if len(a.values) == 0 {
+		return false
 	}
+	i := 0
+	a.values[i]++
+	for a.values[i] >= a.card[i] {
+		a.values[i] = 0
+		i++
+		if i >= len(a.values) {
+			return false
+		}
+		a.values[i]++
+	}
+	return true
 }
 
 // Var returns the id of variable at ith position
-func (a Assignment) Var(i int) int {
-	return a[i].variable
+func (a *Assignment) Var(i int) int {
+	return a.varlist[i]
 }
 
-// Value returns the value assigned to the variable at ith position
-func (a Assignment) Value(i int) int {
-	return a[i].value
+// Variables returns the slice of variables
+func (a *Assignment) Variables() []int {
+	return a.varlist
+}
+
+// Value returns the value assigned to the variable on the ith position
+func (a *Assignment) Value(i int) int {
+	return a.values[i]
+}
+
+// Values returns the slice of values
+func (a *Assignment) Values() []int {
+	return a.values
 }
 
 // Index calculates the corresponding index given a stride
-func (a Assignment) Index(stride map[int]int) int {
+func (a *Assignment) Index(stride map[int]int) int {
 	x := 0
-	for i := range a {
-		x += a[i].value * stride[a[i].variable]
+	for i, v := range a.values {
+		x += v * stride[a.varlist[i]]
 	}
 	return x
 }
 
 // Consistent returns true if the current assignment is consistent with a given valoration
-func (a Assignment) Consistent(values []int) bool {
-	for _, v := range a {
-		if v.variable >= len(values) || values[v.variable] == -1 {
+func (a *Assignment) Consistent(values []int) bool {
+	for i, v := range a.varlist {
+		if v >= len(values) || values[v] == -1 {
 			continue
 		}
-		if values[v.variable] != v.value {
+		if values[v] != a.values[i] {
 			return false
 		}
 	}
