@@ -41,7 +41,7 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	// initialize counter
 	count := make([]*factor.Factor, ct.Size())
 	for i := range count {
-		count[i] = ct.GetPotential(i).ClearCopy()
+		count[i] = ct.CurrPotential(i).ClearCopy()
 	}
 
 	// calculate probability of every instance

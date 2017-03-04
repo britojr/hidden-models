@@ -75,29 +75,29 @@ func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
 	}
 }
 
-// GetBkpPotential ..
-func (c *CliqueTree) GetBkpPotential(i int) *factor.Factor {
-	return c.nodes[i].origPot
-}
-
 // BkpPotentialList returns a list with all the original potentials
 func (c *CliqueTree) BkpPotentialList() []*factor.Factor {
 	f := make([]*factor.Factor, c.Size())
 	for i := range f {
-		f[i] = c.GetBkpPotential(i)
+		f[i] = c.BkpPotential(i)
 	}
 	return f
 }
 
-// GetPotential ..
-func (c *CliqueTree) GetPotential(i int) *factor.Factor {
+// BkpPotential ..
+func (c *CliqueTree) BkpPotential(i int) *factor.Factor {
+	return c.nodes[i].origPot
+}
+
+// CurrPotential ..
+func (c *CliqueTree) CurrPotential(i int) *factor.Factor {
 	return c.nodes[i].currPot
 }
 
 // RestrictByEvidence applies an evidence tuple to each potential on the clique tree
 func (c *CliqueTree) RestrictByEvidence(evidence []int) {
 	for i := range c.nodes {
-		c.nodes[i].currPot = c.nodes[i].origPot.Restrict(evidence)
+		c.nodes[i].currPot = c.nodes[i].origPot.Reduce(evidence)
 	}
 }
 

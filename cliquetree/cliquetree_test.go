@@ -119,7 +119,7 @@ func calculateCalibrated() {
 	cal = make([]*factor.Factor, len(factorList))
 	p := make([]*factor.Factor, 0)
 	for _, f := range factorList {
-		p = append(p, factor.New(f.varlist, cardin, f.values))
+		p = append(p, factor.NewFactorValues(f.varlist, cardin, f.values))
 	}
 	//AB
 	cal[0] = p[0].Product(p[1].SumOutOne(2)).
@@ -150,7 +150,7 @@ func initCliqueTree(factorList []factorStruct, adjList [][]int) *CliqueTree {
 	for i, f := range factorList {
 		c.SetClique(i, f.varlist)
 		c.SetNeighbours(i, adjList[i])
-		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
+		c.SetPotential(i, factor.NewFactorValues(f.varlist, cardin, f.values))
 	}
 	return c
 }
@@ -160,7 +160,7 @@ func TestNew(t *testing.T) {
 	for i, f := range factorList {
 		c.SetClique(i, f.varlist)
 		c.SetNeighbours(i, adjList[i])
-		c.SetPotential(i, factor.New(f.varlist, cardin, f.values))
+		c.SetPotential(i, factor.NewFactorValues(f.varlist, cardin, f.values))
 	}
 }
 

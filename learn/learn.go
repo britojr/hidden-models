@@ -136,7 +136,7 @@ func (l *Learner) CreateUniformPortentials(ct *cliquetree.CliqueTree, cardin []i
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(l.counter.GetOccurrences(observed))
-			factors[i] = factor.New(observed, cardin, values)
+			factors[i] = factor.NewFactorValues(observed, cardin, values)
 			if len(hidden) > 0 {
 				g := factor.NewFactor(hidden, cardin)
 				g.SetUniform()
@@ -171,7 +171,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 		ct.SetAllPotentials(l.CreateUniformPortentials(ct, l.cardin))
 	}
 
-	fmt.Printf("Initial param: %v (%v)=0\n", ct.GetBkpPotential(0).Values()[0], ct.GetBkpPotential(0).Variables())
+	fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
 	// call EM until convergence
 	em.ExpectationMaximization(ct, l.dataset, l.norm)
 
@@ -188,7 +188,7 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	diff, i, j, err := factor.MaxDifference(uniform, ct.BkpPotentialList())
 	utils.ErrCheck(err, "")
-	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.GetBkpPotential(i).Values()[j])
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.BkpPotential(i).Values()[j])
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
@@ -212,11 +212,11 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(l.counter.GetOccurrences(observed))
-			sumOutHidden[i] = ct.GetBkpPotential(i)
+			sumOutHidden[i] = ct.BkpPotential(i)
 			if len(hidden) > 0 {
 				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
 			}
-			initialCount[i] = factor.New(observed, l.cardin, values)
+			initialCount[i] = factor.NewFactorValues(observed, l.cardin, values)
 			initialCount[i].Normalize()
 			sumOutHidden[i].Normalize()
 		}

@@ -62,7 +62,8 @@ var sumOutOneTests = []testStruct{
 
 func TestNew(t *testing.T) {
 	for _, w := range tests {
-		got := New(w.varlist, w.cardin, w.values)
+		got := NewFactor(w.varlist, w.cardin)
+		got.SetValues(w.values)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
 		for {
@@ -75,12 +76,59 @@ func TestNew(t *testing.T) {
 			}
 			i++
 		}
+		if !reflect.DeepEqual(got.Cardinality(), w.cardin) {
+			t.Errorf("Wrong cardinality, want %v, got %v", w.cardin, got.Cardinality())
+		}
+	}
+}
+
+var testNewFactor = []struct {
+	varlist []int
+	cardin  []int
+	values  []float64
+}{
+	{
+		varlist: []int{0, 1},
+		cardin:  []int{2, 2},
+		values:  []float64{0, 0, 0, 0},
+	},
+	{
+		varlist: []int{1, 3, 5},
+		cardin:  []int{2, 2, 2, 2, 2, 2},
+		values:  []float64{0, 0, 0, 0, 0, 0, 0, 0},
+	},
+	{
+		varlist: []int{1},
+		cardin:  []int{2, 2},
+		values:  []float64{0, 0},
+	},
+	{
+		varlist: []int{1},
+		cardin:  []int{2, 1},
+		values:  []float64{0},
+	},
+	{
+		varlist: []int{},
+		cardin:  []int{},
+		values:  []float64{0},
+	},
+}
+
+func TestNewFactor(t *testing.T) {
+	for _, v := range testNewFactor {
+		got := NewFactor(v.varlist, v.cardin)
+		if !reflect.DeepEqual(v.varlist, got.Variables()) {
+			t.Errorf("want %v, got %v", v.varlist, got.Variables())
+		}
+		if !reflect.DeepEqual(v.values, got.Values()) {
+			t.Errorf("want %v, got %v", v.values, got.Values())
+		}
 	}
 }
 
 func TestVariables(t *testing.T) {
 	for _, w := range tests {
-		f := New(w.varlist, w.cardin, w.values)
+		f := NewFactorValues(w.varlist, w.cardin, w.values)
 		got := f.Variables()
 		if !reflect.DeepEqual(w.varlist, got) {
 			t.Errorf("want(%v); got(%v)", w.varlist, got)
@@ -89,8 +137,8 @@ func TestVariables(t *testing.T) {
 }
 
 func TestProduct(t *testing.T) {
-	a := New(f01.varlist, f01.cardin, f01.values)
-	b := New(f12.varlist, f12.cardin, f12.values)
+	a := NewFactorValues(f01.varlist, f01.cardin, f01.values)
+	b := NewFactorValues(f12.varlist, f12.cardin, f12.values)
 	got := a.Product(b)
 	assig := assignment.New(f012.varlist, f012.cardin)
 	i := 0
@@ -107,7 +155,7 @@ func TestProduct(t *testing.T) {
 }
 
 func TestSumOutOne(t *testing.T) {
-	a := New(f012.varlist, f012.cardin, f012.values)
+	a := NewFactorValues(f012.varlist, f012.cardin, f012.values)
 	for i, w := range sumOutOneTests {
 		got := a.SumOutOne(i)
 		assig := assignment.New(w.varlist, w.cardin)
@@ -125,7 +173,7 @@ func TestSumOutOne(t *testing.T) {
 	}
 }
 
-var testRestrict = []struct {
+var testReduce = []struct {
 	varlist    []int
 	cardin     []int
 	values     []float64
@@ -148,10 +196,10 @@ var testRestrict = []struct {
 	},
 }
 
-func TestRestrict(t *testing.T) {
-	for _, v := range testRestrict {
-		f := New(v.varlist, v.cardin, v.values)
-		f = f.Restrict(v.evid)
+func TestReduce(t *testing.T) {
+	for _, v := range testReduce {
+		f := NewFactorValues(v.varlist, v.cardin, v.values)
+		f = f.Reduce(v.evid)
 		if !reflect.DeepEqual(v.restricted, f.values) {
 			t.Errorf("want %v, got %v", v.restricted, f.values)
 		}
@@ -204,7 +252,7 @@ var testNormalize = []struct {
 
 func TestNormalize(t *testing.T) {
 	for _, v := range testNormalize {
-		f := New(v.varlist, v.cardin, v.values)
+		f := NewFactorValues(v.varlist, v.cardin, v.values)
 		f.Normalize()
 		if !reflect.DeepEqual(v.normalized, f.values) {
 			t.Errorf("want %v, got %v", v.normalized, f.values)
@@ -303,10 +351,10 @@ func TestMaxDifference(t *testing.T) {
 		g := make([]*Factor, len(v.alist))
 		for i := range f {
 			if len(v.alist[i]) > 0 {
-				f[i] = New(v.varlist, v.cardin, v.alist[i])
+				f[i] = NewFactorValues(v.varlist, v.cardin, v.alist[i])
 			}
 			if len(v.blist[i]) > 0 {
-				g[i] = New(v.varlist, v.cardin, v.blist[i])
+				g[i] = NewFactorValues(v.varlist, v.cardin, v.blist[i])
 			}
 
 		}
@@ -321,6 +369,139 @@ func TestMaxDifference(t *testing.T) {
 			if math.Abs(f[i].Values()[j]-g[i].Values()[j]) != got {
 				t.Errorf("want %v, got %v", math.Abs(f[i].Values()[j]-g[i].Values()[j]), got)
 			}
+		}
+	}
+}
+
+var testSetUniform = []struct {
+	f       *Factor
+	uniform []float64
+}{
+	{
+		f:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		uniform: []float64{0.25, 0.25, 0.25, 0.25},
+	},
+	{
+		f:       NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2}),
+		uniform: []float64{0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125},
+	},
+	{
+		f:       NewFactor([]int{1}, []int{2, 2}),
+		uniform: []float64{0.5, 0.5},
+	},
+	{
+		f:       NewFactorValues([]int{1}, []int{2, 2}, []float64{}),
+		uniform: []float64{},
+	},
+	{
+		f:       NewFactor([]int{}, []int{}),
+		uniform: []float64{1},
+	},
+}
+
+func TestSetUniform(t *testing.T) {
+	for _, v := range testSetUniform {
+		got := v.f.SetUniform()
+		if !reflect.DeepEqual(v.uniform, got.Values()) {
+			t.Errorf("want %v, got %v", v.uniform, got.Values())
+		}
+	}
+}
+
+var testSetRandom = []struct {
+	f    *Factor
+	size int
+}{
+	{
+		f:    NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		size: 4,
+	},
+	{
+		f:    NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2}),
+		size: 8,
+	},
+	{
+		f:    NewFactor([]int{1}, []int{2, 2}),
+		size: 2,
+	},
+	{
+		f:    NewFactorValues([]int{1}, []int{2, 2}, []float64{}),
+		size: 0,
+	},
+	{
+		f:    NewFactor([]int{}, []int{}),
+		size: 1,
+	},
+}
+
+func TestSetRandom(t *testing.T) {
+	for _, v := range testSetRandom {
+		got := v.f.SetRandom()
+		if v.size != len(got.Values()) {
+			t.Errorf("want %v, got %v", v.size, got.Values())
+		}
+		if v.size != 0 && !utils.FuzzyEqual(1, utils.SliceSumFloat64(got.Values())) {
+			t.Errorf("not normalized, sum %v", utils.SliceSumFloat64(got.Values()))
+		}
+	}
+}
+
+var testSumOut = []struct {
+	f       *Factor
+	varlist []int
+	r       *Factor
+}{
+	{
+		f: NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		r: NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+	},
+	{
+		f:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		varlist: []int{2},
+		r:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+	},
+	{
+		f:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		varlist: []int{0},
+		r:       NewFactorValues([]int{1}, []int{2, 2}, []float64{30, 70}),
+	},
+	{
+		f:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		varlist: []int{1},
+		r:       NewFactorValues([]int{0}, []int{2, 2}, []float64{40, 60}),
+	},
+	{
+		f:       NewFactorValues([]int{1}, []int{2, 2}, []float64{10, 20}),
+		varlist: []int{1},
+		r:       NewFactorValues([]int{}, []int{2, 2}, []float64{30}),
+	},
+	{
+		f:       NewFactorValues([]int{0}, []int{1}, []float64{15}),
+		varlist: []int{0},
+		r:       NewFactorValues([]int{}, []int{1}, []float64{15}),
+	},
+	{
+		f: NewFactorValues([]int{1, 2, 3}, []int{2, 2, 2, 2, 2},
+			[]float64{1, 2, 3, 4, 5, 6, 7, 8}),
+		varlist: []int{3, 1},
+		r:       NewFactorValues([]int{2}, []int{2, 2, 2, 2, 2}, []float64{14, 22}),
+	},
+	{
+		f: NewFactorValues([]int{1, 2, 3}, []int{2, 2, 2, 2, 2},
+			[]float64{1, 2, 3, 4, 5, 6, 7, 8}),
+		varlist: []int{2},
+		r:       NewFactorValues([]int{1, 3}, []int{2, 2, 2, 2, 2}, []float64{1 + 3, 2 + 4, 5 + 7, 6 + 8}),
+	},
+}
+
+func TestSumOut(t *testing.T) {
+	for _, v := range testSumOut {
+		got := v.f.SumOut(v.varlist)
+		if !reflect.DeepEqual(v.r.Variables(), got.Variables()) {
+			t.Errorf("want %v, got %v", v.r.Variables(), got.Variables())
+		}
+		if !reflect.DeepEqual(v.r.Values(), got.Values()) {
+			t.Errorf("want %v, got %v", v.r.Values(), got.Values())
 		}
 	}
 }
