@@ -217,3 +217,34 @@ func TestListIntersection(t *testing.T) {
 		}
 	}
 }
+
+var testSliceSumFloat64 = []struct {
+	values []float64
+	sum    float64
+}{
+	{
+		[]float64{5, 5},
+		10,
+	},
+	{
+		[]float64{1.5, 3.5, 0.5},
+		5.5,
+	},
+	{
+		[]float64{},
+		0,
+	},
+	{
+		[]float64(nil),
+		0,
+	},
+}
+
+func TestSliceSumFloat64(t *testing.T) {
+	for _, v := range testSliceSumFloat64 {
+		got := SliceSumFloat64(v.values)
+		if v.sum != got {
+			t.Errorf("want %v, got %v", v.sum, got)
+		}
+	}
+}

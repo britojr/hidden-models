@@ -84,6 +84,14 @@ func ClearSlice(b *bitset.BitSet, varlist []int) {
 	}
 }
 
+// SliceSumFloat64 returns the sum of all slice values
+func SliceSumFloat64(values []float64) (sum float64) {
+	for _, v := range values {
+		sum += v
+	}
+	return
+}
+
 // NormalizeSlice normalizes the slice so all values sum to one
 func NormalizeSlice(values []float64) {
 	var sum float64
