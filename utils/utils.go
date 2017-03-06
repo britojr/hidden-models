@@ -13,8 +13,12 @@ import (
 const epslon = 1e-10
 
 // FuzzyEqual compares float numbers with a tolerance
-func FuzzyEqual(a, b float64) bool {
-	if math.Abs(a-b) < epslon {
+func FuzzyEqual(a, b float64, delta ...float64) bool {
+	eps := epslon
+	if len(delta) > 0 {
+		eps = delta[0]
+	}
+	if math.Abs(a-b) < eps {
 		return true
 	}
 	return false
