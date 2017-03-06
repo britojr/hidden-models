@@ -234,7 +234,6 @@ func CreateUniformPortentials(cliques [][]int, cardin []int,
 		} else {
 			factors[i] = factor.NewFactor(hidden, cardin)
 			factors[i].SetUniform()
-			fmt.Printf(" >> Factor %v: has only hidden variables\n", i)
 		}
 	}
 	return factors
