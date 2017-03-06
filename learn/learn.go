@@ -103,45 +103,6 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 	return ct, score
 }
 
-// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
-func CreateUniformPortentials(cliques [][]int, cardin []int,
-	numobs int, counter Counter) []*factor.Factor {
-
-	factors := make([]*factor.Factor, len(cliques))
-	for i := range factors {
-		var observed, hidden []int
-		if len(cardin) > numobs {
-			observed, hidden = utils.SliceSplit(cliques[i], numobs)
-		} else {
-			observed = cliques[i]
-		}
-		if len(observed) > 0 {
-			values := utils.SliceItoF64(counter.CountAssignments(observed))
-			factors[i] = factor.NewFactorValues(observed, cardin, values)
-			if len(hidden) > 0 {
-				g := factor.NewFactor(hidden, cardin)
-				g.SetUniform()
-				factors[i] = factors[i].Product(g)
-			}
-			factors[i].Normalize()
-		} else {
-			factors[i] = factor.NewFactor(hidden, cardin)
-			factors[i].SetUniform()
-			fmt.Printf(" >> Factor %v: has only hidden variables\n", i)
-		}
-	}
-	return factors
-}
-
-// CreateRandomPortentials creates a list of clique potentials with random values
-func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
-	factors := make([]*factor.Factor, len(cliques))
-	for i := range factors {
-		factors[i] = factor.NewFactor(cliques[i], cardin).SetRandom()
-	}
-	return factors
-}
-
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	// initialize clique tree potentials
@@ -247,4 +208,43 @@ func sumLogCount(varlist []int, counter Counter) (ll float64) {
 		}
 	}
 	return ll
+}
+
+// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
+func CreateUniformPortentials(cliques [][]int, cardin []int,
+	numobs int, counter Counter) []*factor.Factor {
+
+	factors := make([]*factor.Factor, len(cliques))
+	for i := range factors {
+		var observed, hidden []int
+		if len(cardin) > numobs {
+			observed, hidden = utils.SliceSplit(cliques[i], numobs)
+		} else {
+			observed = cliques[i]
+		}
+		if len(observed) > 0 {
+			values := utils.SliceItoF64(counter.CountAssignments(observed))
+			factors[i] = factor.NewFactorValues(observed, cardin, values)
+			if len(hidden) > 0 {
+				g := factor.NewFactor(hidden, cardin)
+				g.SetUniform()
+				factors[i] = factors[i].Product(g)
+			}
+			factors[i].Normalize()
+		} else {
+			factors[i] = factor.NewFactor(hidden, cardin)
+			factors[i].SetUniform()
+			fmt.Printf(" >> Factor %v: has only hidden variables\n", i)
+		}
+	}
+	return factors
+}
+
+// CreateRandomPortentials creates a list of clique potentials with random values
+func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
+	factors := make([]*factor.Factor, len(cliques))
+	for i := range factors {
+		factors[i] = factor.NewFactor(cliques[i], cardin).SetRandom()
+	}
+	return factors
 }
