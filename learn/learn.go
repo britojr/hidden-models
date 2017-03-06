@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
 	"github.com/britojr/kbn/em"
@@ -235,4 +236,38 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	} else {
 		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
 	}
+}
+
+// Counter returns a counting value for an assignment
+type Counter interface {
+	Count(assig *assignment.Assignment) (count int, ok bool)
+	Cardinality() []int
+	NumTuples() int
+}
+
+// Structloglikelihood calculates the log-likelihood
+func (l *Learner) Structloglikelihood(ct *cliquetree.CliqueTree, counter Counter) (ll float64) {
+	// for each node adds the count of every attribution of the clique and
+	// subtracts the count of every attribution of the sepset
+	for i := 0; i < ct.Size(); i++ {
+		ll += sumLogCount(ct.Clique(i), counter)
+		ll -= sumLogCount(ct.SepSet(i), counter)
+	}
+	ll -= float64(counter.NumTuples()) * math.Log(float64(counter.NumTuples()))
+	return
+}
+
+func sumLogCount(varlist []int, counter Counter) (ll float64) {
+	assig := assignment.New(varlist, counter.Cardinality())
+	for {
+		if v, ok := counter.Count(assig); ok {
+			if v != 0 {
+				ll += float64(v) * math.Log(float64(v))
+			}
+		}
+		if hasnext := assig.Next(); !hasnext {
+			break
+		}
+	}
+	return ll
 }
