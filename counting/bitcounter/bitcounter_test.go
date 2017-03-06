@@ -137,16 +137,16 @@ func TestLoadFromData(t *testing.T) {
 	}
 }
 
-func TestGetOccurrences(t *testing.T) {
+func TestCountAssignments(t *testing.T) {
 	for _, m := range margTests {
 		b := NewBitCounter()
 		b.LoadFromData(m.d.lines, m.d.card)
-		got := b.GetOccurrences(m.in)
+		got := b.CountAssignments(m.in)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
 		//roll twice to test cache
-		got = b.GetOccurrences(m.in)
+		got = b.CountAssignments(m.in)
 		if !reflect.DeepEqual(m.outComplete, got) {
 			t.Errorf("want(%v); got(%v)", m.outComplete, got)
 		}
@@ -155,7 +155,7 @@ func TestGetOccurrences(t *testing.T) {
 	m := margTests[0]
 	b := NewBitCounter()
 	b.LoadFromData(m.d.lines, m.d.card)
-	got := b.GetOccurrences([]int{})
+	got := b.CountAssignments([]int{})
 	if len(got) != 0 {
 		t.Errorf("want(%v); got(%v)", []int{}, got)
 	}
@@ -206,7 +206,7 @@ func TestGetOccurrences_2(t *testing.T) {
 	for _, v := range testGetOccurrences {
 		b := NewBitCounter()
 		b.LoadFromData(v.data, v.cardin)
-		got := b.GetOccurrences(v.varlist)
+		got := b.CountAssignments(v.varlist)
 		if !reflect.DeepEqual(v.result, got) {
 			t.Errorf("want(%v); got(%v)", v.result, got)
 		}

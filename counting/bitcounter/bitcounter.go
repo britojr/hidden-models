@@ -46,9 +46,9 @@ func (b *BitCounter) LoadFromData(dataset [][]int, cardinality []int) {
 
 }
 
-// GetOccurrences returns array with the counting of each possible assignment
+// CountAssignments returns array with the counting of each possible assignment
 // of the given set of variables
-func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
+func (b *BitCounter) CountAssignments(varlist []int) (v []int) {
 	if len(varlist) <= 0 {
 		return
 	}
@@ -57,7 +57,7 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
 		for {
-			if count, ok := b.CountAssignment(assig); ok {
+			if count, ok := b.Count(assig); ok {
 				v = append(v, count)
 			} else {
 				return
@@ -71,8 +71,8 @@ func (b *BitCounter) GetOccurrences(varlist []int) (v []int) {
 	return
 }
 
-// CountAssignment returns the number of occurrences of an specific assignment
-func (b *BitCounter) CountAssignment(assig *assignment.Assignment) (int, bool) {
+// Count returns number of lines
+func (b *BitCounter) Count(assig *assignment.Assignment) (int, bool) {
 	setlist := make([]*bitset.BitSet, 0, len(assig.Variables()))
 	for i := range assig.Variables() {
 		if assig.Var(i) < len(b.cardin) {
@@ -86,4 +86,14 @@ func (b *BitCounter) CountAssignment(assig *assignment.Assignment) (int, bool) {
 	return -1, false
 	//return b.lines, false
 	//return 0, false
+}
+
+// Cardinality returns cardinality slice
+func (b *BitCounter) Cardinality() []int {
+	return b.cardin
+}
+
+// NumTuples returns number of lines
+func (b *BitCounter) NumTuples() int {
+	return b.lines
 }
