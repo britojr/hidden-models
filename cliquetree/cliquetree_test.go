@@ -257,8 +257,8 @@ func TestFromCharTree(t *testing.T) {
 			if !reflect.DeepEqual(got.SepSet(i), v.sepsets[i]) {
 				t.Errorf("Sepset[%v]; Got: %v; Want: %v", i, got.SepSet(i), v.sepsets[i])
 			}
-			if !reflect.DeepEqual(got.nodes[i].neighbours, v.adj[i]) {
-				t.Errorf("Adj[%v]; Got: %v; Want: %v", i, got.nodes[i].neighbours, v.adj[i])
+			if !reflect.DeepEqual(got.neighbours[i], v.adj[i]) {
+				t.Errorf("Adj[%v]; Got: %v; Want: %v", i, got.neighbours[i], v.adj[i])
 			}
 			if got.parent[i] != v.parent[i] {
 				t.Errorf("parent[%v]; Got: %v; Want: %v", i, got.parent[i], v.parent[i])

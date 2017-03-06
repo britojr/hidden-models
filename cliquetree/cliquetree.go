@@ -9,119 +9,128 @@ import (
 
 // CliqueTree ..
 type CliqueTree struct {
-	nodes         []node
-	send, receive []*factor.Factor
-	prev, post    [][]*factor.Factor
-	parent        []int
-}
+	cliques [][]int // wich variables participate on this clique
+	sepsets [][]int // sepsets for each node
 
-type node struct {
-	varlist       []int          // wich variables participate on this clique
-	neighbours    []int          // cliques that are adjacent to this one
-	origPot       *factor.Factor // original clique potential
-	currPot       *factor.Factor // initial clique potential for calibration
-	calibratedPot *factor.Factor // calibrated potential
-	sepset        []int
+	neighbours [][]int // cliques that are adjacent to this one, including parent
+	parent     []int   // the parent of each node
+
+	origPot       []*factor.Factor // original clique potential
+	currPot       []*factor.Factor // initial clique potential for calibration
+	calibratedPot []*factor.Factor // calibrated potential
+
+	send, receive []*factor.Factor   // auxiliar for message passing
+	prev, post    [][]*factor.Factor // axiliar to reduce (memoize) number of factor multiplications
 }
 
 // New ..
 func New(n int) *CliqueTree {
 	c := new(CliqueTree)
-	c.nodes = make([]node, n)
+	c.cliques = make([][]int, n)
+	c.sepsets = make([][]int, n)
+	c.neighbours = make([][]int, n)
+	c.parent = make([]int, n)
+	c.origPot = make([]*factor.Factor, n)
+	c.currPot = make([]*factor.Factor, n)
+	c.calibratedPot = make([]*factor.Factor, n)
 	return c
 }
 
 // Size returns the number of cliques
 func (c *CliqueTree) Size() int {
-	return len(c.nodes)
+	return len(c.cliques)
 }
 
 // SetClique ..
 func (c *CliqueTree) SetClique(i int, varlist []int) {
-	c.nodes[i].varlist = varlist
+	c.cliques[i] = varlist
 }
 
 // SetSepSet ..
 func (c *CliqueTree) SetSepSet(i int, varlist []int) {
-	c.nodes[i].sepset = varlist
+	c.sepsets[i] = varlist
 }
 
-// Clique ..
+// Clique returns the ith clique
 func (c *CliqueTree) Clique(i int) []int {
-	return c.nodes[i].varlist
+	return c.cliques[i]
 }
 
-// SepSet ..
+// Cliques returns the complete clique list ..
+func (c *CliqueTree) Cliques() [][]int {
+	return c.cliques
+}
+
+// SepSet returns the ith sepset
 func (c *CliqueTree) SepSet(i int) []int {
-	return c.nodes[i].sepset
+	return c.sepsets[i]
+}
+
+// SepSets returns complete sepset list
+func (c *CliqueTree) SepSets() [][]int {
+	return c.sepsets
 }
 
 // SetNeighbours ..
 func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
-	c.nodes[i].neighbours = neighbours
+	c.neighbours[i] = neighbours
 }
 
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
-	c.nodes[i].origPot = potential
-	c.nodes[i].currPot = potential
+	c.origPot[i] = potential
+	c.currPot[i] = potential
 }
 
 // SetAllPotentials ..
 func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
-	for i, potential := range potentials {
-		c.nodes[i].origPot = potential
-		c.nodes[i].currPot = potential
-	}
+	c.origPot = potentials
+	c.currPot = potentials
 }
 
 // BkpPotentialList returns a list with all the original potentials
 func (c *CliqueTree) BkpPotentialList() []*factor.Factor {
-	f := make([]*factor.Factor, c.Size())
-	for i := range f {
-		f[i] = c.BkpPotential(i)
-	}
-	return f
+	return c.origPot
 }
 
 // BkpPotential ..
 func (c *CliqueTree) BkpPotential(i int) *factor.Factor {
-	return c.nodes[i].origPot
+	return c.origPot[i]
 }
 
 // CurrPotential ..
 func (c *CliqueTree) CurrPotential(i int) *factor.Factor {
-	return c.nodes[i].currPot
+	return c.currPot[i]
 }
 
 // RestrictByEvidence applies an evidence tuple to each potential on the clique tree
 func (c *CliqueTree) RestrictByEvidence(evidence []int) {
-	for i := range c.nodes {
-		c.nodes[i].currPot = c.nodes[i].origPot.Reduce(evidence)
+	for i := range c.currPot {
+		c.currPot[i] = c.origPot[i].Reduce(evidence)
 	}
 }
 
 // Calibrated ..
 func (c *CliqueTree) Calibrated(i int) *factor.Factor {
-	if c.nodes[i].calibratedPot == nil {
+	if c.calibratedPot[i] == nil {
 		panic("Clique tree wasn't calibrated")
 	}
-	return c.nodes[i].calibratedPot
+	return c.calibratedPot[i]
 }
 
 // LoadCalibration ..
 func (c *CliqueTree) LoadCalibration() {
-	for i := range c.nodes {
-		c.nodes[i].calibratedPot = c.nodes[i].currPot
+	for i := range c.calibratedPot {
+		c.calibratedPot[i] = c.currPot[i]
 	}
 }
 
 // UpDownCalibration ..
 func (c *CliqueTree) UpDownCalibration() {
-	c.send = make([]*factor.Factor, len(c.nodes))
-	c.receive = make([]*factor.Factor, len(c.nodes))
-	c.prev = make([][]*factor.Factor, len(c.nodes))
-	c.post = make([][]*factor.Factor, len(c.nodes))
+	c.send = make([]*factor.Factor, c.Size())
+	c.receive = make([]*factor.Factor, c.Size())
+	c.prev = make([][]*factor.Factor, c.Size())
+	c.post = make([][]*factor.Factor, c.Size())
 	root := 0
 
 	c.upwardmessage(root, -1)
@@ -129,10 +138,10 @@ func (c *CliqueTree) UpDownCalibration() {
 }
 
 func (c *CliqueTree) upwardmessage(v, pa int) {
-	c.prev[v] = make([]*factor.Factor, 1, len(c.nodes[v].neighbours)+1)
-	c.prev[v][0] = c.nodes[v].currPot
-	if len(c.nodes[v].neighbours) > 1 {
-		for _, ne := range c.nodes[v].neighbours {
+	c.prev[v] = make([]*factor.Factor, 1, len(c.neighbours[v])+1)
+	c.prev[v][0] = c.currPot[v]
+	if len(c.neighbours[v]) > 1 {
+		for _, ne := range c.neighbours[v] {
 			if ne != pa {
 				c.upwardmessage(ne, v)
 				c.prev[v] = append(c.prev[v], c.send[ne].Product(c.prev[v][len(c.prev[v])-1]))
@@ -140,18 +149,18 @@ func (c *CliqueTree) upwardmessage(v, pa int) {
 		}
 	}
 	if pa != -1 {
-		c.send[v] = c.prev[v][len(c.prev[v])-1].Marginalize(c.nodes[pa].varlist)
+		c.send[v] = c.prev[v][len(c.prev[v])-1].Marginalize(c.cliques[pa])
 	}
 }
 
 func (c *CliqueTree) downwardmessage(pa, v int) {
-	c.nodes[v].calibratedPot = c.prev[v][len(c.prev[v])-1]
-	n := len(c.nodes[v].neighbours)
+	c.calibratedPot[v] = c.prev[v][len(c.prev[v])-1]
+	n := len(c.neighbours[v])
 	if pa != -1 {
-		c.nodes[v].calibratedPot = c.nodes[v].calibratedPot.Product(c.receive[v])
+		c.calibratedPot[v] = c.calibratedPot[v].Product(c.receive[v])
 		n--
 	}
-	if len(c.nodes[v].neighbours) == 1 && pa != -1 {
+	if len(c.neighbours[v]) == 1 && pa != -1 {
 		return
 	}
 
@@ -159,8 +168,8 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 	i := len(c.post[v]) - 1
 	c.post[v][i] = c.receive[v]
 	i--
-	for k := len(c.nodes[v].neighbours) - 1; k >= 0 && i >= 0; k-- {
-		ch := c.nodes[v].neighbours[k]
+	for k := len(c.neighbours[v]) - 1; k >= 0 && i >= 0; k-- {
+		ch := c.neighbours[v][k]
 		if ch == pa {
 			continue
 		}
@@ -172,7 +181,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 	}
 
 	k := 0
-	for _, ch := range c.nodes[v].neighbours {
+	for _, ch := range c.neighbours[v] {
 		if ch == pa {
 			continue
 		}
@@ -180,7 +189,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		if c.post[v][k] != nil {
 			msg = msg.Product(c.post[v][k])
 		}
-		c.receive[ch] = msg.Marginalize(c.nodes[ch].varlist)
+		c.receive[ch] = msg.Marginalize(c.cliques[ch])
 		c.downwardmessage(v, ch)
 		k++
 	}
