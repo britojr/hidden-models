@@ -85,6 +85,16 @@ func TestCreateRandomPortentials(t *testing.T) {
 }
 
 func TestCreateUniformPortentials(t *testing.T) {
+	fakeCounter := FakeCounter{
+		cardin:    []int{2, 2, 2},
+		numtuples: 100,
+		counts: map[string][]int{
+			fmt.Sprint([]int{0, 1}): {25, 10, 35, 30},
+			fmt.Sprint([]int{1, 2}): {40, 20, 10, 30},
+			fmt.Sprint([]int{1}):    {60, 40},
+			fmt.Sprint([]int{0}):    {35, 65},
+		},
+	}
 	cases := []struct {
 		cliques [][]int
 		cardin  []int
@@ -96,16 +106,22 @@ func TestCreateUniformPortentials(t *testing.T) {
 			cliques: [][]int{{0, 1}, {1, 2}},
 			cardin:  []int{2, 2, 2},
 			numobs:  2,
-			counter: FakeCounter{
-				cardin:    []int{2, 2},
-				numtuples: 100,
-				counts: map[string][]int{
-					fmt.Sprint([]int{0, 1}): {25, 10, 35, 30},
-					fmt.Sprint([]int{1, 2}): {40, 20, 10, 30},
-					fmt.Sprint([]int{1}):    {60, 40},
-				},
-			},
-			result: [][]float64{{.25, .10, .35, .30}, {.60 / 2.0, .40 / 2.0, .60 / 2.0, .40 / 2.0}},
+			counter: fakeCounter,
+			result:  [][]float64{{.25, .10, .35, .30}, {.60 / 2.0, .40 / 2.0, .60 / 2.0, .40 / 2.0}},
+		},
+		{
+			cliques: [][]int{{0, 1}, {1, 2}},
+			cardin:  []int{2, 2, 2},
+			numobs:  3,
+			counter: fakeCounter,
+			result:  [][]float64{{.25, .10, .35, .30}, {.40, .20, .10, .30}},
+		},
+		{
+			cliques: [][]int{{0, 1}, {1, 2}},
+			cardin:  []int{2, 2, 2},
+			numobs:  1,
+			counter: fakeCounter,
+			result:  [][]float64{{.35 / 2.0, .65 / 2.0, .35 / 2.0, .65 / 2.0}, {.25, .25, .25, .25}},
 		},
 	}
 	for _, tt := range cases {
