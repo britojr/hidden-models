@@ -8,6 +8,7 @@ import (
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/generator"
 )
@@ -112,7 +113,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 
 	fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
 	// call EM until convergence
-	em.ExpectationMaximization(ct, l.dataset, l.counter, l.norm)
+	em.ExpectationMaximization(ct, l.dataset, l.counter, l.n, l.norm)
 
 	// check resulting parameters TODO: remove
 	// check if they are uniform

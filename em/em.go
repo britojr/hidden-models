@@ -8,18 +8,20 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/utils"
 )
 
 const epslon = 1e-14
 
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree,
-	ds *filehandler.DataSet, counter utils.Counter, norm bool) {
+func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
+	counter utils.Counter, numobs int, norm bool) {
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
+		fmt.Printf("Current LL: %v\n", likelihood.Loglikelihood1(ct, counter, numobs))
 		newpot := expectationStep(ct, ds)
 		if norm {
 			for j := range newpot {
@@ -47,7 +49,7 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
 		// ct.LoadCalibration()
-		checkCliqueTree(ct)
+		// checkCliqueTree(ct)
 		for i := range count {
 			ct.Calibrated(i).Normalize()
 			for j, v := range ct.Calibrated(i).Values() {

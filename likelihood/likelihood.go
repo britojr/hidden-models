@@ -7,8 +7,8 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-// loglikelihood1 calculates the log-likelihood weighted by counts
-func loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int) (ll float64) {
+// Loglikelihood1 calculates the log-likelihood weighted by counts
+func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int) (ll float64) {
 	for i, clique := range ct.Cliques() {
 		var observed, hidden []int
 		if len(counter.Cardinality()) > numobs {
@@ -44,8 +44,7 @@ func loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int
 
 // loglikelihood2 calculates the log-likelihood line by line
 func loglikelihood2(cliques, sepsets [][]int, counter utils.Counter) (ll float64) {
-	// for each node adds the count of every attribution of the clique and
-	// subtracts the count of every attribution of the sepset
+	// TODO: how to calculate a prob dist over variables throughout more than one clique
 	for i := range cliques {
 		ll += sumLogCount(cliques[i], counter)
 	}
