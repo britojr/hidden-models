@@ -4,13 +4,14 @@ import (
 	"sort"
 
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/characteristic"
 )
 
 // CliqueTree ..
 type CliqueTree struct {
 	cliques [][]int // wich variables participate on this clique
-	sepsets [][]int // sepsets for each node
+	sepsets [][]int // sepsets for each node (intersection with the parent clique)
 
 	neighbours [][]int // cliques that are adjacent to this one, including parent
 	parent     []int   // the parent of each node
@@ -112,12 +113,24 @@ func (c *CliqueTree) ReduceByEvidence(evidence []int) {
 	}
 }
 
-// Calibrated ..
+// Calibrated returns the calibrated potential for the ith clique
 func (c *CliqueTree) Calibrated(i int) *factor.Factor {
 	if c.calibratedPot[i] == nil {
 		panic("Clique tree wasn't calibrated")
 	}
 	return c.calibratedPot[i]
+}
+
+// CalibratedSepSet returns the calibrated potential for the sepset of the ith clique
+func (c *CliqueTree) CalibratedSepSet(i int) *factor.Factor {
+	if c.calibratedPot[i] == nil {
+		panic("Clique tree wasn't calibrated")
+	}
+	if c.parent[i] < 0 {
+		return nil
+	}
+	diff := utils.SliceDifference(c.Clique(i), c.Clique(c.parent[i]))
+	return c.calibratedPot[i].SumOut(diff)
 }
 
 // LoadCalibration ..
