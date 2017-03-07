@@ -7,8 +7,17 @@ import (
 	"math"
 	"strconv"
 
+	"github.com/britojr/kbn/assignment"
 	"github.com/willf/bitset"
 )
+
+// Counter returns a counting value for an assignment
+type Counter interface {
+	Count(assig *assignment.Assignment) (count int, ok bool)
+	CountAssignments(varlist []int) []int
+	Cardinality() []int
+	NumTuples() int
+}
 
 const epslon = 1e-10
 
