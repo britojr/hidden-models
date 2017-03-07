@@ -2,9 +2,7 @@ package learn
 
 import (
 	"fmt"
-	"math"
 
-	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
 	"github.com/britojr/kbn/em"
@@ -99,7 +97,7 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
 	utils.ErrCheck(err, "")
 	ct := cliquetree.FromCharTree(T, iphi)
-	score := Structloglikelihood(ct.Cliques(), ct.SepSets(), l.counter)
+	score := likelihood.StructLog(ct.Cliques(), ct.SepSets(), l.counter)
 	return ct, score
 }
 
@@ -114,7 +112,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 
 	fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
 	// call EM until convergence
-	em.ExpectationMaximization(ct, l.dataset, l.norm)
+	em.ExpectationMaximization(ct, l.dataset, l.counter, l.norm)
 
 	// check resulting parameters TODO: remove
 	// check if they are uniform
@@ -180,41 +178,9 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	}
 }
 
-// Counter returns a counting value for an assignment
-type Counter interface {
-	Count(assig *assignment.Assignment) (count int, ok bool)
-	CountAssignments(varlist []int) []int
-	Cardinality() []int
-	NumTuples() int
-}
-
-// Structloglikelihood calculates the log-likelihood
-func Structloglikelihood(cliques, sepsets [][]int, counter Counter) (ll float64) {
-	// for each node adds the count of every attribution of the clique and
-	// subtracts the count of every attribution of the sepset
-	for i := range cliques {
-		ll += sumLogCount(cliques[i], counter)
-	}
-	for i := range sepsets {
-		ll -= sumLogCount(sepsets[i], counter)
-	}
-	ll -= float64(counter.NumTuples()) * math.Log(float64(counter.NumTuples()))
-	return
-}
-
-func sumLogCount(varlist []int, counter Counter) (ll float64) {
-	values := counter.CountAssignments(varlist)
-	for _, v := range values {
-		if v != 0 {
-			ll += float64(v) * math.Log(float64(v))
-		}
-	}
-	return ll
-}
-
 // CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
 func CreateUniformPortentials(cliques [][]int, cardin []int,
-	numobs int, counter Counter) []*factor.Factor {
+	numobs int, counter utils.Counter) []*factor.Factor {
 
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {

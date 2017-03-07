@@ -14,7 +14,8 @@ import (
 const epslon = 1e-14
 
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, norm bool) {
+func ExpectationMaximization(ct *cliquetree.CliqueTree,
+	ds *filehandler.DataSet, counter utils.Counter, norm bool) {
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
