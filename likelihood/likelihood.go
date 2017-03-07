@@ -10,32 +10,24 @@ import (
 // Loglikelihood1 calculates the log-likelihood weighted by counts
 func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int) (ll float64) {
 	for i, clique := range ct.Cliques() {
-		var observed, hidden []int
-		if len(counter.Cardinality()) > numobs {
-			observed, hidden = utils.SliceSplit(clique, numobs)
-		} else {
-			observed = clique
-		}
+		observed, hidden := utils.SliceSplit(clique, numobs)
 		if len(observed) > 0 {
 			count := counter.CountAssignments(observed)
-			f := ct.Calibrated(i).SumOut(hidden)
-			for j, v := range count {
-				ll += float64(v) * math.Log(f.Values()[j])
+			for j, v := range ct.Calibrated(i).SumOut(hidden).Values() {
+				if v != 0 {
+					ll += float64(count[j]) * math.Log(v)
+				}
 			}
 		}
 	}
 	for i, sepset := range ct.SepSets() {
-		var observed, hidden []int
-		if len(counter.Cardinality()) > numobs {
-			observed, hidden = utils.SliceSplit(sepset, numobs)
-		} else {
-			observed = sepset
-		}
+		observed, hidden := utils.SliceSplit(sepset, numobs)
 		if len(observed) > 0 {
 			count := counter.CountAssignments(observed)
-			f := ct.Calibrated(i).SumOut(hidden)
-			for j, v := range count {
-				ll -= float64(v) * math.Log(f.Values()[j])
+			for j, v := range ct.CalibratedSepSet(i).SumOut(hidden).Values() {
+				if v != 0 {
+					ll -= float64(count[j]) * math.Log(v)
+				}
 			}
 		}
 	}
