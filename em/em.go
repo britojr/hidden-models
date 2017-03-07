@@ -11,16 +11,13 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-var miniterations = 5
-
-const epslon = 1e-16
+const epslon = 1e-14
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, norm bool) {
-	// TODO: remove miniterations
-	diff := epslon + 1
+	diff := epslon * 10
 	var err error
-	for i := 1; i <= miniterations || diff >= epslon; i++ {
+	for i := 1; diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
 		newpot := expectationStep(ct, ds)
 		if norm {
@@ -46,9 +43,10 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 
 	// calculate probability of every instance
 	for _, m := range ds.Data() {
-		ct.RestrictByEvidence(m)
+		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
 		// ct.LoadCalibration()
+		checkCliqueTree(ct)
 		for i := range count {
 			ct.Calibrated(i).Normalize()
 			for j, v := range ct.Calibrated(i).Values() {
@@ -61,4 +59,18 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	}
 
 	return count
+}
+
+func checkCliqueTree(ct *cliquetree.CliqueTree) {
+	for i := range ct.BkpPotentialList() {
+		f := ct.Calibrated(i)
+		sum := 0.0
+		for _, v := range f.Values() {
+			sum += v
+		}
+		if sum == 0 {
+			fmt.Printf("(%v)\n", f.Variables())
+			panic("original zero factor")
+		}
+	}
 }
