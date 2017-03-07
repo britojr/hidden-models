@@ -19,8 +19,10 @@ type CliqueTree struct {
 	currPot       []*factor.Factor // initial clique potential for calibration
 	calibratedPot []*factor.Factor // calibrated potential
 
-	send, receive []*factor.Factor   // auxiliar for message passing
-	prev, post    [][]*factor.Factor // axiliar to reduce (memoize) number of factor multiplications
+	// auxiliar for message passing, send to parent and receive from parent
+	send, receive []*factor.Factor
+	// axiliar to reduce (memoize) number of factor multiplications
+	prev, post [][]*factor.Factor
 }
 
 // New ..
@@ -84,8 +86,8 @@ func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
 
 // SetAllPotentials ..
 func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
-	c.origPot = potentials
-	c.currPot = potentials
+	c.origPot = append([]*factor.Factor(nil), potentials...)
+	c.currPot = append([]*factor.Factor(nil), potentials...)
 }
 
 // BkpPotentialList returns a list with all the original potentials
@@ -103,8 +105,8 @@ func (c *CliqueTree) CurrPotential(i int) *factor.Factor {
 	return c.currPot[i]
 }
 
-// RestrictByEvidence applies an evidence tuple to each potential on the clique tree
-func (c *CliqueTree) RestrictByEvidence(evidence []int) {
+// ReduceByEvidence applies an evidence tuple to each potential on the clique tree
+func (c *CliqueTree) ReduceByEvidence(evidence []int) {
 	for i := range c.currPot {
 		c.currPot[i] = c.origPot[i].Reduce(evidence)
 	}
@@ -129,6 +131,11 @@ func (c *CliqueTree) LoadCalibration() {
 func (c *CliqueTree) UpDownCalibration() {
 	c.send = make([]*factor.Factor, c.Size())
 	c.receive = make([]*factor.Factor, c.Size())
+	// post[i][j] contains the product of every message that node i received
+	// from its j+1 children to the last children
+	// prev[i][j] contains the product of node i initial potential and
+	// every message that node i received from its fist children to the j-1 children
+	// So the message to be sent from i to j will be the product of prev and post
 	c.prev = make([][]*factor.Factor, c.Size())
 	c.post = make([][]*factor.Factor, c.Size())
 	root := 0

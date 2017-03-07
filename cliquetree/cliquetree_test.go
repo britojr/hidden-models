@@ -266,3 +266,54 @@ func TestFromCharTree(t *testing.T) {
 		}
 	}
 }
+
+func TestReduceByEvidence(t *testing.T) {
+	cases := []struct {
+		n          int
+		potentials []*factor.Factor
+		part       []struct {
+			evidence []int
+			reduced  [][]float64
+		}
+	}{
+		{
+			n: 2,
+			potentials: []*factor.Factor{
+				factor.NewFactorValues([]int{0, 1}, []int{2, 2, 2}, []float64{.25, .10, .35, .30}),
+				factor.NewFactorValues([]int{1, 2}, []int{2, 2, 2}, []float64{.40, .20, .10, .30}),
+			},
+			part: []struct {
+				evidence []int
+				reduced  [][]float64
+			}{
+				{
+					[]int{0, 1},
+					[][]float64{{0, 0, .35, 0}, {0, .20, 0, .30}},
+				},
+				{
+					[]int{1, 0},
+					[][]float64{{0, .10, 0, 0}, {.40, 0, .10, 0}},
+				},
+				{
+					[]int{1, 0, 1},
+					[][]float64{{0, .10, 0, 0}, {0, 0, .10, 0}},
+				},
+			},
+		},
+	}
+	for _, tt := range cases {
+		c := New(tt.n)
+		c.SetAllPotentials(tt.potentials)
+		for k := range tt.part {
+			c.ReduceByEvidence(tt.part[k].evidence)
+			for i, f := range c.BkpPotentialList() {
+				if !reflect.DeepEqual(tt.potentials[i].Values(), f.Values()) {
+					t.Errorf("Original potential changed, want %v, got %v", tt.potentials[i].Values(), f.Values())
+				}
+				if !reflect.DeepEqual(tt.part[k].reduced[i], c.CurrPotential(i).Values()) {
+					t.Errorf("Wrong reduction, want %v, got %v", tt.part[k].reduced[i], c.CurrPotential(i).Values())
+				}
+			}
+		}
+	}
+}
