@@ -199,9 +199,12 @@ var testReduce = []struct {
 func TestReduce(t *testing.T) {
 	for _, v := range testReduce {
 		f := NewFactorValues(v.varlist, v.cardin, v.values)
-		f = f.Reduce(v.evid)
-		if !reflect.DeepEqual(v.restricted, f.values) {
-			t.Errorf("want %v, got %v", v.restricted, f.values)
+		g := f.Reduce(v.evid)
+		if !reflect.DeepEqual(v.restricted, g.values) {
+			t.Errorf("want %v, got %v", v.restricted, g.values)
+		}
+		if !reflect.DeepEqual(v.values, f.values) {
+			t.Errorf("Original values changed, want %v, got %v", v.values, f.values)
 		}
 	}
 }
