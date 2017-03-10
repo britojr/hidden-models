@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/characteristic"
 )
 
@@ -12,13 +11,15 @@ import (
 type CliqueTree struct {
 	cliques [][]int // wich variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
+	vardiff []int   // the difference between clique and sepset
 
 	neighbours [][]int // cliques that are adjacent to this one, including parent
 	parent     []int   // the parent of each node
 
-	origPot       []*factor.Factor // original clique potential
-	currPot       []*factor.Factor // initial clique potential for calibration
-	calibratedPot []*factor.Factor // calibrated potential
+	origPot             []*factor.Factor // original clique potential
+	currPot             []*factor.Factor // initial clique potential for calibration
+	calibratedPot       []*factor.Factor // calibrated potential
+	calibratedPotSepSet []*factor.Factor // calibrated potential for the sepset
 
 	// auxiliar for message passing, send to parent and receive from parent
 	send, receive []*factor.Factor
@@ -31,11 +32,13 @@ func New(n int) *CliqueTree {
 	c := new(CliqueTree)
 	c.cliques = make([][]int, n)
 	c.sepsets = make([][]int, n)
+	c.vardiff = make([]int, n)
 	c.neighbours = make([][]int, n)
 	c.parent = make([]int, n)
 	c.origPot = make([]*factor.Factor, n)
 	c.currPot = make([]*factor.Factor, n)
 	c.calibratedPot = make([]*factor.Factor, n)
+	c.calibratedPotSepSet = make([]*factor.Factor, n)
 	return c
 }
 
@@ -133,14 +136,7 @@ func (c *CliqueTree) Calibrated(i int) *factor.Factor {
 
 // CalibratedSepSet returns the calibrated potential for the sepset of the ith clique
 func (c *CliqueTree) CalibratedSepSet(i int) *factor.Factor {
-	if c.calibratedPot[i] == nil {
-		panic("Clique tree wasn't calibrated")
-	}
-	if c.parent[i] < 0 {
-		return nil
-	}
-	diff := utils.SliceDifference(c.Clique(i), c.Clique(c.parent[i]))
-	return c.calibratedPot[i].SumOut(diff)
+	return c.calibratedPotSepSet[i]
 }
 
 // LoadCalibration ..
@@ -154,11 +150,13 @@ func (c *CliqueTree) LoadCalibration() {
 func (c *CliqueTree) UpDownCalibration() {
 	c.send = make([]*factor.Factor, c.Size())
 	c.receive = make([]*factor.Factor, c.Size())
+	// -------------------------------------------------------------------------
 	// post[i][j] contains the product of every message that node i received
 	// from its j+1 children to the last children
 	// prev[i][j] contains the product of node i initial potential and
 	// every message that node i received from its fist children to the j-1 children
 	// So the message to be sent from i to j will be the product of prev and post
+	// -------------------------------------------------------------------------
 	c.prev = make([][]*factor.Factor, c.Size())
 	c.post = make([][]*factor.Factor, c.Size())
 	root := 0
@@ -189,6 +187,8 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 	if pa != -1 {
 		c.calibratedPot[v] = c.calibratedPot[v].Product(c.receive[v])
 		n--
+		// calculate calibrated sepset
+		c.calibratedPotSepSet[v] = c.calibratedPot[v].SumOut(c.vardiff)
 	}
 	if len(c.neighbours[v]) == 1 && pa != -1 {
 		return
@@ -291,9 +291,11 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	sort.Ints(cliques[0])
 	c.SetClique(0, cliques[0])
 	c.SetNeighbours(0, children[0])
+	c.vardiff[0] = -1
 
 	for i := 1; i < c.Size(); i++ {
 		// set cliques and sepset
+		c.vardiff[i] = cliques[i][0]
 		c.SetSepSet(i, append([]int(nil), cliques[i][1:]...))
 		sort.Ints(c.SepSet(i))
 		sort.Ints(cliques[i])

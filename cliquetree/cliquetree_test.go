@@ -203,6 +203,7 @@ var testFromCharTree = []struct {
 	cliques, sepsets [][]int
 	adj              [][]int
 	parent           []int
+	vardiff          []int
 }{
 	{
 		iphi: []int{0, 10, 9, 3, 4, 5, 6, 7, 1, 2, 8},
@@ -243,7 +244,8 @@ var testFromCharTree = []struct {
 			{1},
 			{5, 6, 0},
 		},
-		parent: []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
+		parent:  []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
+		vardiff: []int{-1, 0, 10, 9, 3, 4, 5, 6, 7},
 	},
 }
 
@@ -262,6 +264,9 @@ func TestFromCharTree(t *testing.T) {
 			}
 			if got.parent[i] != v.parent[i] {
 				t.Errorf("parent[%v]; Got: %v; Want: %v", i, got.parent[i], v.parent[i])
+			}
+			if got.vardiff[i] != v.vardiff[i] {
+				t.Errorf("vardiff[%v]; Got: %v; Want: %v", i, got.vardiff[i], v.vardiff[i])
 			}
 		}
 	}
