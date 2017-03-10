@@ -79,6 +79,16 @@ func (c *CliqueTree) SetNeighbours(i int, neighbours []int) {
 	c.neighbours[i] = neighbours
 }
 
+// Neighbours ..
+func (c *CliqueTree) Neighbours(i int) []int {
+	return c.neighbours[i]
+}
+
+// Parents ..
+func (c *CliqueTree) Parents() []int {
+	return c.parent
+}
+
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
 	c.origPot[i] = potential
@@ -278,13 +288,16 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	// create new clique tree
 	c := New(len(children))
 	// initialize root clique
+	sort.Ints(cliques[0])
 	c.SetClique(0, cliques[0])
 	c.SetNeighbours(0, children[0])
 
 	for i := 1; i < c.Size(); i++ {
 		// set cliques and sepset
+		c.SetSepSet(i, append([]int(nil), cliques[i][1:]...))
+		sort.Ints(c.SepSet(i))
+		sort.Ints(cliques[i])
 		c.SetClique(i, cliques[i])
-		c.SetSepSet(i, cliques[i][1:])
 		// set adjacency list as children plus parent
 		children[i] = append(children[i], T.P[i])
 		c.SetNeighbours(i, children[i])
