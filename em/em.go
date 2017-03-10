@@ -8,7 +8,6 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
-	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/utils"
 )
 
@@ -16,22 +15,17 @@ const epslon = 1e-14
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
-	counter utils.Counter, numobs int, norm bool) {
+	counter utils.Counter, numobs int) {
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
-		fmt.Printf("Current LL: %v\n", likelihood.Loglikelihood1(ct, counter, numobs))
 		newpot := expectationStep(ct, ds)
-		if norm {
-			for j := range newpot {
-				newpot[j].Normalize()
-			}
+		for j := range newpot {
+			newpot[j].Normalize()
 		}
-		fmt.Printf("Count param: %v (%v)=0\n", newpot[0].Values()[0], newpot[0].Variables())
 		diff, _, _, err = factor.MaxDifference(ct.BkpPotentialList(), newpot)
 		utils.ErrCheck(err, "")
-		fmt.Printf("current diff: %v\n", diff)
 		ct.SetAllPotentials(newpot)
 	}
 }
@@ -48,8 +42,6 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	for _, m := range ds.Data() {
 		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
-		// ct.LoadCalibration()
-		// checkCliqueTree(ct)
 		for i := range count {
 			ct.Calibrated(i).Normalize()
 			for j, v := range ct.Calibrated(i).Values() {
@@ -66,13 +58,28 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 
 func checkCliqueTree(ct *cliquetree.CliqueTree) {
 	for i := range ct.BkpPotentialList() {
-		f := ct.Calibrated(i)
+		f := ct.CurrPotential(i)
 		sum := 0.0
 		for _, v := range f.Values() {
 			sum += v
 		}
 		if sum == 0 {
 			fmt.Printf("(%v)\n", f.Variables())
+			fmt.Println("tree:")
+			for i := 0; i < ct.Size(); i++ {
+				fmt.Printf("node %v: neighb: %v clique: %v septset: %v parent: %v\n",
+					i, ct.Neighbours(i), ct.Clique(i), ct.SepSet(i), ct.Parents()[i])
+			}
+			fmt.Println("original potentials:")
+			for i := 0; i < ct.Size(); i++ {
+				fmt.Printf("node %v:\n var: %v\n values: %v\n",
+					i, ct.BkpPotential(i).Variables(), ct.BkpPotential(i).Values())
+			}
+			fmt.Println("reduced potentials:")
+			for i := 0; i < ct.Size(); i++ {
+				fmt.Printf("node %v:\n var: %v\n values: %v\n",
+					i, ct.CurrPotential(i).Variables(), ct.CurrPotential(i).Values())
+			}
 			panic("original zero factor")
 		}
 	}

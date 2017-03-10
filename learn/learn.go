@@ -111,9 +111,13 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 		ct.SetAllPotentials(CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter))
 	}
 
-	fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
+	// fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
+	ct.UpDownCalibration()
+	fmt.Printf("Initial LL: %v\n", likelihood.Loglikelihood1(ct, l.counter, l.n))
 	// call EM until convergence
-	em.ExpectationMaximization(ct, l.dataset, l.counter, l.n, l.norm)
+	em.ExpectationMaximization(ct, l.dataset, l.counter, l.n)
+	ct.UpDownCalibration()
+	fmt.Printf("Final LL: %v\n", likelihood.Loglikelihood1(ct, l.counter, l.n))
 
 	// check resulting parameters TODO: remove
 	// check if they are uniform
