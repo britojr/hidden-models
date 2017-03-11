@@ -11,7 +11,8 @@ import (
 type CliqueTree struct {
 	cliques [][]int // wich variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
-	vardiff []int   // the difference between clique and sepset
+	varin   []int   // the difference between clique and parent
+	varout  []int   // the difference between clique and parent
 
 	neighbours [][]int // cliques that are adjacent to this one, including parent
 	parent     []int   // the parent of each node
@@ -32,7 +33,6 @@ func New(n int) *CliqueTree {
 	c := new(CliqueTree)
 	c.cliques = make([][]int, n)
 	c.sepsets = make([][]int, n)
-	c.vardiff = make([]int, n)
 	c.neighbours = make([][]int, n)
 	c.parent = make([]int, n)
 	c.origPot = make([]*factor.Factor, n)
@@ -177,7 +177,7 @@ func (c *CliqueTree) upwardmessage(v, pa int) {
 		}
 	}
 	if pa != -1 {
-		c.send[v] = c.prev[v][len(c.prev[v])-1].Marginalize(c.cliques[pa])
+		c.send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
 	}
 }
 
@@ -188,7 +188,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		c.calibratedPot[v] = c.calibratedPot[v].Product(c.receive[v])
 		n--
 		// calculate calibrated sepset
-		c.calibratedPotSepSet[v] = c.calibratedPot[v].SumOut(c.vardiff)
+		c.calibratedPotSepSet[v] = c.calibratedPot[v].SumOutOne(c.varin[v])
 	}
 	if len(c.neighbours[v]) == 1 && pa != -1 {
 		return
@@ -219,7 +219,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		if c.post[v][k] != nil {
 			msg = msg.Product(c.post[v][k])
 		}
-		c.receive[ch] = msg.Marginalize(c.cliques[ch])
+		c.receive[ch] = msg.SumOutOne(c.varout[ch])
 		c.downwardmessage(v, ch)
 		k++
 	}
@@ -242,6 +242,8 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	// create relabled cliques list
 	cliques := make([][]int, len(children))
 	cliques[0] = make([]int, k)
+	varout := make([]int, n)
+	varout[0] = -1
 	// Initialize auxiliar (not relabled) clique matrix
 	K := make([][]int, n-k+1)
 	K[0] = make([]int, k)
@@ -260,10 +262,13 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	for start != end {
 		v := queue[start]
 		start++
+		varout[v] = -1
 		// update unlabled clique K
 		for i := 0; i < len(K[T.P[v]]); i++ {
 			if i != T.L[v] {
 				K[v] = append(K[v], K[T.P[v]][i])
+			} else {
+				varout[v] = iphi[K[T.P[v]][i]-1]
 			}
 		}
 		if T.P[v] != 0 {
@@ -287,15 +292,17 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 
 	// create new clique tree
 	c := New(len(children))
+	c.varin = make([]int, n)
+	c.varout = varout
 	// initialize root clique
 	sort.Ints(cliques[0])
 	c.SetClique(0, cliques[0])
 	c.SetNeighbours(0, children[0])
-	c.vardiff[0] = -1
+	c.varin[0] = -1
 
 	for i := 1; i < c.Size(); i++ {
 		// set cliques and sepset
-		c.vardiff[i] = cliques[i][0]
+		c.varin[i] = cliques[i][0]
 		c.SetSepSet(i, append([]int(nil), cliques[i][1:]...))
 		sort.Ints(c.SepSet(i))
 		sort.Ints(cliques[i])

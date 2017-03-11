@@ -76,6 +76,8 @@ var fAGIK = factorStruct{
 }
 
 var factorList = []factorStruct{fAB, fABC, fABD, fABE, fBDF, fADG}
+var varinX = []int{-1, 2, 3, 4, 5, 6}
+var varoutX = []int{-1, -1, -1, -1, 0, 1}
 var adjList = [][]int{
 	[]int{1, 2, 3},
 	[]int{0},
@@ -147,6 +149,8 @@ func calculateCalibrated() {
 
 func initCliqueTree(factorList []factorStruct, adjList [][]int) *CliqueTree {
 	c := New(len(factorList))
+	c.varin = varinX
+	c.varout = varoutX
 	for i, f := range factorList {
 		c.SetClique(i, f.varlist)
 		c.SetNeighbours(i, adjList[i])
@@ -203,7 +207,8 @@ var testFromCharTree = []struct {
 	cliques, sepsets [][]int
 	adj              [][]int
 	parent           []int
-	vardiff          []int
+	varin            []int
+	varout           []int
 }{
 	{
 		iphi: []int{0, 10, 9, 3, 4, 5, 6, 7, 1, 2, 8},
@@ -244,8 +249,9 @@ var testFromCharTree = []struct {
 			{1},
 			{5, 6, 0},
 		},
-		parent:  []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
-		vardiff: []int{-1, 0, 10, 9, 3, 4, 5, 6, 7},
+		parent: []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
+		varin:  []int{-1, 0, 10, 9, 3, 4, 5, 6, 7},
+		varout: []int{-1, 2, -1, -1, 1, 8, 2, 1, -1},
 	},
 }
 
@@ -265,8 +271,11 @@ func TestFromCharTree(t *testing.T) {
 			if got.parent[i] != v.parent[i] {
 				t.Errorf("parent[%v]; Got: %v; Want: %v", i, got.parent[i], v.parent[i])
 			}
-			if got.vardiff[i] != v.vardiff[i] {
-				t.Errorf("vardiff[%v]; Got: %v; Want: %v", i, got.vardiff[i], v.vardiff[i])
+			if got.varin[i] != v.varin[i] {
+				t.Errorf("varin[%v]; Got: %v; Want: %v", i, got.varin[i], v.varin[i])
+			}
+			if got.varout[i] != v.varout[i] {
+				t.Errorf("varout[%v]; Got: %v; Want: %v", i, got.varout[i], v.varout[i])
 			}
 		}
 	}
