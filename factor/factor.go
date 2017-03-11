@@ -140,8 +140,8 @@ func (f *Factor) Product(g *Factor) *Factor {
 	// TODO: create version without assig an bench to see how better it is
 	assig := assignment.New(h.varlist, h.cardin)
 	for i := range h.values {
-		h.values[i] = f.Get(assig) * g.Get(assig)
 		assig.Next()
+		h.values[i] = f.Get(assig) * g.Get(assig)
 	}
 	return h
 }
@@ -214,10 +214,10 @@ func (f *Factor) Reduce(evid []int) *Factor {
 	// TODO: think of better way to to this part
 	assig := assignment.New(h.varlist, h.cardin)
 	for i := range h.values {
+		assig.Next()
 		if assig.Consistent(evid) {
 			h.values[i] = f.values[i]
 		}
-		assig.Next()
 	}
 	return h
 }

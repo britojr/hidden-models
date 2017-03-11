@@ -56,14 +56,11 @@ func (b *BitCounter) CountAssignments(varlist []int) (v []int) {
 	v, ok := b.cache[strvarlist]
 	if !ok {
 		assig := assignment.New(varlist, b.cardin)
-		for {
+		for assig.Next() {
 			if count, ok := b.Count(assig); ok {
 				v = append(v, count)
 			} else {
 				return
-			}
-			if hasnext := assig.Next(); !hasnext {
-				break
 			}
 		}
 		b.cache[strvarlist] = v

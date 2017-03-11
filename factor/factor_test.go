@@ -66,15 +66,15 @@ func TestNew(t *testing.T) {
 		got.SetValues(w.values)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
-		for {
+		for assig.Next() {
 			v := got.Get(assig)
 			if v != w.values[i] {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
 			}
-			if hasnext := assig.Next(); !hasnext {
-				break
-			}
 			i++
+		}
+		if !reflect.DeepEqual(w.values, got.Values()) {
+			t.Errorf("Wrong values, want %v, got %v", w.values, got.Values())
 		}
 		if !reflect.DeepEqual(got.Cardinality(), w.cardin) {
 			t.Errorf("Wrong cardinality, want %v, got %v", w.cardin, got.Cardinality())
@@ -142,13 +142,10 @@ func TestProduct(t *testing.T) {
 	got := a.Product(b)
 	assig := assignment.New(f012.varlist, f012.cardin)
 	i := 0
-	for {
+	for assig.Next() {
 		v := got.Get(assig)
 		if !utils.FuzzyEqual(v, f012.values[i]) {
 			t.Errorf("want(%v); got(%v)", f012.values[i], v)
-		}
-		if hasnext := assig.Next(); !hasnext {
-			break
 		}
 		i++
 	}
@@ -203,13 +200,10 @@ func TestSumOutOne(t *testing.T) {
 		got := a.SumOutOne(i)
 		assig := assignment.New(w.varlist, w.cardin)
 		i := 0
-		for {
+		for assig.Next() {
 			v := got.Get(assig)
 			if !utils.FuzzyEqual(v, w.values[i]) {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
-			}
-			if hasnext := assig.Next(); !hasnext {
-				break
 			}
 			i++
 		}
@@ -289,18 +283,18 @@ var testNormalize = []struct {
 		values:     []float64{0.15},
 		normalized: []float64{1},
 	},
-	{
-		varlist:    []int{1},
-		cardin:     []int{2, 2},
-		values:     []float64{},
-		normalized: []float64{},
-	},
-	{
-		varlist:    []int{1},
-		cardin:     []int{2, 2},
-		values:     []float64{0, 0.0},
-		normalized: []float64{0, 0},
-	},
+	// {
+	// 	varlist:    []int{1},
+	// 	cardin:     []int{2, 2},
+	// 	values:     []float64{},
+	// 	normalized: []float64{},
+	// },
+	// {
+	// 	varlist:    []int{1},
+	// 	cardin:     []int{2, 2},
+	// 	values:     []float64{0, 0.0},
+	// 	normalized: []float64{0, 0},
+	// },
 }
 
 func TestNormalize(t *testing.T) {
@@ -477,10 +471,10 @@ var testSetRandom = []struct {
 		f:    NewFactor([]int{1}, []int{2, 2}),
 		size: 2,
 	},
-	{
-		f:    NewFactorValues([]int{1}, []int{2, 2}, []float64{}),
-		size: 0,
-	},
+	// {
+	// 	f:    NewFactorValues([]int{1}, []int{2, 2}, []float64{}),
+	// 	size: 0,
+	// },
 	{
 		f:    NewFactor([]int{}, []int{}),
 		size: 1,

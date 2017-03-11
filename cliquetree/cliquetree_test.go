@@ -175,14 +175,11 @@ func TestUpDownCalibration(t *testing.T) {
 	for i, f := range cal {
 		got := c.Calibrated(i)
 		assig := assignment.New(f.Variables(), cardin)
-		for {
+		for assig.Next() {
 			u := f.Get(assig)
 			v := got.Get(assig)
 			if !utils.FuzzyEqual(u, v) {
 				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
-			}
-			if hasnext := assig.Next(); !hasnext {
-				break
 			}
 		}
 	}

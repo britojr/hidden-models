@@ -19,13 +19,16 @@ func New(varlist []int, cardinality []int) *Assignment {
 			a.card[i] = cardinality[v]
 		}
 	}
+	// starts before the first value
+	if len(a.values) > 0 {
+		a.values[0] = -1
+	}
 	return a
 }
 
 // Next creates the next valuation for the assignment
 // or returns false after the last possible value
 func (a *Assignment) Next() bool {
-	// TODO: change to use a flag "completed" to provide better iteration
 	if len(a.values) == 0 {
 		return false
 	}
