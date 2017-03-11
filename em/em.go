@@ -3,7 +3,6 @@ package em
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
@@ -11,7 +10,7 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-const epslon = 1e-14
+const epslon = 1e-10
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
@@ -46,9 +45,6 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 			ct.Calibrated(i).Normalize()
 			for j, v := range ct.Calibrated(i).Values() {
 				count[i].Values()[j] += v
-				if math.IsNaN(count[i].Values()[j]) {
-					panic(fmt.Sprintf("count %v, index %v is NaN", i, j))
-				}
 			}
 		}
 	}

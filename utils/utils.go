@@ -112,7 +112,7 @@ func NormalizeSlice(values []float64) {
 		sum += v
 	}
 	if sum == 0 {
-		return
+		panic("trying to normalize zero factor")
 	}
 	for i, v := range values {
 		values[i] = v / sum
