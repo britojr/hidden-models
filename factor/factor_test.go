@@ -153,6 +153,49 @@ func TestProduct(t *testing.T) {
 		i++
 	}
 }
+func TestProduct2(t *testing.T) {
+	cases := []struct {
+		cardin []int
+		varA   []int
+		valA   []float64
+		varB   []int
+		valB   []float64
+		varRes []int
+		valRes []float64
+	}{{
+		cardin: []int{2, 2, 2, 2},
+		varA:   []int{1, 0, 2},
+		valA:   []float64{.2, .3, .4, .5, .6, .7, .8, .9},
+		varB:   []int{2, 1},
+		valB:   []float64{.11, .12, .13, .14},
+		varRes: []int{0, 1, 2},
+		valRes: []float64{.2 * .11, .4 * .11, .3 * .13, .5 * .13, .6 * .12, .8 * .12, .7 * .14, .9 * .14},
+	}, {
+		cardin: []int{2, 2, 2, 2},
+		varA:   []int{1, 0, 2},
+		valA:   []float64{.2, .3, .4, .5, .6, .7, .8, .9},
+		varB:   []int{2, 1, 3},
+		valB:   []float64{.11, .12, .13, .14, .15, .16, .17, .18},
+		varRes: []int{0, 1, 2, 3},
+		valRes: []float64{
+			.2 * .11, .4 * .11, .3 * .13, .5 * .13, .6 * .12, .8 * .12, .7 * .14, .9 * .14,
+			.2 * .15, .4 * .15, .3 * .17, .5 * .17, .6 * .16, .8 * .16, .7 * .18, .9 * .18,
+		},
+	}}
+	for _, tt := range cases {
+		a := NewFactorValues(tt.varA, tt.cardin, tt.valA)
+		b := NewFactorValues(tt.varB, tt.cardin, tt.valB)
+		got := a.Product(b)
+		if !reflect.DeepEqual(tt.varRes, got.Variables()) {
+			t.Errorf("Wrong variables, want %v, got %v", tt.varRes, got.Variables())
+		}
+		for i, v := range tt.valRes {
+			if !utils.FuzzyEqual(v, got.Values()[i]) {
+				t.Errorf("Wrong values, want %v, got %v", v, got.Values()[i])
+			}
+		}
+	}
+}
 
 func TestSumOutOne(t *testing.T) {
 	a := NewFactorValues(f012.varlist, f012.cardin, f012.values)

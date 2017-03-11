@@ -77,6 +77,7 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	for i := l.n; i < len(l.cardin); i++ {
 		l.cardin[i] = l.hiddencard
 	}
+	fmt.Printf("Tot var: %v\n", len(l.cardin))
 	fmt.Printf("Variables: %v, Instances: %v\n", l.n, len(l.dataset.Data()))
 }
 
