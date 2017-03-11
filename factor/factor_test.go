@@ -194,6 +194,13 @@ var testReduce = []struct {
 		evid:       []int{0, 1, 0},
 		restricted: []float64{0.0, 0.2, 0.0, 0.4},
 	},
+	{
+		varlist:    []int{3, 1},
+		cardin:     []int{2, 2, 2, 2},
+		values:     []float64{0.1, 0.3, 0.2, 0.4},
+		evid:       []int{0, 1, 0},
+		restricted: []float64{0.0, 0.0, 0.2, 0.4},
+	},
 }
 
 func TestReduce(t *testing.T) {
@@ -469,6 +476,11 @@ var testSumOut = []struct {
 		r:       NewFactorValues([]int{1}, []int{2, 2}, []float64{30, 70}),
 	},
 	{
+		f:       NewFactorValues([]int{1, 0}, []int{2, 2}, []float64{10, 30, 20, 40}),
+		varlist: []int{0},
+		r:       NewFactorValues([]int{1}, []int{2, 2}, []float64{30, 70}),
+	},
+	{
 		f:       NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
 		varlist: []int{1},
 		r:       NewFactorValues([]int{0}, []int{2, 2}, []float64{40, 60}),
@@ -486,6 +498,12 @@ var testSumOut = []struct {
 	{
 		f: NewFactorValues([]int{1, 2, 3}, []int{2, 2, 2, 2, 2},
 			[]float64{1, 2, 3, 4, 5, 6, 7, 8}),
+		varlist: []int{3, 1},
+		r:       NewFactorValues([]int{2}, []int{2, 2, 2, 2, 2}, []float64{14, 22}),
+	},
+	{
+		f: NewFactorValues([]int{3, 2, 1}, []int{2, 2, 2, 2, 2},
+			[]float64{1, 5, 3, 7, 2, 6, 4, 8}),
 		varlist: []int{3, 1},
 		r:       NewFactorValues([]int{2}, []int{2, 2, 2, 2, 2}, []float64{14, 22}),
 	},

@@ -10,6 +10,7 @@ import (
 // Loglikelihood1 calculates the log-likelihood weighted by counts
 func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int) (ll float64) {
 	for i, clique := range ct.Cliques() {
+		// TODO: how to avoid this split?
 		observed, hidden := utils.SliceSplit(clique, numobs)
 		if len(observed) > 0 {
 			count := counter.CountAssignments(observed)
