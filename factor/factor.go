@@ -214,17 +214,6 @@ func (f *Factor) SumOut(vars []int) *Factor {
 	return q
 }
 
-// // Marginalize ..
-// func (f *Factor) Marginalize(vars []int) *Factor {
-// 	// TODO: create better implementation for SumOut and Marginalize
-// 	diff := utils.SliceDifference(f.varlist, vars, uint(len(f.cardin)))
-// 	q := f
-// 	for _, x := range diff {
-// 		q = q.SumOutOne(x)
-// 	}
-// 	return q
-// }
-
 // Reduce mutes out every value that is not consistent with a given evidence tuple
 func (f *Factor) Reduce(evid []int) *Factor {
 	h := new(Factor)
