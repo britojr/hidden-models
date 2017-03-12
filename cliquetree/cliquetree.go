@@ -26,6 +26,8 @@ type CliqueTree struct {
 	send, receive []*factor.Factor
 	// axiliar to reduce (memoize) number of factor multiplications
 	prev, post [][]*factor.Factor
+
+	calibratedPotStored []*factor.Factor // auxiliar for storing calibrated potentials
 }
 
 // New ..
@@ -145,6 +147,47 @@ func (c *CliqueTree) LoadCalibration() {
 		c.calibratedPot[i] = c.currPot[i]
 	}
 }
+
+// StoreCalibration stores the calibrated values in order to retract them later
+func (c *CliqueTree) StoreCalibration() {
+	c.calibratedPotStored = append([]*factor.Factor(nil), c.calibratedPot...)
+}
+
+// RecoverCalibration recover calibration previously stored
+func (c *CliqueTree) RecoverCalibration() {
+	c.calibratedPot = append([]*factor.Factor(nil), c.calibratedPotStored...)
+}
+
+// TODO: how to use a calibrated tree to calculate P(Hidden|evid)?
+// // ReduceCalibration applies evidence reduction on a calibrated tree
+// func (c *CliqueTree) ReduceCalibration(evid []int) {
+// 	root := 0
+// 	send := make([]*factor.Factor, c.Size())
+// 	c.upwardreduction(root, -1, evid, send)
+// }
+//
+// func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
+// 	// c.prev[v] = make([]*factor.Factor, 1, len(c.neighbours[v])+1)
+// 	// c.prev[v][0] = c.currPot[v]
+// 	if len(c.neighbours[v]) > 1 {
+// 		for _, ne := range c.neighbours[v] {
+// 			if ne != pa {
+// 				c.upwardreduction(ne, v)
+// 				// c.prev[v] = append(c.prev[v], c.send[ne].Product(c.prev[v][len(c.prev[v])-1]))
+// 			}
+// 		}
+// 	}
+// 	if pa != -1 {
+// 		// send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
+// 		send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
+// 	}
+//
+// 	// if is a leaf
+// 	if len(c.neighbours[v]) == 1 && pa != -1 {
+// 		c.calibratedPot[v] = c.calibratedPot[v].Reduce(evid)
+// 		send[v] = c.calibratedPot[v].Division(c.receive[v])
+// 	}
+// }
 
 // UpDownCalibration ..
 func (c *CliqueTree) UpDownCalibration() {
