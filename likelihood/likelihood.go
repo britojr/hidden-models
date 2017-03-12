@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/utils"
 )
 
@@ -35,16 +36,26 @@ func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int
 	return
 }
 
-// loglikelihood2 calculates the log-likelihood line by line
-func loglikelihood2(cliques, sepsets [][]int, counter utils.Counter) (ll float64) {
+// Loglikelihood2 calculates the log-likelihood line by line
+func Loglikelihood2(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, numobs int) (ll float64) {
 	// TODO: how to calculate a prob dist over variables throughout more than one clique
-	for i := range cliques {
-		ll += sumLogCount(cliques[i], counter)
+	p := 1.0
+	for _, m := range ds.Data() {
+		for i := range ct.Cliques() {
+			values := ct.Calibrated(i).Reduce(m).Values()
+			for _, v := range values {
+				if v != 0 {
+					p *= v
+				}
+			}
+			values = ct.CalibratedSepSet(i).Reduce(m).Values()
+			for _, v := range values {
+				if v != 0 {
+					p /= v
+				}
+			}
+		}
 	}
-	for i := range sepsets {
-		ll -= sumLogCount(sepsets[i], counter)
-	}
-	ll -= float64(counter.NumTuples()) * math.Log(float64(counter.NumTuples()))
 	return
 }
 

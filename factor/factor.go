@@ -146,6 +146,27 @@ func (f *Factor) Product(g *Factor) *Factor {
 	return h
 }
 
+// Division divide factor f by factor g and return a new factor as the result
+func (f *Factor) Division(g *Factor) *Factor {
+	h := new(Factor)
+	h.cardin = f.cardin
+	h.varlist = f.varlist
+	h.stride = f.stride
+	h.values = append([]float64(nil), f.values...)
+	// TODO: create version without assig an bench to see how better it is
+	assig := assignment.New(h.varlist, h.cardin)
+	for i := range h.values {
+		assig.Next()
+		v := g.Get(assig)
+		if v != 0 {
+			h.values[i] /= v
+		} else {
+			h.values[i] = 0
+		}
+	}
+	return h
+}
+
 // SumOutOne returns a factor with the given variable summed out
 func (f *Factor) SumOutOne(x int) *Factor {
 	h := new(Factor)
@@ -193,16 +214,16 @@ func (f *Factor) SumOut(vars []int) *Factor {
 	return q
 }
 
-// Marginalize ..
-func (f *Factor) Marginalize(vars []int) *Factor {
-	// TODO: create better implementation for SumOut and Marginalize
-	diff := utils.SliceDifference(f.varlist, vars, uint(len(f.cardin)))
-	q := f
-	for _, x := range diff {
-		q = q.SumOutOne(x)
-	}
-	return q
-}
+// // Marginalize ..
+// func (f *Factor) Marginalize(vars []int) *Factor {
+// 	// TODO: create better implementation for SumOut and Marginalize
+// 	diff := utils.SliceDifference(f.varlist, vars, uint(len(f.cardin)))
+// 	q := f
+// 	for _, x := range diff {
+// 		q = q.SumOutOne(x)
+// 	}
+// 	return q
+// }
 
 // Reduce mutes out every value that is not consistent with a given evidence tuple
 func (f *Factor) Reduce(evid []int) *Factor {
