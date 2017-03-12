@@ -24,7 +24,6 @@ type Learner struct {
 	hidden     int   // number of hidden variables
 	hiddencard int   // default cardinality of the hidden variables
 	cardin     []int // cardinality slice
-	norm       bool
 	initpot    int
 }
 
@@ -34,7 +33,6 @@ func New() *Learner {
 	l.iterations = 100
 	l.treewidth = 3
 	l.hiddencard = 2
-	l.norm = true
 	l.initpot = 1
 	return l
 }
@@ -52,11 +50,6 @@ func (l *Learner) SetIterations(it int) {
 // SetHiddenVars ..
 func (l *Learner) SetHiddenVars(h int) {
 	l.hidden = h
-}
-
-// SetNorm ..
-func (l *Learner) SetNorm(norm bool) {
-	l.norm = norm
 }
 
 // SetInitPot ..
@@ -103,24 +96,70 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 	return ct, score
 }
 
-// OptimizeParameters optimize the clique tree parameters
-func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
-	// initialize clique tree potentials
-	if l.initpot == 1 {
+// InitializePotentials initialize clique tree potentials
+func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int) {
+	aux := l.initpot
+	if len(initpot) > 0 {
+		aux = initpot[0]
+	}
+	if aux == 1 {
 		ct.SetAllPotentials(CreateRandomPortentials(ct.Cliques(), l.cardin))
 	} else {
 		ct.SetAllPotentials(CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter))
 	}
+}
 
-	// fmt.Printf("Initial param: %v (%v)=0\n", ct.BkpPotential(0).Values()[0], ct.BkpPotential(0).Variables())
-	ct.UpDownCalibration()
-	fmt.Printf("Initial LL: %v\n", likelihood.Loglikelihood1(ct, l.counter, l.n))
-	// call EM until convergence
+// OptimizeParameters optimize the clique tree parameters
+func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 	em.ExpectationMaximization(ct, l.dataset, l.counter, l.n)
-	ct.UpDownCalibration()
-	fmt.Printf("Final LL: %v\n", likelihood.Loglikelihood1(ct, l.counter, l.n))
+}
 
-	// check resulting parameters TODO: remove
+// CalculateLikelihood calculates the likelihood of a clique tree
+func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
+	ct.UpDownCalibration()
+	return likelihood.Loglikelihood1(ct, l.counter, l.n)
+}
+
+// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
+func CreateUniformPortentials(cliques [][]int, cardin []int,
+	numobs int, counter utils.Counter) []*factor.Factor {
+
+	factors := make([]*factor.Factor, len(cliques))
+	for i := range factors {
+		var observed, hidden []int
+		if len(cardin) > numobs {
+			observed, hidden = utils.SliceSplit(cliques[i], numobs)
+		} else {
+			observed = cliques[i]
+		}
+		if len(observed) > 0 {
+			values := utils.SliceItoF64(counter.CountAssignments(observed))
+			factors[i] = factor.NewFactorValues(observed, cardin, values)
+			if len(hidden) > 0 {
+				g := factor.NewFactor(hidden, cardin)
+				g.SetUniform()
+				factors[i] = factors[i].Product(g)
+			}
+			factors[i].Normalize()
+		} else {
+			factors[i] = factor.NewFactor(hidden, cardin)
+			factors[i].SetUniform()
+		}
+	}
+	return factors
+}
+
+// CreateRandomPortentials creates a list of clique potentials with random values
+func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
+	factors := make([]*factor.Factor, len(cliques))
+	for i := range factors {
+		factors[i] = factor.NewFactor(cliques[i], cardin).SetRandom()
+	}
+	return factors
+}
+
+// CheckTree ..
+func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 	// check if they are uniform
 	l.checkUniform(ct)
 	// check if after summing out the hidden variables they are the same as initial count
@@ -182,42 +221,4 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	} else {
 		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
 	}
-}
-
-// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
-func CreateUniformPortentials(cliques [][]int, cardin []int,
-	numobs int, counter utils.Counter) []*factor.Factor {
-
-	factors := make([]*factor.Factor, len(cliques))
-	for i := range factors {
-		var observed, hidden []int
-		if len(cardin) > numobs {
-			observed, hidden = utils.SliceSplit(cliques[i], numobs)
-		} else {
-			observed = cliques[i]
-		}
-		if len(observed) > 0 {
-			values := utils.SliceItoF64(counter.CountAssignments(observed))
-			factors[i] = factor.NewFactorValues(observed, cardin, values)
-			if len(hidden) > 0 {
-				g := factor.NewFactor(hidden, cardin)
-				g.SetUniform()
-				factors[i] = factors[i].Product(g)
-			}
-			factors[i].Normalize()
-		} else {
-			factors[i] = factor.NewFactor(hidden, cardin)
-			factors[i].SetUniform()
-		}
-	}
-	return factors
-}
-
-// CreateRandomPortentials creates a list of clique potentials with random values
-func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
-	factors := make([]*factor.Factor, len(cliques))
-	for i := range factors {
-		factors[i] = factor.NewFactor(cliques[i], cardin).SetRandom()
-	}
-	return factors
 }
