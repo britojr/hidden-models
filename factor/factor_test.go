@@ -563,3 +563,28 @@ func TestSumOut(t *testing.T) {
 		}
 	}
 }
+
+func TestDivision(t *testing.T) {
+	cases := []struct {
+		f      *Factor
+		g      *Factor
+		result *Factor
+	}{{
+		f:      NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		g:      NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{5, 5, 30, 5}),
+		result: NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{2, 4, 1, 8}),
+	}, {
+		f:      NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 60}),
+		g:      NewFactorValues([]int{1}, []int{2, 2}, []float64{5, 30}),
+		result: NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{2, 4, 1, 2}),
+	}}
+	for _, tt := range cases {
+		got := tt.f.Division(tt.g)
+		if !reflect.DeepEqual(tt.result.Variables(), got.Variables()) {
+			t.Errorf("want %v, got %v", tt.result.Variables(), got.Variables())
+		}
+		if !reflect.DeepEqual(tt.result.Values(), got.Values()) {
+			t.Errorf("want %v, got %v", tt.result.Values(), got.Values())
+		}
+	}
+}
