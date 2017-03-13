@@ -168,36 +168,27 @@ func (c *CliqueTree) RecoverCalibration() {
 	c.calibratedPot = append([]*factor.Factor(nil), c.calibratedPotStored...)
 }
 
-// TODO: how to use a calibrated tree to calculate P(Hidden|evid)?
-// // ReduceCalibration applies evidence reduction on a calibrated tree
-// func (c *CliqueTree) ReduceCalibration(evid []int) {
-// 	root := 0
-// 	send := make([]*factor.Factor, c.Size())
-// 	c.upwardreduction(root, -1, evid, send)
-// }
-//
-// func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
-// 	// c.prev[v] = make([]*factor.Factor, 1, len(c.neighbours[v])+1)
-// 	// c.prev[v][0] = c.currPot[v]
-// 	if len(c.neighbours[v]) > 1 {
-// 		for _, ne := range c.neighbours[v] {
-// 			if ne != pa {
-// 				c.upwardreduction(ne, v)
-// 				// c.prev[v] = append(c.prev[v], c.send[ne].Product(c.prev[v][len(c.prev[v])-1]))
-// 			}
-// 		}
-// 	}
-// 	if pa != -1 {
-// 		// send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
-// 		send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
-// 	}
-//
-// 	// if is a leaf
-// 	if len(c.neighbours[v]) == 1 && pa != -1 {
-// 		c.calibratedPot[v] = c.calibratedPot[v].Reduce(evid)
-// 		send[v] = c.calibratedPot[v].Division(c.receive[v])
-// 	}
-// }
+// ProbOfEvidence ..
+func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
+	root := 0
+	send := make([]*factor.Factor, c.Size())
+	c.upwardreduction(root, -1, evid, send)
+	// summout all variables of the resulting (calibrated) root factor
+	return send[root].SumOut(send[root].Variables()).Values()[0]
+}
+
+func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
+	prev := c.currPot[v].Reduce(evid)
+	if len(c.neighbours[v]) > 1 {
+		for _, ne := range c.neighbours[v] {
+			if ne != pa {
+				c.upwardreduction(ne, v, evid, send)
+				prev = prev.Product(send[ne])
+			}
+		}
+	}
+	send[v] = prev.SumOutOne(c.varin[v])
+}
 
 // UpDownCalibration ..
 func (c *CliqueTree) UpDownCalibration() {

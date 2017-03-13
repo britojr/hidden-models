@@ -115,9 +115,12 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree
-func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
-	ct.UpDownCalibration()
-	return likelihood.Loglikelihood1(ct, l.counter, l.n)
+func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree, t int) float64 {
+	if t == 1 {
+		ct.UpDownCalibration()
+		return likelihood.Loglikelihood1(ct, l.counter, l.n)
+	}
+	return likelihood.Loglikelihood2(ct, l.dataset, l.n)
 }
 
 // CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables

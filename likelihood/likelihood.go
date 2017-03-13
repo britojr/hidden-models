@@ -1,6 +1,7 @@
 package likelihood
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -38,22 +39,13 @@ func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int
 
 // Loglikelihood2 calculates the log-likelihood line by line
 func Loglikelihood2(ct *cliquetree.CliqueTree, ds *filehandler.DataSet, numobs int) (ll float64) {
-	// TODO: how to calculate a prob dist over variables throughout more than one clique
-	p := 1.0
 	for _, m := range ds.Data() {
-		for i := range ct.Cliques() {
-			values := ct.Calibrated(i).Reduce(m).Values()
-			for _, v := range values {
-				if v != 0 {
-					p *= v
-				}
-			}
-			values = ct.CalibratedSepSet(i).Reduce(m).Values()
-			for _, v := range values {
-				if v != 0 {
-					p /= v
-				}
-			}
+		v := ct.ProbOfEvidence(m)
+		if v != 0 {
+			ll += math.Log(v)
+		} else {
+			fmt.Printf("zero probability for evid: %v\n", m)
+			panic("zero probability for evid")
 		}
 	}
 	return

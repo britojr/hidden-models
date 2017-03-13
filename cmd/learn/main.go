@@ -70,14 +70,18 @@ func learnStructureAndParamenters(learner *learn.Learner, check bool) (*cliquetr
 
 	fmt.Println("Learning parameters...")
 	learner.InitializePotentials(ct, 2)
-	fmt.Printf("Uniform LL: %v\n", learner.CalculateLikelihood(ct))
+	fmt.Printf("Uniform LL: %v\n", learner.CalculateLikelihood(ct, 1))
+	fmt.Printf("Uniform LL: %v\n", learner.CalculateLikelihood(ct, 2))
 	learner.InitializePotentials(ct)
-	fmt.Printf("Initial LL: %v\n", learner.CalculateLikelihood(ct))
+	fmt.Printf("Initial LL: %v\n", learner.CalculateLikelihood(ct, 1))
+	fmt.Printf("Initial LL: %v\n", learner.CalculateLikelihood(ct, 2))
 	start = time.Now()
 	learner.OptimizeParameters(ct)
 	elapsed = time.Since(start)
 	fmt.Printf("Time: %v; CT: %v\n", elapsed, ct.Size())
-	ll = learner.CalculateLikelihood(ct)
+	ll = learner.CalculateLikelihood(ct, 1)
+	fmt.Printf("Final LL: %v\n", ll)
+	ll = learner.CalculateLikelihood(ct, 2)
 	fmt.Printf("Final LL: %v\n", ll)
 
 	if check {
