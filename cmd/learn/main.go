@@ -22,7 +22,7 @@ func main() {
 		check      bool
 	)
 	flag.IntVar(&k, "k", 5, "tree-width")
-	flag.IntVar(&iterations, "it", 100, "number of iterations/samples")
+	flag.IntVar(&iterations, "it", 1, "number of iterations/samples")
 	flag.StringVar(&dsfile, "f", "", "dataset file")
 	flag.UintVar(&delimiter, "delimiter", ',', "field delimiter")
 	flag.UintVar(&hdr, "hdr", 1, "1- name header, 2- cardinality header")
@@ -52,7 +52,7 @@ func main() {
 
 	fmt.Println("Learning structure...")
 	start = time.Now()
-	ct, ll := learner.GuessStructure()
+	ct, ll := learner.GuessStructure(iterations)
 	elapsed = time.Since(start)
 	fmt.Printf("Time: %v; Structure LogLikelihood: %v\n", elapsed, ll)
 

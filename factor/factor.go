@@ -234,7 +234,9 @@ func (f *Factor) Reduce(evid []int) *Factor {
 
 // Normalize normalizes the factor so all values sum to 1
 func (f *Factor) Normalize() *Factor {
-	utils.NormalizeSlice(f.values)
+	if len(f.values) > 0 {
+		utils.NormalizeSlice(f.values)
+	}
 	return f
 }
 

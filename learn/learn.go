@@ -75,9 +75,9 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 }
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
-func (l *Learner) GuessStructure() (*cliquetree.CliqueTree, float64) {
+func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float64) {
 	bestStruct, bestScore := l.randomStruct()
-	for i := 1; i < l.iterations; i++ {
+	for i := 1; i < iterations; i++ {
 		currStruct, currScore := l.randomStruct()
 		if currScore > bestScore {
 			bestScore = currScore

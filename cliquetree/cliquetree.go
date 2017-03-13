@@ -141,6 +141,16 @@ func (c *CliqueTree) CalibratedSepSet(i int) *factor.Factor {
 	return c.calibratedPotSepSet[i]
 }
 
+// SetCalibrated ..
+func (c *CliqueTree) SetCalibrated(i int, f *factor.Factor) {
+	c.calibratedPot[i] = f
+}
+
+// SetCalibratedSepSet ..
+func (c *CliqueTree) SetCalibratedSepSet(i int, f *factor.Factor) {
+	c.calibratedPotSepSet[i] = f
+}
+
 // LoadCalibration ..
 func (c *CliqueTree) LoadCalibration() {
 	for i := range c.calibratedPot {
