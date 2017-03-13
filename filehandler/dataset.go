@@ -85,11 +85,18 @@ func (d *DataSet) Size() int {
 func (d *DataSet) calcCardinality() {
 	d.cardinality = make([]int, len(d.data[0]))
 	for j := 0; j < len(d.data[0]); j++ {
-		m := make(map[int]bool)
+		// m := make(map[int]bool)
+		// for i := 0; i < len(d.data); i++ {
+		// 	m[d.data[i][j]] = true
+		// }
+		// d.cardinality[j] = len(m)
+		m := 0
 		for i := 0; i < len(d.data); i++ {
-			m[d.data[i][j]] = true
+			if d.data[i][j] > m {
+				m = d.data[i][j]
+			}
 		}
-		d.cardinality[j] = len(m)
+		d.cardinality[j] = m + 1
 	}
 }
 
