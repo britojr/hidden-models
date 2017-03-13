@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/learn"
 )
@@ -50,10 +51,21 @@ func main() {
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 
+	ct, ll := learnStructureAndParamenters(learner, check)
+	for i := 1; i < iterations; i++ {
+		currct, currll := learnStructureAndParamenters(learner, check)
+		if currll > ll {
+			ct, ll = currct, currll
+		}
+	}
+	fmt.Printf("Best LL: %v (%v)\n", ll, ct.Size())
+}
+
+func learnStructureAndParamenters(learner *learn.Learner, check bool) (*cliquetree.CliqueTree, float64) {
 	fmt.Println("Learning structure...")
-	start = time.Now()
-	ct, ll := learner.GuessStructure(iterations)
-	elapsed = time.Since(start)
+	start := time.Now()
+	ct, ll := learner.GuessStructure(1)
+	elapsed := time.Since(start)
 	fmt.Printf("Time: %v; Structure LogLikelihood: %v\n", elapsed, ll)
 
 	fmt.Println("Learning parameters...")
@@ -65,10 +77,11 @@ func main() {
 	learner.OptimizeParameters(ct)
 	elapsed = time.Since(start)
 	fmt.Printf("Time: %v; CT: %v\n", elapsed, ct.Size())
-	fmt.Printf("Final LL: %v\n", learner.CalculateLikelihood(ct))
+	ll = learner.CalculateLikelihood(ct)
+	fmt.Printf("Final LL: %v\n", ll)
 
 	if check {
 		learner.CheckTree(ct)
 	}
-
+	return ct, ll
 }
