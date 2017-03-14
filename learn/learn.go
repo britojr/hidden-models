@@ -2,6 +2,7 @@ package learn
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
@@ -116,8 +117,8 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
 
 // CalculateLikelihood calculates the likelihood of a clique tree
 func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree, t int) float64 {
+	ct.UpDownCalibration()
 	if t == 1 {
-		ct.UpDownCalibration()
 		return likelihood.Loglikelihood1(ct, l.counter, l.n)
 	}
 	return likelihood.Loglikelihood2(ct, l.dataset, l.n)
@@ -167,6 +168,8 @@ func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 	l.checkUniform(ct)
 	// check if after summing out the hidden variables they are the same as initial count
 	l.checkWithInitialCount(ct)
+
+	checkCliqueTree(ct)
 }
 
 func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
@@ -223,5 +226,79 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		}
 	} else {
 		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
+	}
+}
+
+// checkCliqueTree ..
+func checkCliqueTree(ct *cliquetree.CliqueTree) {
+	printTree := func(f *factor.Factor) {
+		fmt.Printf("(%v)\n", f.Variables())
+		fmt.Println("tree:")
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("node %v: neighb: %v clique: %v septset: %v parent: %v\n",
+				i, ct.Neighbours(i), ct.Clique(i), ct.SepSet(i), ct.Parents()[i])
+		}
+		fmt.Println("original potentials:")
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("node %v:\n var: %v\n values: %v\n",
+				i, ct.BkpPotential(i).Variables(), ct.BkpPotential(i).Values())
+		}
+		fmt.Println("reduced potentials:")
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("node %v:\n var: %v\n values: %v\n",
+				i, ct.CurrPotential(i).Variables(), ct.CurrPotential(i).Values())
+		}
+	}
+
+	for i := range ct.BkpPotentialList() {
+		f := ct.BkpPotential(i)
+		sum := 0.0
+		for _, v := range f.Values() {
+			sum += v
+		}
+		if utils.FuzzyEqual(sum, 0) {
+			printTree(f)
+			panic("original zero factor")
+		}
+		f = ct.Calibrated(i)
+		sum = 0.0
+		for _, v := range f.Values() {
+			sum += v
+		}
+		if utils.FuzzyEqual(sum, 0) {
+			printTree(f)
+			panic("original zero factor")
+		}
+	}
+}
+
+// SaveCliqueTree saves a clique tree in libDAI factor graph format
+func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	// number of potentials
+	fmt.Fprintf(f, "%d\n", ct.Size())
+	fmt.Fprintln(f)
+	for i := 0; i < ct.Size(); i++ {
+		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Variables()))
+		for _, v := range ct.Calibrated(i).Variables() {
+			fmt.Fprintf(f, "%d ", v)
+		}
+		fmt.Fprintln(f)
+
+		for _, v := range ct.Calibrated(i).Variables() {
+			fmt.Fprintf(f, "%d ", ct.Calibrated(i).Cardinality()[v])
+		}
+		fmt.Fprintln(f)
+
+		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Values()))
+		// fmt.Println(ct.BkpPotential(i).Values())
+		// for j, v := range ct.Calibrated(i).Values() {
+		for j, v := range ct.BkpPotential(i).Values() {
+			// fmt.Fprintf(f, "%d     %.4f    %.10f\n", j, v, ct.Calibrated(i).Values()[j])
+			fmt.Fprintf(f, "%d     %.4f\n", j, v)
+		}
+		fmt.Fprintln(f)
 	}
 }

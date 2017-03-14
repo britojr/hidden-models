@@ -52,6 +52,7 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	return count
 }
 
+// checkCliqueTree ..
 func checkCliqueTree(ct *cliquetree.CliqueTree) {
 	for i := range ct.BkpPotentialList() {
 		f := ct.CurrPotential(i)
@@ -59,7 +60,7 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 		for _, v := range f.Values() {
 			sum += v
 		}
-		if sum == 0 {
+		if utils.FuzzyEqual(sum, 0) {
 			fmt.Printf("(%v)\n", f.Variables())
 			fmt.Println("tree:")
 			for i := 0; i < ct.Size(); i++ {

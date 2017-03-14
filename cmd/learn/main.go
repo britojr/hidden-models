@@ -21,6 +21,7 @@ func main() {
 		h          int
 		initpot    int
 		check      bool
+		treefile   string
 	)
 	flag.IntVar(&k, "k", 5, "tree-width")
 	flag.IntVar(&iterations, "it", 1, "number of iterations/samples")
@@ -30,6 +31,7 @@ func main() {
 	flag.IntVar(&h, "h", 0, "hidden variables")
 	flag.IntVar(&initpot, "initpot", 1, "1- random values, 2- uniform values")
 	flag.BoolVar(&check, "check", false, "check tree")
+	flag.StringVar(&treefile, "s", "", "saves the tree if informed a file name")
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -59,6 +61,10 @@ func main() {
 		}
 	}
 	fmt.Printf("Best LL: %v (%v)\n", ll, ct.Size())
+
+	if len(treefile) > 0 {
+		saveTree(ct, treefile)
+	}
 }
 
 func learnStructureAndParamenters(learner *learn.Learner, check bool) (*cliquetree.CliqueTree, float64) {
@@ -88,4 +94,8 @@ func learnStructureAndParamenters(learner *learn.Learner, check bool) (*cliquetr
 		learner.CheckTree(ct)
 	}
 	return ct, ll
+}
+
+func saveTree(ct *cliquetree.CliqueTree, treefile string) {
+	learn.SaveCliqueTree(ct, treefile)
 }
