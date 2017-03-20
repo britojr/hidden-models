@@ -62,7 +62,7 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 	}
 	c.bfsOrder(0)
 	for i := 1; i < n; i++ {
-		// use orderSliceDifference to get intersection, in, out
+		c.sepsets[i], _, _ = orderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
 	}
 	return c, nil
 }
