@@ -414,13 +414,20 @@ func TestReduceByEvidence(t *testing.T) {
 		c := New(tt.n)
 		c.SetAllPotentials(tt.potentials)
 		for k := range tt.part {
+			c.StorePotentials()
 			c.ReduceByEvidence(tt.part[k].evidence)
-			for i, f := range c.BkpPotentialList() {
+			for i, f := range c.initialPotStored {
 				if !reflect.DeepEqual(tt.potentials[i].Values(), f.Values()) {
 					t.Errorf("Original potential changed, want %v, got %v", tt.potentials[i].Values(), f.Values())
 				}
 				if !reflect.DeepEqual(tt.part[k].reduced[i], c.InitialPotential(i).Values()) {
 					t.Errorf("Wrong reduction, want %v, got %v", tt.part[k].reduced[i], c.InitialPotential(i).Values())
+				}
+			}
+			c.RecoverPotentials()
+			for i := range tt.potentials {
+				if !reflect.DeepEqual(tt.potentials[i].Values(), c.InitialPotential(i).Values()) {
+					t.Errorf("Wrong recover, want %v, got %v", tt.potentials[i].Values(), c.InitialPotential(i).Values())
 				}
 			}
 		}

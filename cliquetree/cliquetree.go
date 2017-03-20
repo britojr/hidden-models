@@ -2,6 +2,7 @@ package cliquetree
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/britojr/kbn/factor"
@@ -169,24 +170,19 @@ func (c *CliqueTree) Parents() []int {
 
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
-	c.initialPotStored[i] = potential
 	c.initialPot[i] = potential
 }
 
 // SetAllPotentials ..
-func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
-	c.initialPotStored = append([]*factor.Factor(nil), potentials...)
+func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) error {
 	c.initialPot = append([]*factor.Factor(nil), potentials...)
-}
-
-// BkpPotentialList returns a list with all the original potentials
-func (c *CliqueTree) BkpPotentialList() []*factor.Factor {
-	return c.initialPotStored
-}
-
-// BkpPotential ..
-func (c *CliqueTree) BkpPotential(i int) *factor.Factor {
-	return c.initialPotStored[i]
+	// check potentials scope
+	for i, f := range c.initialPot {
+		if !reflect.DeepEqual(f.Variables(), c.cliques[i]) {
+			return fmt.Errorf("Wrong scope, clique %v has factor %v", c.cliques[i], f.Variables())
+		}
+	}
+	return nil
 }
 
 // InitialPotential ..
@@ -197,8 +193,18 @@ func (c *CliqueTree) InitialPotential(i int) *factor.Factor {
 // ReduceByEvidence applies an evidence tuple to each potential on the clique tree
 func (c *CliqueTree) ReduceByEvidence(evidence []int) {
 	for i := range c.initialPot {
-		c.initialPot[i] = c.initialPotStored[i].Reduce(evidence)
+		c.initialPot[i] = c.initialPot[i].Reduce(evidence)
 	}
+}
+
+// StorePotentials stores the initial potential values in order to b able to recover them later
+func (c *CliqueTree) StorePotentials() {
+	c.initialPotStored = append([]*factor.Factor(nil), c.initialPot...)
+}
+
+// RecoverPotentials recover intial potentials previously stored
+func (c *CliqueTree) RecoverPotentials() {
+	c.initialPot = append([]*factor.Factor(nil), c.initialPotStored...)
 }
 
 // Calibrated returns the calibrated potential for the ith clique
