@@ -185,6 +185,28 @@ func TestUpDownCalibration(t *testing.T) {
 	}
 }
 
+func TestUpDownCalibration2(t *testing.T) {
+	cases := []struct {
+		ciques [][]int
+		adj    [][]int
+		facs   []*factor.Factor
+	}{}
+	c := initCliqueTree(factorList, adjList)
+	c.UpDownCalibration()
+	calculateCalibrated()
+	for i, f := range cal {
+		got := c.Calibrated(i)
+		assig := assignment.New(f.Variables(), cardin)
+		for assig.Next() {
+			u := f.Get(assig)
+			v := got.Get(assig)
+			if !utils.FuzzyEqual(u, v) {
+				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
+			}
+		}
+	}
+}
+
 func BenchmarkUpDownCalibration(b *testing.B) {
 	ctrees := make([]*CliqueTree, 0)
 	for _, bt := range benchTest {

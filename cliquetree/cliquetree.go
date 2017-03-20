@@ -1,6 +1,7 @@
 package cliquetree
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/britojr/kbn/factor"
@@ -42,6 +43,72 @@ func New(n int) *CliqueTree {
 	c.calibratedPot = make([]*factor.Factor, n)
 	c.calibratedPotSepSet = make([]*factor.Factor, n)
 	return c
+}
+
+// NewStructure creates a new clique tree structure
+func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
+	c := new(CliqueTree)
+	n := len(cliques)
+	if len(adj) != n {
+		return nil, fmt.Errorf("wrong size for adjacency list: %v", len(adj))
+	}
+	c.cliques = make([][]int, n)
+	c.sepsets = make([][]int, n)
+	c.neighbours = make([][]int, n)
+	for i := range cliques {
+		c.cliques[i] = append([]int(nil), cliques[i]...)
+		sort.Ints(c.cliques[i])
+		c.neighbours[i] = append([]int(nil), adj[i]...)
+	}
+	c.bfsOrder(0)
+	for i := 1; i < n; i++ {
+		// use orderSliceDifference to get intersection, in, out
+	}
+	return c, nil
+}
+
+// orderedSliceDiff returns intersection, b-a and a-b for ordered slices a,b
+func orderedSliceDiff(a, b []int) (inter, in, out []int) {
+	n, m := len(a), len(b)
+	i, j := 0, 0
+	for i < n && j < m {
+		switch {
+		case a[i] < b[j]:
+			out = append(out, a[i])
+			i++
+		case a[i] > b[j]:
+			in = append(in, b[j])
+			j++
+		default:
+			inter = append(inter, a[i])
+			i, j = i+1, j+1
+		}
+	}
+	return
+}
+
+func (c *CliqueTree) bfsOrder(root int) []int {
+	c.parent = make([]int, len(c.cliques))
+	visit := make([]bool, len(c.cliques))
+	queue := make([]int, len(c.cliques))
+	start, end := 0, 0
+	c.parent[root] = -1
+	visit[root] = true
+	queue[end] = root
+	end++
+	for start < end {
+		v := queue[start]
+		start++
+		for _, ne := range c.neighbours[v] {
+			if !visit[ne] {
+				c.parent[ne] = v
+				visit[ne] = true
+				queue[end] = ne
+				end++
+			}
+		}
+	}
+	return queue
 }
 
 // Size returns the number of cliques
