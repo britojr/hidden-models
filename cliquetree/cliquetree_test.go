@@ -2,6 +2,7 @@ package cliquetree
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
@@ -76,8 +77,8 @@ var fAGIK = factorStruct{
 }
 
 var factorList = []factorStruct{fAB, fABC, fABD, fABE, fBDF, fADG}
-var varinX = []int{-1, 2, 3, 4, 5, 6}
-var varoutX = []int{-1, -1, -1, -1, 0, 1}
+var varinX = [][]int{[]int(nil), []int{2}, []int{3}, []int{4}, []int{5}, []int{6}}
+var varoutX = [][]int{[]int(nil), []int(nil), []int(nil), []int(nil), []int{0}, []int{1}}
 var adjList = [][]int{
 	[]int{1, 2, 3},
 	[]int{0},
@@ -168,6 +169,81 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNewStructure(t *testing.T) {
+	cases := []struct {
+		cliques, adj, sepsets, varin, varout [][]int
+		parents                              []int
+		err                                  error
+	}{{
+		cliques: [][]int{{0, 1}, {0, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{1}, {0, 2, 3}, {1}, {1}},
+		sepsets: [][]int{nil, {0}, {2}, {2}},
+		parents: []int{-1, 0, 1, 1},
+		varin:   [][]int{nil, {2}, {3}, {4}},
+		varout:  [][]int{nil, {1}, {0}, {0}},
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if tt.err != err {
+			t.Errorf("wrong err, want %v, got %v", tt.err, err)
+		}
+		if tt.err == nil {
+			for i := range tt.cliques {
+				sort.Ints(tt.cliques[i])
+				sort.Ints(tt.sepsets[i])
+				if !reflect.DeepEqual(tt.cliques[i], c.Clique(i)) {
+					t.Errorf("wrong clique, want %v, got %v", tt.cliques[i], c.Clique(i))
+				}
+				if !reflect.DeepEqual(tt.sepsets[i], c.SepSet(i)) {
+					t.Errorf("wrong sepset, want %v, got %v", tt.sepsets[i], c.SepSet(i))
+				}
+				if !reflect.DeepEqual(tt.adj[i], c.Neighbours(i)) {
+					t.Errorf("wrong adj, want %v, got %v", tt.adj[i], c.Neighbours(i))
+				}
+				if !reflect.DeepEqual(tt.varin[i], c.varin[i]) {
+					t.Errorf("wrong varin, want %v, got %v", tt.varin[i], c.varin[i])
+				}
+				if !reflect.DeepEqual(tt.varout[i], c.varout[i]) {
+					t.Errorf("wrong varout, want %v, got %v", tt.varout[i], c.varout[i])
+				}
+			}
+			if !reflect.DeepEqual(tt.parents, c.Parents()) {
+				t.Errorf("wrong parents, want %v, got %v", tt.parents, c.Parents())
+			}
+		}
+	}
+}
+
+func TestOrderedSliceDiff(t *testing.T) {
+	cases := []struct {
+		a, b, inter, in, out []int
+	}{{
+		a:     []int{2, 3, 4},
+		b:     []int{2, 4, 5},
+		inter: []int{2, 4},
+		in:    []int{5},
+		out:   []int{3},
+	}, {
+		a:     []int{5, 6, 7},
+		b:     []int{2, 4, 5},
+		inter: []int{5},
+		in:    []int{2, 4},
+		out:   []int{6, 7},
+	}}
+	for _, tt := range cases {
+		inter, in, out := orderedSliceDiff(tt.a, tt.b)
+		if !reflect.DeepEqual(tt.inter, inter) {
+			t.Errorf("wrong inter, want %v, got %v", tt.inter, inter)
+		}
+		if !reflect.DeepEqual(tt.in, in) {
+			t.Errorf("wrong in, want %v, got %v", tt.in, in)
+		}
+		if !reflect.DeepEqual(tt.out, out) {
+			t.Errorf("wrong out, want %v, got %v", tt.out, out)
+		}
+	}
+}
+
 func TestUpDownCalibration(t *testing.T) {
 	c := initCliqueTree(factorList, adjList)
 	c.UpDownCalibration()
@@ -186,11 +262,11 @@ func TestUpDownCalibration(t *testing.T) {
 }
 
 func TestUpDownCalibration2(t *testing.T) {
-	cases := []struct {
-		ciques [][]int
-		adj    [][]int
-		facs   []*factor.Factor
-	}{}
+	// cases := []struct {
+	// 	ciques [][]int
+	// 	adj    [][]int
+	// 	facs   []*factor.Factor
+	// }{}
 	c := initCliqueTree(factorList, adjList)
 	c.UpDownCalibration()
 	calculateCalibrated()
@@ -226,8 +302,8 @@ var testFromCharTree = []struct {
 	cliques, sepsets [][]int
 	adj              [][]int
 	parent           []int
-	varin            []int
-	varout           []int
+	varin            [][]int
+	varout           [][]int
 }{
 	{
 		iphi: []int{0, 10, 9, 3, 4, 5, 6, 7, 1, 2, 8},
@@ -269,8 +345,8 @@ var testFromCharTree = []struct {
 			{5, 6, 0},
 		},
 		parent: []int{-1, 5, 0, 0, 2, 8, 8, 1, 0},
-		varin:  []int{-1, 0, 10, 9, 3, 4, 5, 6, 7},
-		varout: []int{-1, 2, -1, -1, 1, 8, 2, 1, -1},
+		varin:  [][]int{[]int(nil), []int{0}, []int{10}, []int{9}, []int{3}, []int{4}, []int{5}, []int{6}, []int{7}},
+		varout: [][]int{[]int(nil), []int{2}, []int(nil), []int(nil), []int{1}, []int{8}, []int{2}, []int{1}, []int(nil)},
 	},
 }
 
@@ -290,10 +366,10 @@ func TestFromCharTree(t *testing.T) {
 			if got.parent[i] != v.parent[i] {
 				t.Errorf("parent[%v]; Got: %v; Want: %v", i, got.parent[i], v.parent[i])
 			}
-			if got.varin[i] != v.varin[i] {
+			if !reflect.DeepEqual(got.varin[i], v.varin[i]) {
 				t.Errorf("varin[%v]; Got: %v; Want: %v", i, got.varin[i], v.varin[i])
 			}
-			if got.varout[i] != v.varout[i] {
+			if !reflect.DeepEqual(got.varout[i], v.varout[i]) {
 				t.Errorf("varout[%v]; Got: %v; Want: %v", i, got.varout[i], v.varout[i])
 			}
 		}
@@ -343,8 +419,8 @@ func TestReduceByEvidence(t *testing.T) {
 				if !reflect.DeepEqual(tt.potentials[i].Values(), f.Values()) {
 					t.Errorf("Original potential changed, want %v, got %v", tt.potentials[i].Values(), f.Values())
 				}
-				if !reflect.DeepEqual(tt.part[k].reduced[i], c.CurrPotential(i).Values()) {
-					t.Errorf("Wrong reduction, want %v, got %v", tt.part[k].reduced[i], c.CurrPotential(i).Values())
+				if !reflect.DeepEqual(tt.part[k].reduced[i], c.InitialPotential(i).Values()) {
+					t.Errorf("Wrong reduction, want %v, got %v", tt.part[k].reduced[i], c.InitialPotential(i).Values())
 				}
 			}
 		}

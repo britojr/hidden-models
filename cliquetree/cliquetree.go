@@ -12,23 +12,22 @@ import (
 type CliqueTree struct {
 	cliques [][]int // wich variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
-	varin   []int   // the difference between clique and parent
-	varout  []int   // the difference between clique and parent
+	varin   [][]int // the difference between clique and parent
+	varout  [][]int // the difference between clique and parent
 
 	neighbours [][]int // cliques that are adjacent to this one, including parent
 	parent     []int   // the parent of each node
 
-	origPot             []*factor.Factor // original clique potential
-	currPot             []*factor.Factor // initial clique potential for calibration
+	initialPotStored    []*factor.Factor // original clique potential
+	initialPot          []*factor.Factor // initial clique potential for calibration
 	calibratedPot       []*factor.Factor // calibrated potential
 	calibratedPotSepSet []*factor.Factor // calibrated potential for the sepset
+	calibratedPotStored []*factor.Factor // auxiliar for storing calibrated potentials
 
 	// auxiliar for message passing, send to parent and receive from parent
 	send, receive []*factor.Factor
 	// axiliar to reduce (memoize) number of factor multiplications
 	prev, post [][]*factor.Factor
-
-	calibratedPotStored []*factor.Factor // auxiliar for storing calibrated potentials
 }
 
 // New ..
@@ -38,10 +37,8 @@ func New(n int) *CliqueTree {
 	c.sepsets = make([][]int, n)
 	c.neighbours = make([][]int, n)
 	c.parent = make([]int, n)
-	c.origPot = make([]*factor.Factor, n)
-	c.currPot = make([]*factor.Factor, n)
-	c.calibratedPot = make([]*factor.Factor, n)
-	c.calibratedPotSepSet = make([]*factor.Factor, n)
+	c.initialPotStored = make([]*factor.Factor, n)
+	c.initialPot = make([]*factor.Factor, n)
 	return c
 }
 
@@ -53,7 +50,6 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 		return nil, fmt.Errorf("wrong size for adjacency list: %v", len(adj))
 	}
 	c.cliques = make([][]int, n)
-	c.sepsets = make([][]int, n)
 	c.neighbours = make([][]int, n)
 	for i := range cliques {
 		c.cliques[i] = append([]int(nil), cliques[i]...)
@@ -61,8 +57,10 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 		c.neighbours[i] = append([]int(nil), adj[i]...)
 	}
 	c.bfsOrder(0)
+	c.sepsets = make([][]int, n)
+	c.varin, c.varout = make([][]int, n), make([][]int, n)
 	for i := 1; i < n; i++ {
-		c.sepsets[i], _, _ = orderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
+		c.sepsets[i], c.varin[i], c.varout[i] = orderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
 	}
 	return c, nil
 }
@@ -83,6 +81,14 @@ func orderedSliceDiff(a, b []int) (inter, in, out []int) {
 			inter = append(inter, a[i])
 			i, j = i+1, j+1
 		}
+	}
+	for i < n {
+		out = append(out, a[i])
+		i++
+	}
+	for j < m {
+		in = append(in, b[j])
+		j++
 	}
 	return
 }
@@ -163,35 +169,35 @@ func (c *CliqueTree) Parents() []int {
 
 // SetPotential ..
 func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
-	c.origPot[i] = potential
-	c.currPot[i] = potential
+	c.initialPotStored[i] = potential
+	c.initialPot[i] = potential
 }
 
 // SetAllPotentials ..
 func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) {
-	c.origPot = append([]*factor.Factor(nil), potentials...)
-	c.currPot = append([]*factor.Factor(nil), potentials...)
+	c.initialPotStored = append([]*factor.Factor(nil), potentials...)
+	c.initialPot = append([]*factor.Factor(nil), potentials...)
 }
 
 // BkpPotentialList returns a list with all the original potentials
 func (c *CliqueTree) BkpPotentialList() []*factor.Factor {
-	return c.origPot
+	return c.initialPotStored
 }
 
 // BkpPotential ..
 func (c *CliqueTree) BkpPotential(i int) *factor.Factor {
-	return c.origPot[i]
+	return c.initialPotStored[i]
 }
 
-// CurrPotential ..
-func (c *CliqueTree) CurrPotential(i int) *factor.Factor {
-	return c.currPot[i]
+// InitialPotential ..
+func (c *CliqueTree) InitialPotential(i int) *factor.Factor {
+	return c.initialPot[i]
 }
 
 // ReduceByEvidence applies an evidence tuple to each potential on the clique tree
 func (c *CliqueTree) ReduceByEvidence(evidence []int) {
-	for i := range c.currPot {
-		c.currPot[i] = c.origPot[i].Reduce(evidence)
+	for i := range c.initialPot {
+		c.initialPot[i] = c.initialPotStored[i].Reduce(evidence)
 	}
 }
 
@@ -221,7 +227,7 @@ func (c *CliqueTree) SetCalibratedSepSet(i int, f *factor.Factor) {
 // LoadCalibration ..
 func (c *CliqueTree) LoadCalibration() {
 	for i := range c.calibratedPot {
-		c.calibratedPot[i] = c.currPot[i]
+		c.calibratedPot[i] = c.initialPot[i]
 	}
 }
 
@@ -245,7 +251,7 @@ func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
 }
 
 func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
-	prev := c.currPot[v].Reduce(evid)
+	prev := c.initialPot[v].Reduce(evid)
 	if len(c.neighbours[v]) > 1 {
 		for _, ne := range c.neighbours[v] {
 			if ne != pa {
@@ -254,7 +260,7 @@ func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Facto
 			}
 		}
 	}
-	send[v] = prev.SumOutOne(c.varin[v])
+	send[v] = prev.SumOut(c.varin[v])
 }
 
 // UpDownCalibration ..
@@ -270,6 +276,9 @@ func (c *CliqueTree) UpDownCalibration() {
 	// -------------------------------------------------------------------------
 	c.prev = make([][]*factor.Factor, c.Size())
 	c.post = make([][]*factor.Factor, c.Size())
+
+	c.calibratedPot = make([]*factor.Factor, c.Size())
+	c.calibratedPotSepSet = make([]*factor.Factor, c.Size())
 	root := 0
 
 	c.upwardmessage(root, -1)
@@ -278,7 +287,7 @@ func (c *CliqueTree) UpDownCalibration() {
 
 func (c *CliqueTree) upwardmessage(v, pa int) {
 	c.prev[v] = make([]*factor.Factor, 1, len(c.neighbours[v])+1)
-	c.prev[v][0] = c.currPot[v]
+	c.prev[v][0] = c.initialPot[v]
 	if len(c.neighbours[v]) > 1 {
 		for _, ne := range c.neighbours[v] {
 			if ne != pa {
@@ -288,7 +297,7 @@ func (c *CliqueTree) upwardmessage(v, pa int) {
 		}
 	}
 	if pa != -1 {
-		c.send[v] = c.prev[v][len(c.prev[v])-1].SumOutOne(c.varin[v])
+		c.send[v] = c.prev[v][len(c.prev[v])-1].SumOut(c.varin[v])
 	}
 }
 
@@ -299,7 +308,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		c.calibratedPot[v] = c.calibratedPot[v].Product(c.receive[v])
 		n--
 		// calculate calibrated sepset
-		c.calibratedPotSepSet[v] = c.calibratedPot[v].SumOutOne(c.varin[v])
+		c.calibratedPotSepSet[v] = c.calibratedPot[v].SumOut(c.varin[v])
 	}
 	if len(c.neighbours[v]) == 1 && pa != -1 {
 		return
@@ -330,7 +339,7 @@ func (c *CliqueTree) downwardmessage(pa, v int) {
 		if c.post[v][k] != nil {
 			msg = msg.Product(c.post[v][k])
 		}
-		c.receive[ch] = msg.SumOutOne(c.varout[ch])
+		c.receive[ch] = msg.SumOut(c.varout[ch])
 		c.downwardmessage(v, ch)
 		k++
 	}
@@ -353,8 +362,7 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	// create relabled cliques list
 	cliques := make([][]int, len(children))
 	cliques[0] = make([]int, k)
-	varout := make([]int, n)
-	varout[0] = -1
+	varout := make([][]int, n)
 	// Initialize auxiliar (not relabled) clique matrix
 	K := make([][]int, n-k+1)
 	K[0] = make([]int, k)
@@ -373,13 +381,12 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	for start != end {
 		v := queue[start]
 		start++
-		varout[v] = -1
 		// update unlabled clique K
 		for i := 0; i < len(K[T.P[v]]); i++ {
 			if i != T.L[v] {
 				K[v] = append(K[v], K[T.P[v]][i])
 			} else {
-				varout[v] = iphi[K[T.P[v]][i]-1]
+				varout[v] = append(varout[v], iphi[K[T.P[v]][i]-1])
 			}
 		}
 		if T.P[v] != 0 {
@@ -403,17 +410,16 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 
 	// create new clique tree
 	c := New(len(children))
-	c.varin = make([]int, n)
+	c.varin = make([][]int, n)
 	c.varout = varout
 	// initialize root clique
 	sort.Ints(cliques[0])
 	c.SetClique(0, cliques[0])
 	c.SetNeighbours(0, children[0])
-	c.varin[0] = -1
 
 	for i := 1; i < c.Size(); i++ {
 		// set cliques and sepset
-		c.varin[i] = cliques[i][0]
+		c.varin[i] = append(c.varin[i], cliques[i][0])
 		c.SetSepSet(i, append([]int(nil), cliques[i][1:]...))
 		sort.Ints(c.SepSet(i))
 		sort.Ints(cliques[i])
