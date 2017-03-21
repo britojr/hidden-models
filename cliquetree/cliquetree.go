@@ -40,6 +40,8 @@ func New(n int) *CliqueTree {
 	c.parent = make([]int, n)
 	c.initialPotStored = make([]*factor.Factor, n)
 	c.initialPot = make([]*factor.Factor, n)
+	c.calibratedPot = make([]*factor.Factor, n)
+	c.calibratedPotSepSet = make([]*factor.Factor, n)
 	return c
 }
 
@@ -191,6 +193,11 @@ func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) error {
 // InitialPotential ..
 func (c *CliqueTree) InitialPotential(i int) *factor.Factor {
 	return c.initialPot[i]
+}
+
+// Potentials ..
+func (c *CliqueTree) Potentials() []*factor.Factor {
+	return c.initialPot
 }
 
 // ReduceByEvidence applies an evidence tuple to each potential on the clique tree

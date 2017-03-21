@@ -176,9 +176,9 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
 	uniform := CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
-	diff, i, j, err := factor.MaxDifference(uniform, ct.BkpPotentialList())
+	diff, i, j, err := factor.MaxDifference(uniform, ct.Potentials())
 	utils.ErrCheck(err, "")
-	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.BkpPotential(i).Values()[j])
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.InitialPotential(i).Values()[j])
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
@@ -202,7 +202,7 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(l.counter.CountAssignments(observed))
-			sumOutHidden[i] = ct.BkpPotential(i)
+			sumOutHidden[i] = ct.InitialPotential(i)
 			if len(hidden) > 0 {
 				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
 			}
@@ -241,17 +241,12 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 		fmt.Println("original potentials:")
 		for i := 0; i < ct.Size(); i++ {
 			fmt.Printf("node %v:\n var: %v\n values: %v\n",
-				i, ct.BkpPotential(i).Variables(), ct.BkpPotential(i).Values())
-		}
-		fmt.Println("reduced potentials:")
-		for i := 0; i < ct.Size(); i++ {
-			fmt.Printf("node %v:\n var: %v\n values: %v\n",
-				i, ct.CurrPotential(i).Variables(), ct.CurrPotential(i).Values())
+				i, ct.InitialPotential(i).Variables(), ct.InitialPotential(i).Values())
 		}
 	}
 
-	for i := range ct.BkpPotentialList() {
-		f := ct.BkpPotential(i)
+	for i := range ct.Potentials() {
+		f := ct.InitialPotential(i)
 		sum := 0.0
 		for _, v := range f.Values() {
 			sum += v
@@ -295,7 +290,7 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Values()))
 		// fmt.Println(ct.BkpPotential(i).Values())
 		// for j, v := range ct.Calibrated(i).Values() {
-		for j, v := range ct.BkpPotential(i).Values() {
+		for j, v := range ct.InitialPotential(i).Values() {
 			// fmt.Fprintf(f, "%d     %.4f    %.10f\n", j, v, ct.Calibrated(i).Values()[j])
 			fmt.Fprintf(f, "%d     %.4f\n", j, v)
 		}

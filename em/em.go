@@ -23,7 +23,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
 		for j := range newpot {
 			newpot[j].Normalize()
 		}
-		diff, _, _, err = factor.MaxDifference(ct.BkpPotentialList(), newpot)
+		diff, _, _, err = factor.MaxDifference(ct.Potentials(), newpot)
 		utils.ErrCheck(err, "")
 		ct.SetAllPotentials(newpot)
 	}
@@ -34,10 +34,11 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	// initialize counter
 	count := make([]*factor.Factor, ct.Size())
 	for i := range count {
-		count[i] = ct.CurrPotential(i).ClearCopy()
+		count[i] = ct.InitialPotential(i).ClearCopy()
 	}
 
 	// calculate probability of every instance
+	ct.StorePotentials()
 	for _, m := range ds.Data() {
 		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
@@ -47,6 +48,7 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 				count[i].Values()[j] += v
 			}
 		}
+		ct.RecoverPotentials()
 	}
 
 	return count
@@ -54,8 +56,8 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 
 // checkCliqueTree ..
 func checkCliqueTree(ct *cliquetree.CliqueTree) {
-	for i := range ct.BkpPotentialList() {
-		f := ct.CurrPotential(i)
+	for i := range ct.Potentials() {
+		f := ct.InitialPotential(i)
 		sum := 0.0
 		for _, v := range f.Values() {
 			sum += v
@@ -70,12 +72,7 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 			fmt.Println("original potentials:")
 			for i := 0; i < ct.Size(); i++ {
 				fmt.Printf("node %v:\n var: %v\n values: %v\n",
-					i, ct.BkpPotential(i).Variables(), ct.BkpPotential(i).Values())
-			}
-			fmt.Println("reduced potentials:")
-			for i := 0; i < ct.Size(); i++ {
-				fmt.Printf("node %v:\n var: %v\n values: %v\n",
-					i, ct.CurrPotential(i).Variables(), ct.CurrPotential(i).Values())
+					i, ct.InitialPotential(i).Variables(), ct.InitialPotential(i).Values())
 			}
 			panic("original zero factor")
 		}
