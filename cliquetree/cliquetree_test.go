@@ -485,3 +485,81 @@ func TestReduceByEvidence(t *testing.T) {
 		}
 	}
 }
+
+func TestProbOfEvidence(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       []struct {
+			evidence []int
+			prob     float64
+		}
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: []struct {
+			evidence []int
+			prob     float64
+		}{{
+			evidence: []int{0, 0, 0},
+			prob:     .996004998,
+		}, {
+			evidence: []int{},
+			prob:     1,
+		}, {
+			evidence: []int{0},
+			prob:     .99899999,
+		}, {
+			evidence: []int{1, 1, 1},
+			prob:     .0000019,
+		}, {
+			evidence: []int{1, 0, 1, 1},
+			prob:     .000844308,
+		}, {
+			evidence: []int{1, 0, 1},
+			prob:     .00093812,
+		}, {
+			evidence: []int{0, 0, 1},
+			prob:     .000997002,
+		}, {
+			evidence: []int{0, 1, 1},
+			prob:     .00057942,
+		}, {
+			evidence: []int{0, 1, 1, 1},
+			prob:     .000521478,
+		}, {
+			evidence: []int{0, 1, 1, 1, 1},
+			prob:     .0003650346,
+		}},
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		c.UpDownCalibration()
+		for _, r := range tt.result {
+			got := c.ProbOfEvidence(r.evidence)
+			if !utils.FuzzyEqual(r.prob, got, 1e-7) {
+				t.Errorf("wrong prob of evidence, want %v, got %v", r.prob, got)
+			}
+		}
+	}
+}
