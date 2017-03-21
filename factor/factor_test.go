@@ -552,13 +552,13 @@ var testSumOut = []struct {
 	},
 	{
 		f: NewFactorValues([]int{0, 1}, []int{2, 2, 2},
-			[]float64{.25, .35, .35, .5}),
+			[]float64{.25, .35, .35, .05}),
 		varlist: []int{0},
 		r:       NewFactorValues([]int{1}, []int{2, 2, 2}, []float64{.6, .4}),
 	},
 	{
 		f: NewFactorValues([]int{1, 2}, []int{2, 2, 2},
-			[]float64{.20, .40, .22, .18}),
+			[]float64{.20, .22, .40, .18}),
 		varlist: []int{2},
 		r:       NewFactorValues([]int{1}, []int{2, 2, 2}, []float64{.6, .4}),
 	},
@@ -570,8 +570,10 @@ func TestSumOut(t *testing.T) {
 		if !reflect.DeepEqual(v.r.Variables(), got.Variables()) {
 			t.Errorf("want %v, got %v", v.r.Variables(), got.Variables())
 		}
-		if !reflect.DeepEqual(v.r.Values(), got.Values()) {
-			t.Errorf("want %v, got %v", v.r.Values(), got.Values())
+		for i, x := range v.r.Values() {
+			if !utils.FuzzyEqual(x, got.Values()[i]) {
+				t.Errorf("want %v, got %v", v.r.Values(), got.Values())
+			}
 		}
 	}
 }
