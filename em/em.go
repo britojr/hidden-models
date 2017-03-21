@@ -14,7 +14,7 @@ import (
 const epslon = 1e-10
 
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
+func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) {
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
@@ -30,8 +30,8 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet)
 	}
 }
 
-// expectationStep ..
-func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*factor.Factor {
+// expectationStep calculates the expected count of a list of observations and a cliquetree
+func expectationStep(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) []*factor.Factor {
 	// initialize counter
 	count := make([]*factor.Factor, ct.Size())
 	for i := range count {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/utils"
 )
@@ -103,6 +104,80 @@ func TestCheckFactorDiff(t *testing.T) {
 		if tt.err == nil {
 			if !utils.FuzzyEqual(tt.diff, diff, 1e-4) {
 				t.Errorf("wrong max diff, want %v, got %v", tt.diff, diff)
+			}
+		}
+	}
+}
+
+type FakeDataHandler struct {
+	data [][]int
+}
+
+func (f FakeDataHandler) Data() [][]int {
+	return f.data
+}
+
+func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {
+	c, err := cliquetree.NewStructure(cliques, adj)
+	if err != nil {
+		return nil, err
+	}
+	potentials := make([]*factor.Factor, len(values))
+	for i, v := range values {
+		potentials[i] = factor.NewFactorValues(cliques[i], cardin, v)
+	}
+	err = c.SetAllPotentials(potentials)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func TestExpectationStep(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		ds           FakeDataHandler
+		result       [][]float64
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		ds: FakeDataHandler{
+			data: [][]int{
+				{0, 1, 1, 0, 1},
+			},
+		},
+		result: [][]float64{
+			{3, 1},
+			{0, 4},
+			{0, 0, 0, 0, 0, 0, 3, 1},
+			{0, 3, 0, 1},
+			{0, 0, 0, 4},
+		},
+	}}
+	for _, tt := range cases {
+		c, err := initiCliqueTree(tt.cliques, tt.adj, tt.cardin, tt.values)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		got := expectationStep(c, tt.ds)
+		if len(got) != len(tt.result) {
+			t.Errorf("wrong number of factors, want %v, got %v", len(got), len(tt.result))
+		}
+		for i := range tt.result {
+			for j := range tt.result[i] {
+				if !utils.FuzzyEqual(tt.result[i][j], got[i].Values()[j]) {
+					t.Errorf("wrong counting, want %v, got %v", tt.result[i], got[i].Values())
+				}
 			}
 		}
 	}
