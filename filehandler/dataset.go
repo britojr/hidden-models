@@ -10,6 +10,11 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
+// DataHandler interface, returns data as an int matrix
+type DataHandler interface {
+	Data() [][]int
+}
+
 // HeaderFlags type is used to store the flags indicating the kind header lines the file has
 // each kind of header line must appear in the fixed order of the constants declared bellow
 type HeaderFlags byte
