@@ -3,6 +3,7 @@ package em
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
@@ -23,7 +24,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet)
 		for j := range newpot {
 			newpot[j].Normalize()
 		}
-		diff, _, _, err = factor.MaxDifference(ct.Potentials(), newpot)
+		diff, err = checkFactorDiff(ct, newpot, diff)
 		utils.ErrCheck(err, "")
 		ct.SetAllPotentials(newpot)
 	}
@@ -52,4 +53,42 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	}
 
 	return count
+}
+
+func checkFactorDiff(ct *cliquetree.CliqueTree, fs []*factor.Factor, threshold float64) (float64, error) {
+	if ct.Size() != len(fs) {
+		return 0, fmt.Errorf("missing potentials %v x %v", ct.Size(), len(fs))
+	}
+	var diff float64
+	for i := 0; i < ct.Size(); i++ {
+		d, err := maxDiff(ct.InitialPotential(i).Values(), fs[i].Values(), threshold)
+		if err != nil {
+			return 0, err
+		}
+		if d > diff {
+			diff = d
+			if diff >= threshold {
+				return diff, nil
+			}
+		}
+	}
+	return diff, nil
+}
+
+// MaxDiff calculates the max difference of two slices,
+// if the difference is already bigger than threshold, stops the calculation
+func maxDiff(a, b []float64, threshold float64) (float64, error) {
+	if len(a) != len(b) {
+		return 0, fmt.Errorf("slices of different sizes %v x %v", len(a), len(b))
+	}
+	var diff float64
+	for i := range a {
+		if d := math.Abs(a[i] - b[i]); d > diff {
+			diff = d
+			if diff >= threshold {
+				return diff, nil
+			}
+		}
+	}
+	return diff, nil
 }
