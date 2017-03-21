@@ -279,6 +279,24 @@ func TestUpDownCalibration2(t *testing.T) {
 			{.15, .21, .14, .02},
 			{.12, .088, .24, .072},
 		},
+	}, {
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.9960050, .0000599, .0014186, .0000001, .0009970, .0009381, .0005794, .0000019},
+			{.9476094, .0002516, .0498741, .0022648},
+			{.9875088, .0007549, .0099748, .0017615},
+		},
 	}}
 	for _, tt := range cases {
 		c, err := NewStructure(tt.cliques, tt.adj)
@@ -296,7 +314,7 @@ func TestUpDownCalibration2(t *testing.T) {
 		c.UpDownCalibration()
 		for i := range tt.cliques {
 			for j, x := range tt.result[i] {
-				if !utils.FuzzyEqual(x, c.Calibrated(i).Values()[j]) {
+				if !utils.FuzzyEqual(x, c.Calibrated(i).Values()[j], 1e-5) {
 					t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
 				}
 			}
