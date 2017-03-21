@@ -177,9 +177,12 @@ func (c *CliqueTree) SetPotential(i int, potential *factor.Factor) {
 func (c *CliqueTree) SetAllPotentials(potentials []*factor.Factor) error {
 	c.initialPot = append([]*factor.Factor(nil), potentials...)
 	// check potentials scope
-	for i, f := range c.initialPot {
-		if !reflect.DeepEqual(f.Variables(), c.cliques[i]) {
-			return fmt.Errorf("Wrong scope, clique %v has factor %v", c.cliques[i], f.Variables())
+	for i := range c.cliques {
+		if i >= len(c.initialPot) || c.initialPot[i] == nil {
+			return fmt.Errorf("no factor for clique %v", c.cliques[i])
+		}
+		if !reflect.DeepEqual(c.initialPot[i].Variables(), c.cliques[i]) {
+			return fmt.Errorf("wrong scope, clique %v has factor %v", c.cliques[i], c.initialPot[i].Variables())
 		}
 	}
 	return nil
@@ -294,12 +297,10 @@ func (c *CliqueTree) UpDownCalibration() {
 func (c *CliqueTree) upwardmessage(v, pa int) {
 	c.prev[v] = make([]*factor.Factor, 1, len(c.neighbours[v])+1)
 	c.prev[v][0] = c.initialPot[v]
-	if len(c.neighbours[v]) > 1 {
-		for _, ne := range c.neighbours[v] {
-			if ne != pa {
-				c.upwardmessage(ne, v)
-				c.prev[v] = append(c.prev[v], c.send[ne].Product(c.prev[v][len(c.prev[v])-1]))
-			}
+	for _, ne := range c.neighbours[v] {
+		if ne != pa {
+			c.upwardmessage(ne, v)
+			c.prev[v] = append(c.prev[v], c.send[ne].Product(c.prev[v][len(c.prev[v])-1]))
 		}
 	}
 	if pa != -1 {

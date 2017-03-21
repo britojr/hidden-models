@@ -262,25 +262,45 @@ func TestUpDownCalibration(t *testing.T) {
 }
 
 func TestUpDownCalibration2(t *testing.T) {
-	// cases := []struct {
-	// 	ciques [][]int
-	// 	adj    [][]int
-	// 	facs   []*factor.Factor
-	// }{}
-	c := initCliqueTree(factorList, adjList)
-	c.UpDownCalibration()
-	calculateCalibrated()
-	for i, f := range cal {
-		got := c.Calibrated(i)
-		assig := assignment.New(f.Variables(), cardin)
-		for assig.Next() {
-			u := f.Get(assig)
-			v := got.Get(assig)
-			if !utils.FuzzyEqual(u, v) {
-				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       [][]float64
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		cardin:  []int{2, 2, 2},
+		values: [][]float64{
+			{.25, .35, .35, .5},
+			{.20, .40, .22, .18},
+		},
+		result: [][]float64{
+			{.15, .14, .21, .02},
+			{.12, .24, .088, .072},
+		},
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		c.UpDownCalibration()
+		for i := range tt.cliques {
+			if !reflect.DeepEqual(tt.result[i], c.Calibrated(i).Values()) {
+				t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
 			}
 		}
 	}
+
 }
 
 func BenchmarkUpDownCalibration(b *testing.B) {
