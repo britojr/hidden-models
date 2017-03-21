@@ -300,6 +300,19 @@ func TestUpDownCalibration2(t *testing.T) {
 					t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
 				}
 			}
+			pa := c.Parents()[i]
+			if pa != -1 {
+				v1 := c.Calibrated(i).SumOut(c.varin[i]).Values()
+				v2 := c.Calibrated(pa).SumOut(c.varout[i]).Values()
+				for j, x := range c.CalibratedSepSet(i).Values() {
+					if !utils.FuzzyEqual(x, v1[j]) {
+						t.Errorf("wrong values for sepset of clique %v, want %v, got %v", tt.cliques[i], x, v1[j])
+					}
+					if !utils.FuzzyEqual(x, v2[j]) {
+						t.Errorf("wrong values for sepset of clique %v, want %v, got %v", tt.cliques[i], x, v2[j])
+					}
+				}
+			}
 		}
 	}
 }
