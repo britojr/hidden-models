@@ -13,12 +13,12 @@ import (
 const epslon = 1e-10
 
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet,
-	counter utils.Counter, numobs int) {
+func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) {
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
+		// TODO: check what is to be done for the maximization step
 		newpot := expectationStep(ct, ds)
 		for j := range newpot {
 			newpot[j].Normalize()
@@ -52,29 +52,4 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	}
 
 	return count
-}
-
-// checkCliqueTree ..
-func checkCliqueTree(ct *cliquetree.CliqueTree) {
-	for i := range ct.Potentials() {
-		f := ct.InitialPotential(i)
-		sum := 0.0
-		for _, v := range f.Values() {
-			sum += v
-		}
-		if utils.FuzzyEqual(sum, 0) {
-			fmt.Printf("(%v)\n", f.Variables())
-			fmt.Println("tree:")
-			for i := 0; i < ct.Size(); i++ {
-				fmt.Printf("node %v: neighb: %v clique: %v septset: %v parent: %v\n",
-					i, ct.Neighbours(i), ct.Clique(i), ct.SepSet(i), ct.Parents()[i])
-			}
-			fmt.Println("original potentials:")
-			for i := 0; i < ct.Size(); i++ {
-				fmt.Printf("node %v:\n var: %v\n values: %v\n",
-					i, ct.InitialPotential(i).Variables(), ct.InitialPotential(i).Values())
-			}
-			panic("original zero factor")
-		}
-	}
 }

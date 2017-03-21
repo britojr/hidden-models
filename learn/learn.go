@@ -112,7 +112,7 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int
 
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
-	em.ExpectationMaximization(ct, l.dataset, l.counter, l.n)
+	em.ExpectationMaximization(ct, l.dataset)
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree
