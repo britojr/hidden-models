@@ -154,6 +154,9 @@ func TestExpectationStep(t *testing.T) {
 		ds: FakeDataHandler{
 			data: [][]int{
 				{0, 1, 1, 0, 1},
+				{0, 1, 1, 0, 1},
+				{1, 1, 1, 1, 1},
+				{0, 1, 1, 0, 1},
 			},
 		},
 		result: [][]float64{
