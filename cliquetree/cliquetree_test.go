@@ -272,12 +272,12 @@ func TestUpDownCalibration2(t *testing.T) {
 		adj:     [][]int{{1}, {0}},
 		cardin:  []int{2, 2, 2},
 		values: [][]float64{
-			{.25, .35, .35, .5},
-			{.20, .40, .22, .18},
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
 		},
 		result: [][]float64{
-			{.15, .14, .21, .02},
-			{.12, .24, .088, .072},
+			{.15, .21, .14, .02},
+			{.12, .088, .24, .072},
 		},
 	}}
 	for _, tt := range cases {
@@ -295,12 +295,13 @@ func TestUpDownCalibration2(t *testing.T) {
 		}
 		c.UpDownCalibration()
 		for i := range tt.cliques {
-			if !reflect.DeepEqual(tt.result[i], c.Calibrated(i).Values()) {
-				t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
+			for j, x := range tt.result[i] {
+				if !utils.FuzzyEqual(x, c.Calibrated(i).Values()[j]) {
+					t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
+				}
 			}
 		}
 	}
-
 }
 
 func BenchmarkUpDownCalibration(b *testing.B) {
