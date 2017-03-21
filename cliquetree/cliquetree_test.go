@@ -563,3 +563,99 @@ func TestProbOfEvidence(t *testing.T) {
 		}
 	}
 }
+
+func TestConditionalProb(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       []struct {
+			evidence []int
+			prob     [][]float64
+		}
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: []struct {
+			evidence []int
+			prob     [][]float64
+		}{{
+			evidence: []int{},
+			prob: [][]float64{
+				{.999, .001},
+				{.998, .002},
+				{.9975, .0025},
+				{.9479, .0521},
+				{.9883, .0117},
+			},
+		}, {
+			evidence: []int{0, 0, 0},
+			prob: [][]float64{
+				{1, 0},
+				{1, 0},
+				{1, 0},
+				{.9491, .0509},
+				{.9893, .0107},
+			},
+		}, {
+			evidence: []int{0, 1, 1, 1},
+			prob: [][]float64{
+				{1, 0},
+				{0, 1},
+				{0, 1},
+				{0, 1},
+				{.3, .7},
+			},
+		}, {
+			evidence: []int{0, 1, 1, 1, 1},
+			prob: [][]float64{
+				{1, 0},
+				{0, 1},
+				{0, 1},
+				{0, 1},
+				{0, 1},
+			},
+		}},
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		c.StorePotentials()
+		for _, r := range tt.result {
+			c.ReduceByEvidence(r.evidence)
+			c.UpDownCalibration()
+			for i := 0; i < c.Size(); i++ {
+				f := c.Calibrated(i).Normalize()
+				for _, v := range c.Calibrated(i).Variables() {
+					if v != i {
+						f = f.SumOutOne(v)
+					}
+				}
+				for j := range r.prob[i] {
+					if !utils.FuzzyEqual(r.prob[i][j], f.Values()[j], 1e-3) {
+						t.Errorf("wrong probabilities for evid %v,  want %v, got %v", r.evidence, r.prob[i], f.Values())
+					}
+				}
+			}
+			c.RecoverPotentials()
+		}
+	}
+}
