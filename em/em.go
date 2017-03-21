@@ -24,7 +24,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds *filehandler.DataSet)
 		for j := range newpot {
 			newpot[j].Normalize()
 		}
-		diff, err = checkFactorDiff(ct, newpot, diff)
+		diff, err = checkFactorDiff(ct.Potentials(), newpot, diff)
 		utils.ErrCheck(err, "")
 		ct.SetAllPotentials(newpot)
 	}
@@ -55,13 +55,13 @@ func expectationStep(ct *cliquetree.CliqueTree, ds *filehandler.DataSet) []*fact
 	return count
 }
 
-func checkFactorDiff(ct *cliquetree.CliqueTree, fs []*factor.Factor, threshold float64) (float64, error) {
-	if ct.Size() != len(fs) {
-		return 0, fmt.Errorf("missing potentials %v x %v", ct.Size(), len(fs))
+func checkFactorDiff(fs1, fs2 []*factor.Factor, threshold float64) (float64, error) {
+	if len(fs1) != len(fs2) {
+		return 0, fmt.Errorf("missing potentials %v x %v", len(fs1), len(fs2))
 	}
 	var diff float64
-	for i := 0; i < ct.Size(); i++ {
-		d, err := maxDiff(ct.InitialPotential(i).Values(), fs[i].Values(), threshold)
+	for i := range fs1 {
+		d, err := maxDiff(fs1[i].Values(), fs2[i].Values(), threshold)
 		if err != nil {
 			return 0, err
 		}
