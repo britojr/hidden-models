@@ -153,6 +153,8 @@ func (f *Factor) Division(g *Factor) *Factor {
 	h.varlist = f.varlist
 	h.stride = f.stride
 	h.values = append([]float64(nil), f.values...)
+	_, in, _ := utils.OrderedSliceDiff(f.varlist, g.varlist)
+	g = g.SumOut(in)
 	// TODO: create version without assig an bench to see how better it is
 	assig := assignment.New(h.varlist, h.cardin)
 	for i := range h.values {

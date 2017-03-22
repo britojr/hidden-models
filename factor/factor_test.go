@@ -591,14 +591,31 @@ func TestDivision(t *testing.T) {
 		f:      NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 60}),
 		g:      NewFactorValues([]int{1}, []int{2, 2}, []float64{5, 30}),
 		result: NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{2, 4, 1, 2}),
+	}, {
+		f:      NewFactorValues([]int{1, 2}, []int{2, 2, 2}, []float64{20, 22, 40, 18}),
+		g:      NewFactorValues([]int{0, 1}, []int{2, 2, 2}, []float64{25, 35, 35, 5}),
+		result: NewFactorValues([]int{1, 2}, []int{2, 2, 2}, []float64{.333333, .55, .666666, .45}),
 	}}
 	for _, tt := range cases {
 		got := tt.f.Division(tt.g)
 		if !reflect.DeepEqual(tt.result.Variables(), got.Variables()) {
 			t.Errorf("want %v, got %v", tt.result.Variables(), got.Variables())
 		}
-		if !reflect.DeepEqual(tt.result.Values(), got.Values()) {
-			t.Errorf("want %v, got %v", tt.result.Values(), got.Values())
+		for j, v := range tt.result.Values() {
+			if !utils.FuzzyEqual(v, got.Values()[j], 1e-6) {
+				t.Errorf("want %v, got %v", tt.result.Values(), got.Values())
+			}
+		}
+	}
+	for _, tt := range cases {
+		fvalues := append([]float64(nil), tt.f.Values()...)
+		gvalues := append([]float64(nil), tt.g.Values()...)
+		tt.f.Division(tt.g)
+		if !reflect.DeepEqual(tt.f.Values(), fvalues) {
+			t.Errorf("factor changed want %v, got %v", tt.f.Values(), fvalues)
+		}
+		if !reflect.DeepEqual(tt.g.Values(), gvalues) {
+			t.Errorf("factor changed want %v, got %v", tt.g.Values(), gvalues)
 		}
 	}
 }
