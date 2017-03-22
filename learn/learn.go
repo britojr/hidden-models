@@ -288,7 +288,6 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 		fmt.Fprintln(f)
 
 		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Values()))
-		// fmt.Println(ct.BkpPotential(i).Values())
 		// for j, v := range ct.Calibrated(i).Values() {
 		for j, v := range ct.InitialPotential(i).Values() {
 			// fmt.Fprintf(f, "%d     %.4f    %.10f\n", j, v, ct.Calibrated(i).Values()[j])
