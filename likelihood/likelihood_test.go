@@ -29,6 +29,30 @@ func (f FakeCounter) NumTuples() int {
 	return f.numtuples
 }
 
+type FakeDataHandler struct {
+	data [][]int
+}
+
+func (f FakeDataHandler) Data() [][]int {
+	return f.data
+}
+
+func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {
+	c, err := cliquetree.NewStructure(cliques, adj)
+	if err != nil {
+		return nil, err
+	}
+	potentials := make([]*factor.Factor, len(values))
+	for i, v := range values {
+		potentials[i] = factor.NewFactorValues(cliques[i], cardin, v)
+	}
+	err = c.SetAllPotentials(potentials)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 func TestStructloglikelihood(t *testing.T) {
 	cases := []struct {
 		cliques [][]int
@@ -100,6 +124,56 @@ func TestLoglikelihood1(t *testing.T) {
 		got := Loglikelihood1(ct, tt.counter, tt.numobs)
 		if !utils.FuzzyEqual(tt.result, got, 1e-4) {
 			t.Errorf("want %v, got %v", tt.result, got)
+		}
+	}
+}
+
+func TestLoglikelihood2(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       []struct {
+			ds FakeDataHandler
+			ll float64
+		}
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: []struct {
+			ds FakeDataHandler
+			ll float64
+		}{{
+			ds: FakeDataHandler{
+				data: [][]int{
+					{0, 1, 1, 0, 1},
+					{0, 1, 1, 0, 1},
+					{1, 1, 1, 1, 1},
+					{0, 1, 1, 0, 1},
+				},
+			},
+			ll: -43.97392118,
+		}},
+	}}
+	for _, tt := range cases {
+		c, err := initiCliqueTree(tt.cliques, tt.adj, tt.cardin, tt.values)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		c.UpDownCalibration()
+		for i := range tt.result {
+			got := Loglikelihood2(c, tt.result[i].ds, c.Size())
+			if !utils.FuzzyEqual(tt.result[i].ll, got, 1e-7) {
+				t.Errorf("wrong ll2, want %v, got %v", tt.result[i].ll, got)
+			}
 		}
 	}
 }
