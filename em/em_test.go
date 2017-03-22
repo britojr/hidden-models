@@ -185,3 +185,54 @@ func TestExpectationStep(t *testing.T) {
 		}
 	}
 }
+
+func TestExpectationMaximization(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		ds           FakeDataHandler
+		result       [][]float64
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		ds: FakeDataHandler{
+			data: [][]int{
+				{0, 1, 1, 0, 1},
+				{0, 1, 1, 0, 1},
+				{1, 1, 1, 1, 1},
+				{0, 1, 1, 0, 1},
+			},
+		},
+		result: [][]float64{
+			{.75, .25},
+			{0, 1},
+			{0, 0, 0, 0, 0, 0, .75, .25},
+			{0, .75, 0, .25},
+			{0, 0, 0, 1},
+		},
+	}}
+	for _, tt := range cases {
+		c, err := initiCliqueTree(tt.cliques, tt.adj, tt.cardin, tt.values)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		ExpectationMaximization(c, tt.ds)
+		c.UpDownCalibration()
+		for i := range tt.result {
+			for j := range tt.result[i] {
+				if !utils.FuzzyEqual(tt.result[i][j], c.Calibrated(i).Values()[j]) {
+					t.Errorf("wrong counting, want %v, got %v", tt.result[i], c.Calibrated(i).Values())
+				}
+			}
+		}
+	}
+}
