@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/characteristic"
 )
 
@@ -63,37 +64,9 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 	c.sepsets = make([][]int, n)
 	c.varin, c.varout = make([][]int, n), make([][]int, n)
 	for i := 1; i < n; i++ {
-		c.sepsets[i], c.varin[i], c.varout[i] = orderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
+		c.sepsets[i], c.varin[i], c.varout[i] = utils.OrderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
 	}
 	return c, nil
-}
-
-// orderedSliceDiff returns intersection, b-a and a-b for ordered slices a,b
-func orderedSliceDiff(a, b []int) (inter, in, out []int) {
-	n, m := len(a), len(b)
-	i, j := 0, 0
-	for i < n && j < m {
-		switch {
-		case a[i] < b[j]:
-			out = append(out, a[i])
-			i++
-		case a[i] > b[j]:
-			in = append(in, b[j])
-			j++
-		default:
-			inter = append(inter, a[i])
-			i, j = i+1, j+1
-		}
-	}
-	for i < n {
-		out = append(out, a[i])
-		i++
-	}
-	for j < m {
-		in = append(in, b[j])
-		j++
-	}
-	return
 }
 
 func (c *CliqueTree) bfsOrder(root int) []int {
@@ -153,6 +126,11 @@ func (c *CliqueTree) SepSet(i int) []int {
 // SepSets returns complete sepset list
 func (c *CliqueTree) SepSets() [][]int {
 	return c.sepsets
+}
+
+// Varin returns the variables that are on the ith clique and not on its parent
+func (c *CliqueTree) Varin(i int) []int {
+	return c.varin[i]
 }
 
 // SetNeighbours ..
