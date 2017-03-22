@@ -246,12 +246,10 @@ func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
 
 func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
 	prev := c.initialPot[v].Reduce(evid)
-	if len(c.neighbours[v]) > 1 {
-		for _, ne := range c.neighbours[v] {
-			if ne != pa {
-				c.upwardreduction(ne, v, evid, send)
-				prev = prev.Product(send[ne])
-			}
+	for _, ne := range c.neighbours[v] {
+		if ne != pa {
+			c.upwardreduction(ne, v, evid, send)
+			prev = prev.Product(send[ne])
 		}
 	}
 	send[v] = prev.SumOut(c.varin[v])
@@ -259,6 +257,10 @@ func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Facto
 
 // UpDownCalibration ..
 func (c *CliqueTree) UpDownCalibration() {
+	// -------------------------------------------------------------------------
+	// send[i] contains the message that ith node sends up to its parent
+	// receive[i] contains the message that ith node receives from his parent
+	// -------------------------------------------------------------------------
 	c.send = make([]*factor.Factor, c.Size())
 	c.receive = make([]*factor.Factor, c.Size())
 	// -------------------------------------------------------------------------

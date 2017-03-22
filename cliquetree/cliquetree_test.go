@@ -528,7 +528,7 @@ func TestProbOfEvidence(t *testing.T) {
 		for _, r := range tt.result {
 			got := c.ProbOfEvidence(r.evidence)
 			if !utils.FuzzyEqual(r.prob, got, 1e-7) {
-				t.Errorf("wrong prob of evidence, want %v, got %v", r.prob, got)
+				t.Errorf("wrong prob of evidence %v, want %v, got %v", r.evidence, r.prob, got)
 			}
 		}
 	}
