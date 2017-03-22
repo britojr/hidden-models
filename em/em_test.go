@@ -138,8 +138,10 @@ func TestExpectationStep(t *testing.T) {
 		cliques, adj [][]int
 		cardin       []int
 		values       [][]float64
-		ds           FakeDataHandler
-		result       [][]float64
+		result       []struct {
+			ds     FakeDataHandler
+			values [][]float64
+		}
 	}{{
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
@@ -151,35 +153,61 @@ func TestExpectationStep(t *testing.T) {
 			{.95, .10, .05, .90},
 			{.99, .30, .01, .70},
 		},
-		ds: FakeDataHandler{
-			data: [][]int{
-				{0, 1, 1, 0, 1},
-				{0, 1, 1, 0, 1},
-				{1, 1, 1, 1, 1},
-				{0, 1, 1, 0, 1},
+		result: []struct {
+			ds     FakeDataHandler
+			values [][]float64
+		}{{
+			ds: FakeDataHandler{
+				data: [][]int{
+					{0, 1, 1, 0, 1},
+					{0, 1, 1, 0, 1},
+					{1, 1, 1, 1, 1},
+					{0, 1, 1, 0, 1},
+				},
 			},
-		},
-		result: [][]float64{
-			{3, 1},
-			{0, 4},
-			{0, 0, 0, 0, 0, 0, 3, 1},
-			{0, 3, 0, 1},
-			{0, 0, 0, 4},
-		},
+			values: [][]float64{
+				{3, 1},
+				{0, 4},
+				{0, 0, 0, 0, 0, 0, 3, 1},
+				{0, 3, 0, 1},
+				{0, 0, 0, 4},
+			},
+		}, {
+			ds: FakeDataHandler{
+				data: [][]int{
+					{0, 1, -1, 0, 1},
+					{0, 1, -1, 0, 1},
+					{1, 1, -1, 1, 1},
+					{0, 1, -1, 0, 1},
+				},
+			},
+			values: [][]float64{
+				{3, 1},
+				{0, 4},
+				// {0, 0, 2.13, 0.05, 0, 0, 0.873, 0.95},
+				// {2.99919, .00078, .95656, .04344},
+				// {0, 0, 3.39964, 0.45003},
+				{0, 0, 0.7482, 0.000000001, 0, 0, 2.2518, 0.999999999},
+				{3 * 0.7482, 3 * 0.999999999, 0.000000001, 0.999999999},
+				{0, 0, 3.39964, 0.45003},
+			},
+		}},
 	}}
 	for _, tt := range cases {
 		c, err := initiCliqueTree(tt.cliques, tt.adj, tt.cardin, tt.values)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-		got := expectationStep(c, tt.ds)
-		if len(got) != len(tt.result) {
-			t.Errorf("wrong number of factors, want %v, got %v", len(got), len(tt.result))
-		}
-		for i := range tt.result {
-			for j := range tt.result[i] {
-				if !utils.FuzzyEqual(tt.result[i][j], got[i].Values()[j]) {
-					t.Errorf("wrong counting, want %v, got %v", tt.result[i], got[i].Values())
+		for _, r := range tt.result {
+			got := expectationStep(c, r.ds)
+			if len(got) != len(r.values) {
+				t.Errorf("wrong number of factors, want %v, got %v", len(got), len(r.values))
+			}
+			for i := range r.values {
+				for j := range r.values[i] {
+					if !utils.FuzzyEqual(r.values[i][j], got[i].Values()[j]) {
+						t.Errorf("wrong counting, want %v, got %v", r.values[i], got[i].Values())
+					}
 				}
 			}
 		}
