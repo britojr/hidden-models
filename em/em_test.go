@@ -231,6 +231,7 @@ func TestExpectationMaximization(t *testing.T) {
 			for j := range tt.result[i] {
 				if !utils.FuzzyEqual(tt.result[i][j], c.Calibrated(i).Values()[j]) {
 					t.Errorf("wrong counting, want %v, got %v", tt.result[i], c.Calibrated(i).Values())
+					break
 				}
 			}
 		}

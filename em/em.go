@@ -15,14 +15,18 @@ const epslon = 1e-10
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) {
+	// TODO: check what is to be done for the maximization step
 	diff := epslon * 10
 	var err error
 	for i := 1; diff >= epslon; i++ {
 		fmt.Printf("Iteration: %v\n", i)
-		// TODO: check what is to be done for the maximization step
 		newpot := expectationStep(ct, ds)
 		for j := range newpot {
-			newpot[j].Normalize()
+			if ct.Parents()[j] >= 0 {
+				newpot[j] = newpot[j].Division(newpot[j].SumOut(ct.Varin(j)))
+			} else {
+				newpot[j].Normalize()
+			}
 		}
 		diff, err = checkFactorDiff(ct.Potentials(), newpot, diff)
 		utils.ErrCheck(err, "")
