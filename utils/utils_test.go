@@ -248,3 +248,33 @@ func TestSliceSumFloat64(t *testing.T) {
 		}
 	}
 }
+
+func TestOrderedSliceDiff(t *testing.T) {
+	cases := []struct {
+		a, b, inter, in, out []int
+	}{{
+		a:     []int{2, 3, 4},
+		b:     []int{2, 4, 5},
+		inter: []int{2, 4},
+		in:    []int{5},
+		out:   []int{3},
+	}, {
+		a:     []int{5, 6, 7},
+		b:     []int{2, 4, 5},
+		inter: []int{5},
+		in:    []int{2, 4},
+		out:   []int{6, 7},
+	}}
+	for _, tt := range cases {
+		inter, in, out := OrderedSliceDiff(tt.a, tt.b)
+		if !reflect.DeepEqual(tt.inter, inter) {
+			t.Errorf("wrong inter, want %v, got %v", tt.inter, inter)
+		}
+		if !reflect.DeepEqual(tt.in, in) {
+			t.Errorf("wrong in, want %v, got %v", tt.in, in)
+		}
+		if !reflect.DeepEqual(tt.out, out) {
+			t.Errorf("wrong out, want %v, got %v", tt.out, out)
+		}
+	}
+}

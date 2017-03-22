@@ -180,3 +180,31 @@ func SliceDifference(l1, l2 []int, size ...uint) []int {
 	ClearSlice(b, l2)
 	return SliceFromBitSet(b)
 }
+
+// OrderedSliceDiff returns three lists: intersection, b-a and a-b for ordered slices a,b
+func OrderedSliceDiff(a, b []int) (inter, in, out []int) {
+	n, m := len(a), len(b)
+	i, j := 0, 0
+	for i < n && j < m {
+		switch {
+		case a[i] < b[j]:
+			out = append(out, a[i])
+			i++
+		case a[i] > b[j]:
+			in = append(in, b[j])
+			j++
+		default:
+			inter = append(inter, a[i])
+			i, j = i+1, j+1
+		}
+	}
+	for i < n {
+		out = append(out, a[i])
+		i++
+	}
+	for j < m {
+		in = append(in, b[j])
+		j++
+	}
+	return
+}
