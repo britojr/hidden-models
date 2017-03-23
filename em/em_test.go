@@ -184,12 +184,9 @@ func TestExpectationStep(t *testing.T) {
 			values: [][]float64{
 				{3, 1},
 				{0, 4},
-				// {0, 0, 2.13, 0.05, 0, 0, 0.873, 0.95},
-				// {2.99919, .00078, .95656, .04344},
-				// {0, 0, 3.39964, 0.45003},
-				{0, 0, 0.7482, 0.000000001, 0, 0, 2.2518, 0.999999999},
-				{3 * 0.7482, 3 * 0.999999999, 0.000000001, 0.999999999},
-				{0, 0, 3.39964, 0.45003},
+				{0.0, 0.0, 7.481974e-01, 4.176935e-05, 0.0, 0.0, 2.251803e+00, 9.999582e-01},
+				{7.481974e-01, 2.251803e+00, 4.176935e-05, 9.999582e-01},
+				{0.0000000, 0.0000000, 0.7482392, 3.2517608},
 			},
 		}},
 	}}
@@ -205,8 +202,9 @@ func TestExpectationStep(t *testing.T) {
 			}
 			for i := range r.values {
 				for j := range r.values[i] {
-					if !utils.FuzzyEqual(r.values[i][j], got[i].Values()[j]) {
+					if !utils.FuzzyEqual(r.values[i][j], got[i].Values()[j], 1e-6) {
 						t.Errorf("wrong counting, want %v, got %v", r.values[i], got[i].Values())
+						break
 					}
 				}
 			}
