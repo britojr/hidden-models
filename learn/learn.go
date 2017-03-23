@@ -32,7 +32,6 @@ type Learner struct {
 // New ..
 func New() *Learner {
 	l := new(Learner)
-	l.iterations = 100
 	l.treewidth = 3
 	l.hiddencard = 2
 	l.initpot = 1
@@ -43,11 +42,6 @@ func New() *Learner {
 // SetTreeWidth ..
 func (l *Learner) SetTreeWidth(k int) {
 	l.treewidth = k
-}
-
-// SetIterations ..
-func (l *Learner) SetIterations(it int) {
-	l.iterations = it
 }
 
 // SetHiddenVars ..
@@ -120,16 +114,31 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int
 }
 
 // OptimizeParameters optimize the clique tree parameters
-func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
+func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, initpot, iterations int) {
+	l.InitializePotentials(ct, initpot)
 	em.ExpectationMaximization(ct, l.dataset, l.epslon)
+	ll := l.CalculateLikelihood(ct)
+	fmt.Printf("curr LL %v\n", ll)
+	pot := make([]*factor.Factor, len(ct.Potentials()))
+	copy(pot, ct.Potentials())
+	for i := 1; i < iterations; i++ {
+		l.InitializePotentials(ct, initpot)
+		em.ExpectationMaximization(ct, l.dataset, l.epslon)
+		currll := l.CalculateLikelihood(ct)
+		fmt.Printf("curr LL %v\n", currll)
+		if currll > ll {
+			ll = currll
+			copy(pot, ct.Potentials())
+			fmt.Println(pot[0].Values()[0])
+		}
+	}
+	fmt.Println(pot[0].Values()[0])
+	ct.SetAllPotentials(pot)
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree
-func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree, t int) float64 {
+func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	ct.UpDownCalibration()
-	if t == 1 {
-		return likelihood.Loglikelihood1(ct, l.counter, l.n)
-	}
 	return likelihood.Loglikelihood2(ct, l.dataset, l.n)
 }
 
