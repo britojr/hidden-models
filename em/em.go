@@ -11,15 +11,14 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-const epslon = 1e-10
-
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) {
-	// TODO: check what is to be done for the maximization step
+func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, epslon float64) {
 	diff := epslon * 10
 	var err error
-	for i := 1; diff >= epslon; i++ {
-		fmt.Printf("Iteration: %v\n", i)
+	i := 1
+	for ; diff >= epslon; i++ {
+		// fmt.Printf("Iteration: %v\n", i)
+		fmt.Printf(".")
 		newpot := expectationStep(ct, ds)
 		for j := range newpot {
 			if ct.Parents()[j] >= 0 {
@@ -32,6 +31,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 		utils.ErrCheck(err, "")
 		ct.SetAllPotentials(newpot)
 	}
+	fmt.Printf("\nIterations: %v\n", i)
 }
 
 // expectationStep calculates the expected count of a list of observations and a cliquetree

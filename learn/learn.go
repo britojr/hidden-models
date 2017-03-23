@@ -26,6 +26,7 @@ type Learner struct {
 	hiddencard int   // default cardinality of the hidden variables
 	cardin     []int // cardinality slice
 	initpot    int
+	epslon     float64 // epslon for EM convergence
 }
 
 // New ..
@@ -35,6 +36,7 @@ func New() *Learner {
 	l.treewidth = 3
 	l.hiddencard = 2
 	l.initpot = 1
+	l.epslon = 1e-6
 	return l
 }
 
@@ -56,6 +58,13 @@ func (l *Learner) SetHiddenVars(h int) {
 // SetInitPot ..
 func (l *Learner) SetInitPot(initpot int) {
 	l.initpot = initpot
+}
+
+// SetEpslon ..
+func (l *Learner) SetEpslon(epslon float64) {
+	if epslon != 0 {
+		l.epslon = epslon
+	}
 }
 
 // LoadDataSet ..
@@ -112,7 +121,7 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int
 
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree) {
-	em.ExpectationMaximization(ct, l.dataset)
+	em.ExpectationMaximization(ct, l.dataset, l.epslon)
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree

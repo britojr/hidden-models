@@ -251,7 +251,7 @@ func TestExpectationMaximization(t *testing.T) {
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-		ExpectationMaximization(c, tt.ds)
+		ExpectationMaximization(c, tt.ds, 1e-8)
 		c.UpDownCalibration()
 		for i := range tt.result {
 			for j := range tt.result[i] {
