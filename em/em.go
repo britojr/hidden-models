@@ -15,7 +15,7 @@ import (
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, epslon float64) {
 	diff := epslon * 10
 	var err error
-	i := 1
+	i := 0
 	for ; diff >= epslon; i++ {
 		// fmt.Printf("Iteration: %v\n", i)
 		fmt.Printf(".")

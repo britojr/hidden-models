@@ -209,6 +209,7 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 
 func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkWithInitialCount")
+	ct.UpDownCalibration()
 	initialCount := make([]*factor.Factor, ct.Size())
 	sumOutHidden := make([]*factor.Factor, ct.Size())
 	for i := range initialCount {
@@ -220,7 +221,8 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(l.counter.CountAssignments(observed))
-			sumOutHidden[i] = ct.InitialPotential(i)
+			// sumOutHidden[i] = ct.InitialPotential(i)
+			sumOutHidden[i] = ct.Calibrated(i)
 			if len(hidden) > 0 {
 				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
 			}
