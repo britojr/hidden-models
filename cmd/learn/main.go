@@ -105,4 +105,5 @@ func learnStructureAndParamenters(learner *learn.Learner,
 
 func saveTree(ct *cliquetree.CliqueTree, treefile string) {
 	learn.SaveCliqueTree(ct, treefile)
+	learn.SaveMarginals(ct, treefile+"marg")
 }

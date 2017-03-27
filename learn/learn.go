@@ -3,6 +3,7 @@ package learn
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting/bitcounter"
@@ -314,5 +315,22 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 			fmt.Fprintf(f, "%d     %.4f\n", j, v)
 		}
 		fmt.Fprintln(f)
+	}
+}
+
+// SaveMarginals saves all marginals of a cliquetree
+func SaveMarginals(ct *cliquetree.CliqueTree, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	m := ct.Marginals()
+
+	var keys []int
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for _, k := range keys {
+		fmt.Fprintf(f, "{%d} %v\n", k, m[k])
 	}
 }
