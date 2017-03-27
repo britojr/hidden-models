@@ -241,7 +241,7 @@ func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
 	send := make([]*factor.Factor, c.Size())
 	c.upwardreduction(root, -1, evid, send)
 	// summout all variables of the resulting (calibrated) root factor
-	return send[root].SumOut(send[root].Variables()).Values()[0]
+	return utils.SliceSumFloat64(send[root].Values())
 }
 
 func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
