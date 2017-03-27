@@ -224,12 +224,23 @@ func (f *Factor) Reduce(evid []int) *Factor {
 	h.stride = f.stride
 	h.values = make([]float64, len(f.values))
 	// TODO: think of better way to to this part
-	assig := assignment.New(h.varlist, h.cardin)
-	for i := range h.values {
-		assig.Next()
-		if assig.Consistent(evid) {
+	k := 0
+	free := []int(nil)
+	for _, v := range h.varlist {
+		if v >= len(evid) || evid[v] == -1 {
+			free = append(free, v)
+		} else {
+			k += h.stride[v] * evid[v]
+		}
+	}
+	if len(free) > 0 {
+		assig := assignment.New(free, h.cardin)
+		for assig.Next() {
+			i := k + assig.Index(h.stride)
 			h.values[i] = f.values[i]
 		}
+	} else {
+		h.values[k] = f.values[k]
 	}
 	return h
 }
