@@ -1,2 +1,3 @@
-examples/*.fg
 examples/*.fg*
+examples/tests/*.fg*
+examples/tests/*.csv*
