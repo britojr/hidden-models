@@ -118,23 +118,23 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, initpot, iterations int) {
 	l.InitializePotentials(ct, initpot)
 	em.ExpectationMaximization(ct, l.dataset, l.epslon)
-	ll := l.CalculateLikelihood(ct)
-	fmt.Printf("curr LL %v\n", ll)
-	pot := make([]*factor.Factor, len(ct.Potentials()))
-	copy(pot, ct.Potentials())
-	for i := 1; i < iterations; i++ {
-		l.InitializePotentials(ct, initpot)
-		em.ExpectationMaximization(ct, l.dataset, l.epslon)
-		currll := l.CalculateLikelihood(ct)
-		fmt.Printf("curr LL %v\n", currll)
-		if currll > ll {
-			ll = currll
-			copy(pot, ct.Potentials())
-			fmt.Println(pot[0].Values()[0])
+	if iterations > 1 {
+		ll := l.CalculateLikelihood(ct)
+		fmt.Printf("curr LL %v\n", ll)
+		pot := make([]*factor.Factor, len(ct.Potentials()))
+		copy(pot, ct.Potentials())
+		for i := 1; i < iterations; i++ {
+			l.InitializePotentials(ct, initpot)
+			em.ExpectationMaximization(ct, l.dataset, l.epslon)
+			currll := l.CalculateLikelihood(ct)
+			fmt.Printf("curr LL %v\n", currll)
+			if currll > ll {
+				ll = currll
+				copy(pot, ct.Potentials())
+			}
 		}
+		ct.SetAllPotentials(pot)
 	}
-	fmt.Println(pot[0].Values()[0])
-	ct.SetAllPotentials(pot)
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree
@@ -309,9 +309,7 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 		fmt.Fprintln(f)
 
 		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Values()))
-		// for j, v := range ct.Calibrated(i).Values() {
 		for j, v := range ct.InitialPotential(i).Values() {
-			// fmt.Fprintf(f, "%d     %.4f    %.10f\n", j, v, ct.Calibrated(i).Values()[j])
 			fmt.Fprintf(f, "%d     %.4f\n", j, v)
 		}
 		fmt.Fprintln(f)
@@ -319,7 +317,7 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 }
 
 // SaveMarginals saves all marginals of a cliquetree
-func SaveMarginals(ct *cliquetree.CliqueTree, fname string) {
+func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
 	f, err := os.Create(fname)
 	utils.ErrCheck(err, "")
 	defer f.Close()
@@ -333,4 +331,5 @@ func SaveMarginals(ct *cliquetree.CliqueTree, fname string) {
 	for _, k := range keys {
 		fmt.Fprintf(f, "{%d} %v\n", k, m[k])
 	}
+	fmt.Fprintf(f, "LL=%v\n", ll)
 }

@@ -70,25 +70,20 @@ func main() {
 	fmt.Printf("Best LL: %v (%v)\n", ll, ct.Size())
 
 	if len(treefile) > 0 {
-		saveTree(ct, treefile)
+		saveTree(ct, ll, treefile)
 	}
 }
 
 func learnStructureAndParamenters(learner *learn.Learner,
 	initpot, numktrees, iterEM int, check bool) (*cliquetree.CliqueTree, float64) {
-	fmt.Println("Learning structure...")
 
+	fmt.Println("Learning structure...")
 	start := time.Now()
 	ct, ll := learner.GuessStructure(numktrees)
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v; Structure LogLikelihood: %v\n", elapsed, ll)
 
 	fmt.Println("Learning parameters...")
-	learner.InitializePotentials(ct, 2)
-	fmt.Printf("Uniform LL: %v\n", learner.CalculateLikelihood(ct))
-	learner.InitializePotentials(ct)
-	fmt.Printf("Initial LL: %v\n", learner.CalculateLikelihood(ct))
-
 	start = time.Now()
 	learner.OptimizeParameters(ct, initpot, iterEM)
 	elapsed = time.Since(start)
@@ -103,7 +98,7 @@ func learnStructureAndParamenters(learner *learn.Learner,
 	return ct, ll
 }
 
-func saveTree(ct *cliquetree.CliqueTree, treefile string) {
+func saveTree(ct *cliquetree.CliqueTree, ll float64, treefile string) {
 	learn.SaveCliqueTree(ct, treefile)
-	learn.SaveMarginals(ct, treefile+"marg")
+	learn.SaveMarginals(ct, ll, treefile+"_marg")
 }

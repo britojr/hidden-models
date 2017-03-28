@@ -17,7 +17,6 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 	var err error
 	i := 0
 	for ; diff >= epslon; i++ {
-		// fmt.Printf("Iteration: %v\n", i)
 		fmt.Printf(".")
 		newpot := expectationStep(ct, ds)
 		for j := range newpot {
