@@ -107,10 +107,14 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int
 	if len(initpot) > 0 {
 		aux = initpot[0]
 	}
-	if aux == 1 {
-		ct.SetAllPotentials(CreateRandomPortentials(ct.Cliques(), l.cardin))
-	} else {
-		ct.SetAllPotentials(CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter))
+	switch aux {
+	case 2:
+		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, true))
+	case 3:
+		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, false))
+	default:
+		// case 1:
+		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
 	}
 }
 
@@ -143,9 +147,10 @@ func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	return likelihood.Loglikelihood2(ct, l.dataset, l.n)
 }
 
-// CreateUniformPortentials creates a list of clique tree potentials with uniform values for the hidden variables
-func CreateUniformPortentials(cliques [][]int, cardin []int,
-	numobs int, counter utils.Counter) []*factor.Factor {
+// CreateEmpiricPotentials creates a list of clique tree potentials with counting
+// for observed variables (empiric distribution), and expand uniformily or randomly for the hidden variables
+func CreateEmpiricPotentials(cliques [][]int, cardin []int,
+	numobs int, counter utils.Counter, uniform bool) []*factor.Factor {
 
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
@@ -160,7 +165,11 @@ func CreateUniformPortentials(cliques [][]int, cardin []int,
 			factors[i] = factor.NewFactorValues(observed, cardin, values)
 			if len(hidden) > 0 {
 				g := factor.NewFactor(hidden, cardin)
-				g.SetUniform()
+				if uniform {
+					g.SetUniform()
+				} else {
+					g.SetRandom()
+				}
 				factors[i] = factors[i].Product(g)
 			}
 			factors[i].Normalize()
@@ -172,8 +181,8 @@ func CreateUniformPortentials(cliques [][]int, cardin []int,
 	return factors
 }
 
-// CreateRandomPortentials creates a list of clique potentials with random values
-func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
+// CreateRandomPotentials creates a list of clique potentials with random values
+func CreateRandomPotentials(cliques [][]int, cardin []int) []*factor.Factor {
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
 		factors[i] = factor.NewFactor(cliques[i], cardin).SetRandom()
@@ -194,7 +203,7 @@ func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 
 func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
-	uniform := CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter)
+	uniform := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, true)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	calibrated := make([]*factor.Factor, ct.Size())
 	for i := range calibrated {
