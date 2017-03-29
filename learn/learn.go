@@ -183,6 +183,7 @@ func CreateRandomPortentials(cliques [][]int, cardin []int) []*factor.Factor {
 
 // CheckTree ..
 func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
+	ct.UpDownCalibration()
 	// check if they are uniform
 	l.checkUniform(ct)
 	// check if after summing out the hidden variables they are the same as initial count
@@ -195,9 +196,13 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
 	uniform := CreateUniformPortentials(ct.Cliques(), l.cardin, l.n, l.counter)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
-	diff, i, j, err := factor.MaxDifference(uniform, ct.Potentials())
+	calibrated := make([]*factor.Factor, ct.Size())
+	for i := range calibrated {
+		calibrated[i] = ct.Calibrated(i)
+	}
+	diff, i, j, err := factor.MaxDifference(uniform, calibrated)
 	utils.ErrCheck(err, "")
-	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.InitialPotential(i).Values()[j])
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.Calibrated(i).Values()[j])
 	if diff > 0 {
 		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
 		if diff > 1e-6 {
@@ -210,7 +215,6 @@ func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 
 func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkWithInitialCount")
-	ct.UpDownCalibration()
 	initialCount := make([]*factor.Factor, ct.Size())
 	sumOutHidden := make([]*factor.Factor, ct.Size())
 	for i := range initialCount {
