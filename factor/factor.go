@@ -96,6 +96,17 @@ func (f *Factor) SetRandom() *Factor {
 	return f
 }
 
+// SetDirichlet sets the factor with normalized Dirichlet distribution
+func (f *Factor) SetDirichlet() *Factor {
+	// TODO: implement this
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range f.values {
+		f.values[i] = rand.Float64()
+	}
+	utils.NormalizeSlice(f.values)
+	return f
+}
+
 // ClearCopy creates a copy factor with zero values
 func (f *Factor) ClearCopy() *Factor {
 	h := new(Factor)
