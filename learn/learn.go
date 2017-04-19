@@ -15,6 +15,14 @@ import (
 	"github.com/britojr/tcc/generator"
 )
 
+const (
+	// FullRandom initialize potentials with random values
+	FullRandom = iota
+	EmpiricDirichlet
+	EmpiricRandom
+	EmpiricUniform
+)
+
 // Learner ..
 type Learner struct {
 	//parameters

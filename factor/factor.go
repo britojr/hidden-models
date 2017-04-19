@@ -8,6 +8,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/utils"
+	stat "github.com/ematvey/gostat"
 )
 
 // Factor ..
@@ -97,13 +98,8 @@ func (f *Factor) SetRandom() *Factor {
 }
 
 // SetDirichlet sets the factor with normalized Dirichlet distribution
-func (f *Factor) SetDirichlet() *Factor {
-	// TODO: implement this
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := range f.values {
-		f.values[i] = rand.Float64()
-	}
-	utils.NormalizeSlice(f.values)
+func (f *Factor) SetDirichlet(alpha []float64) *Factor {
+	f.values = stat.Dirichlet(alpha)()
 	return f
 }
 
