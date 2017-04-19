@@ -29,7 +29,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 		}
 		ct.SetAllPotentials(newpot)
 		llnew = likelihood.Loglikelihood2(ct, ds)
-		diff = llnew - llant
+		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
 	fmt.Printf("\nIterations: %v\n", i)
