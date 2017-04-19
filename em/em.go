@@ -8,13 +8,14 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/likelihood"
 )
 
 // ExpectationMaximization ..
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, epslon float64) {
 	diff := epslon * 10
-	var err error
+	var llnew, llant float64
+	llant = likelihood.Loglikelihood2(ct, ds)
 	i := 0
 	for ; diff >= epslon; i++ {
 		fmt.Printf(".")
@@ -26,9 +27,10 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 				newpot[j].Normalize()
 			}
 		}
-		diff, err = checkFactorDiff(ct.Potentials(), newpot, diff)
-		utils.ErrCheck(err, "")
 		ct.SetAllPotentials(newpot)
+		llnew = likelihood.Loglikelihood2(ct, ds)
+		diff = llnew - llant
+		llant = llnew
 	}
 	fmt.Printf("\nIterations: %v\n", i)
 }

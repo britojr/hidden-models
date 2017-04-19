@@ -170,7 +170,7 @@ func TestLoglikelihood2(t *testing.T) {
 		}
 		c.UpDownCalibration()
 		for i := range tt.result {
-			got := Loglikelihood2(c, tt.result[i].ds, c.Size())
+			got := Loglikelihood2(c, tt.result[i].ds)
 			if !utils.FuzzyEqual(tt.result[i].ll, got, 1e-7) {
 				t.Errorf("wrong ll2, want %v, got %v", tt.result[i].ll, got)
 			}

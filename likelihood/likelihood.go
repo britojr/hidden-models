@@ -38,7 +38,7 @@ func Loglikelihood1(ct *cliquetree.CliqueTree, counter utils.Counter, numobs int
 }
 
 // Loglikelihood2 calculates the log-likelihood line by line
-func Loglikelihood2(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, numobs int) (ll float64) {
+func Loglikelihood2(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) (ll float64) {
 	for _, m := range ds.Data() {
 		v := ct.ProbOfEvidence(m)
 		if v != 0 {

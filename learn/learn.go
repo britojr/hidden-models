@@ -144,7 +144,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, initpot, iterati
 // CalculateLikelihood calculates the likelihood of a clique tree
 func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	ct.UpDownCalibration()
-	return likelihood.Loglikelihood2(ct, l.dataset, l.n)
+	return likelihood.Loglikelihood2(ct, l.dataset)
 }
 
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting
