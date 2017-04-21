@@ -491,6 +491,70 @@ func TestSetRandom(t *testing.T) {
 			t.Errorf("not normalized, sum %v", utils.SliceSumFloat64(got.Values()))
 		}
 	}
+
+	// test different outcomes
+	f := NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2})
+	f.SetRandom()
+	values := append([]float64(nil), f.values...)
+	f.SetRandom()
+	count := 0
+	for i := range values {
+		if utils.FuzzyEqual(values[i], f.values[i]) {
+			count++
+		}
+	}
+	if count == len(values) {
+		t.Errorf("Sampled the same distribution:\n%v\n%v", f.values, f.SetRandom().values)
+	}
+}
+
+func TestSetDirichlet(t *testing.T) {
+	cases := []struct {
+		f      *Factor
+		size   int
+		alphas []float64
+	}{{
+		f:      NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		size:   4,
+		alphas: []float64{3.2, 3.2, 3.2, 3.2},
+	}, {
+		f:      NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2}),
+		size:   8,
+		alphas: []float64{0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1},
+	}, {
+		f:      NewFactor([]int{1}, []int{2, 2}),
+		size:   2,
+		alphas: []float64{0.01, 0.01},
+	}, {
+		f:      NewFactor([]int{}, []int{}),
+		size:   1,
+		alphas: []float64{5},
+	}}
+	for _, tt := range cases {
+		got := tt.f.SetDirichlet(tt.alphas)
+		if tt.size != len(got.Values()) {
+			t.Errorf("want %v, got %v", tt.size, got.Values())
+		}
+		if tt.size != 0 && !utils.FuzzyEqual(1, utils.SliceSumFloat64(got.Values())) {
+			t.Errorf("not normalized, sum %v", utils.SliceSumFloat64(got.Values()))
+		}
+	}
+
+	// test different outcomes
+	f := NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2})
+	alphas := []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}
+	f.SetDirichlet(alphas)
+	values := append([]float64(nil), f.values...)
+	f.SetDirichlet(alphas)
+	count := 0
+	for i := range values {
+		if utils.FuzzyEqual(values[i], f.values[i]) {
+			count++
+		}
+	}
+	if count == len(values) {
+		t.Errorf("Sampled the same distribution:\n%v\n%v", f.values, f.SetDirichlet(alphas).values)
+	}
 }
 
 var testSumOut = []struct {
