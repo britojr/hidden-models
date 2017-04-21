@@ -2,6 +2,7 @@ package learn
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"sort"
 
@@ -18,8 +19,11 @@ import (
 const (
 	// FullRandom initialize potentials with random values
 	FullRandom = iota
+	// EmpiricDirichlet initialize potentials with empiric distribution extended by dirichlet
 	EmpiricDirichlet
+	// EmpiricRandom initialize potentials with empiric distribution extended by random
 	EmpiricRandom
+	// EmpiricUniform initialize potentials with empiric distribution extended by uniform
 	EmpiricUniform
 )
 
@@ -31,11 +35,11 @@ type Learner struct {
 	n          int // number of variables
 	dataset    *filehandler.DataSet
 	counter    *bitcounter.BitCounter
-	hidden     int   // number of hidden variables
-	hiddencard int   // default cardinality of the hidden variables
-	cardin     []int // cardinality slice
-	initpot    int
-	epslon     float64 // epslon for EM convergence
+	hidden     int       // number of hidden variables
+	hiddencard int       // default cardinality of the hidden variables
+	cardin     []int     // cardinality slice
+	epslon     float64   // epslon for EM convergence
+	alphas     []float64 // parameters for dirichlet distribution
 }
 
 // New ..
@@ -43,7 +47,6 @@ func New() *Learner {
 	l := new(Learner)
 	l.treewidth = 3
 	l.hiddencard = 2
-	l.initpot = 1
 	l.epslon = 1e-6
 	return l
 }
@@ -53,14 +56,17 @@ func (l *Learner) SetTreeWidth(k int) {
 	l.treewidth = k
 }
 
+// SetAlpha creates alpha parameter vector for dirichlet
+func (l *Learner) SetAlpha(alpha float64) {
+	l.alphas = make([]float64, int(math.Pow(2, float64(l.treewidth+1))))
+	for i := range l.alphas {
+		l.alphas[i] = alpha
+	}
+}
+
 // SetHiddenVars ..
 func (l *Learner) SetHiddenVars(h int) {
 	l.hidden = h
-}
-
-// SetInitPot ..
-func (l *Learner) SetInitPot(initpot int) {
-	l.initpot = initpot
 }
 
 // SetEpslon ..
@@ -110,19 +116,11 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 }
 
 // InitializePotentials initialize clique tree potentials
-func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot ...int) {
-	aux := l.initpot
-	if len(initpot) > 0 {
-		aux = initpot[0]
-	}
-	switch aux {
-	case 2:
-		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, true))
-	case 3:
-		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, false))
-	default:
-		// case 1:
+func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot int) {
+	if initpot == FullRandom {
 		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
+	} else {
+		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, initpot, l.alphas...))
 	}
 }
 
@@ -158,8 +156,11 @@ func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting
 // for observed variables (empiric distribution), and expand uniformily or randomly for the hidden variables
 func CreateEmpiricPotentials(cliques [][]int, cardin []int,
-	numobs int, counter utils.Counter, uniform bool) []*factor.Factor {
+	numobs int, counter utils.Counter, initpot int, alphas ...float64) []*factor.Factor {
 
+	if initpot == EmpiricDirichlet && len(alphas) == 0 {
+		panic("no parameters for dirichlet dirtributions")
+	}
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
 		var observed, hidden []int
@@ -173,10 +174,13 @@ func CreateEmpiricPotentials(cliques [][]int, cardin []int,
 			factors[i] = factor.NewFactorValues(observed, cardin, values)
 			if len(hidden) > 0 {
 				g := factor.NewFactor(hidden, cardin)
-				if uniform {
-					g.SetUniform()
-				} else {
+				switch initpot {
+				case EmpiricDirichlet:
+					g.SetDirichlet(alphas[:int(math.Pow(2, float64(len(hidden))))])
+				case EmpiricRandom:
 					g.SetRandom()
+				case EmpiricUniform:
+					g.SetUniform()
 				}
 				factors[i] = factors[i].Product(g)
 			}
@@ -211,7 +215,7 @@ func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 
 func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
-	uniform := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, true)
+	uniform := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, EmpiricUniform)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	calibrated := make([]*factor.Factor, ct.Size())
 	for i := range calibrated {
@@ -250,7 +254,7 @@ func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
 			}
 			initialCount[i] = factor.NewFactorValues(observed, l.cardin, values)
 			initialCount[i].Normalize()
-			sumOutHidden[i].Normalize()
+			// sumOutHidden[i].Normalize()
 		}
 	}
 

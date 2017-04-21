@@ -95,7 +95,7 @@ func TestCreateUniformPortentials(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		faclist := CreateEmpiricPotentials(tt.cliques, tt.cardin, tt.numobs, tt.counter, true)
+		faclist := CreateEmpiricPotentials(tt.cliques, tt.cardin, tt.numobs, tt.counter, EmpiricUniform)
 		if len(faclist) != len(tt.result) {
 			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
 		}

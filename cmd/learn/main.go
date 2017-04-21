@@ -25,6 +25,7 @@ func main() {
 		check      bool
 		treefile   string
 		epslon     float64
+		alpha      float64
 	)
 	flag.IntVar(&k, "k", 5, "tree-width")
 	flag.IntVar(&numktrees, "numk", 1, "number of ktrees samples")
@@ -34,10 +35,15 @@ func main() {
 	flag.UintVar(&delimiter, "delimiter", ',', "field delimiter")
 	flag.UintVar(&hdr, "hdr", 1, "1- name header, 2- cardinality header")
 	flag.IntVar(&h, "h", 0, "hidden variables")
-	flag.IntVar(&initpot, "initpot", 1, "1- random values, 2- uniform values")
+	flag.IntVar(&initpot, "initpot", 0,
+		`		0- random values,
+		1- empiric + dirichlet,
+		2- empiric + random,
+		3- empiric + uniform`)
 	flag.BoolVar(&check, "check", false, "check tree")
 	flag.StringVar(&treefile, "s", "", "saves the tree if informed a file name")
 	flag.Float64Var(&epslon, "e", 0, "minimum precision for EM convergence")
+	flag.Float64Var(&alpha, "a", 1, "alpha parameter for dirichlet distribution")
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -51,8 +57,8 @@ func main() {
 	learner := learn.New()
 	learner.SetTreeWidth(k)
 	learner.SetHiddenVars(h)
-	learner.SetInitPot(initpot)
 	learner.SetEpslon(epslon)
+	learner.SetAlpha(alpha)
 
 	fmt.Printf("Loading dataset: %v\n", dsfile)
 	start := time.Now()
