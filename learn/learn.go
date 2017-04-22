@@ -118,9 +118,25 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 // InitializePotentials initialize clique tree potentials
 func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot int) {
 	if initpot == FullRandom {
-		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
+		// ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
+		// TODO: remove this temporary test
+		factors := CreateRandomPotentials(ct.Cliques(), l.cardin)
+		for i := range factors {
+			if len(ct.Varin(i)) != 0 {
+				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
+			}
+		}
+		ct.SetAllPotentials(factors)
 	} else {
-		ct.SetAllPotentials(CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, initpot, l.alphas...))
+		factors := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, initpot, l.alphas...)
+		for i := range factors {
+			if len(ct.Varin(i)) != 0 {
+				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
+				// } else {
+				// 	factors[i].Normalize()
+			}
+		}
+		ct.SetAllPotentials(factors)
 	}
 }
 
@@ -171,26 +187,41 @@ func CreateEmpiricPotentials(cliques [][]int, cardin []int,
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(counter.CountAssignments(observed))
-			factors[i] = factor.NewFactorValues(observed, cardin, values)
+			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {
-				g := factor.NewFactor(hidden, cardin)
-				switch initpot {
-				case EmpiricDirichlet:
-					g.SetDirichlet(alphas[:int(math.Pow(2, float64(len(hidden))))])
-				case EmpiricRandom:
-					g.SetRandom()
-				case EmpiricUniform:
-					g.SetUniform()
-				}
+				g := latentFactor(cliques[i], cardin, len(observed), initpot, alphas)
 				factors[i] = factors[i].Product(g)
 			}
-			factors[i].Normalize()
 		} else {
-			factors[i] = factor.NewFactor(hidden, cardin)
-			factors[i].SetUniform()
+			factors[i] = latentFactor(cliques[i], cardin, len(observed), initpot, alphas)
 		}
 	}
 	return factors
+}
+
+func latentFactor(varlist, cardin []int, obs, initpot int, alphas []float64) *factor.Factor {
+	g := factor.NewFactor(varlist, cardin)
+	switch initpot {
+	case EmpiricDirichlet:
+		g.SetDirichlet(alphas[:len(g.Values())])
+	case EmpiricRandom:
+		g.SetRandom()
+	case EmpiricUniform:
+		g.SetUniform()
+	}
+	// conditional normalization
+	obslen := 1
+	for i := 0; i < obs; i++ {
+		obslen *= cardin[varlist[i]]
+	}
+	norm := make([]float64, obslen)
+	for i, v := range g.Values() {
+		norm[i%obslen] += v
+	}
+	for i, v := range g.Values() {
+		g.Values()[i] = v / norm[i%obslen]
+	}
+	return g
 }
 
 // CreateRandomPotentials creates a list of clique potentials with random values
