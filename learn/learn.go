@@ -111,7 +111,7 @@ func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
 	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
 	utils.ErrCheck(err, "")
 	ct := cliquetree.FromCharTree(T, iphi)
-	score := likelihood.StructLog(ct.Cliques(), ct.SepSets(), l.counter)
+	score := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), l.counter)
 	return ct, score
 }
 
@@ -166,7 +166,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, initpot, iterati
 // CalculateLikelihood calculates the likelihood of a clique tree
 func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	ct.UpDownCalibration()
-	return likelihood.Loglikelihood2(ct, l.dataset)
+	return likelihood.Loglikelihood(ct, l.dataset)
 }
 
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting

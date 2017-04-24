@@ -15,7 +15,7 @@ import (
 func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, epslon float64) {
 	diff := epslon * 10
 	var llnew, llant float64
-	llant = likelihood.Loglikelihood2(ct, ds)
+	llant = likelihood.Loglikelihood(ct, ds)
 	i := 0
 	for ; diff >= epslon; i++ {
 		fmt.Printf(".")
@@ -28,7 +28,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 			}
 		}
 		ct.SetAllPotentials(newpot)
-		llnew = likelihood.Loglikelihood2(ct, ds)
+		llnew = likelihood.Loglikelihood(ct, ds)
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}

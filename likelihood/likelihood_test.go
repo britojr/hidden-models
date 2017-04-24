@@ -76,59 +76,14 @@ func TestStructloglikelihood(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		got := StructLog(tt.cliques, tt.sepsets, tt.counter)
+		got := StructLoglikelihood(tt.cliques, tt.sepsets, tt.counter)
 		if !utils.FuzzyEqual(tt.result, got, 1e-4) {
 			t.Errorf("want %v, got %v", tt.result, got)
 		}
 	}
 }
 
-func TestLoglikelihood1(t *testing.T) {
-	cases := []struct {
-		cliques [][]int
-		sepsets [][]int
-		counter FakeCounter
-		numobs  int
-		result  float64
-	}{
-		{
-			cliques: [][]int{{0, 1}, {1, 2}},
-			sepsets: [][]int{{}, {1}},
-			counter: FakeCounter{
-				cardin:    []int{2, 2, 2},
-				numtuples: 100,
-				counts: map[string][]int{
-					fmt.Sprint([]int{0, 1}): {25, 10, 35, 30},
-					fmt.Sprint([]int{1, 2}): {40, 20, 10, 30},
-					fmt.Sprint([]int{1}):    {60, 40},
-				},
-			},
-			numobs: 3,
-			result: -191.2304,
-		},
-	}
-	for _, tt := range cases {
-		ct := cliquetree.New(len(tt.cliques))
-		var values []float64
-		var f *factor.Factor
-		for i := range tt.cliques {
-			ct.SetClique(i, tt.cliques[i])
-			ct.SetSepSet(i, tt.sepsets[i])
-			values = utils.SliceItoF64(tt.counter.CountAssignments(tt.cliques[i]))
-			f = factor.NewFactorValues(tt.cliques[i], tt.counter.Cardinality(), values).Normalize()
-			ct.SetCalibrated(i, f)
-			values = utils.SliceItoF64(tt.counter.CountAssignments(tt.sepsets[i]))
-			f = factor.NewFactorValues(tt.sepsets[i], tt.counter.Cardinality(), values).Normalize()
-			ct.SetCalibratedSepSet(i, f)
-		}
-		got := Loglikelihood1(ct, tt.counter, tt.numobs)
-		if !utils.FuzzyEqual(tt.result, got, 1e-4) {
-			t.Errorf("want %v, got %v", tt.result, got)
-		}
-	}
-}
-
-func TestLoglikelihood2(t *testing.T) {
+func TestLoglikelihood(t *testing.T) {
 	cases := []struct {
 		cliques, adj [][]int
 		cardin       []int
@@ -170,7 +125,7 @@ func TestLoglikelihood2(t *testing.T) {
 		}
 		c.UpDownCalibration()
 		for i := range tt.result {
-			got := Loglikelihood2(c, tt.result[i].ds)
+			got := Loglikelihood(c, tt.result[i].ds)
 			if !utils.FuzzyEqual(tt.result[i].ll, got, 1e-7) {
 				t.Errorf("wrong ll2, want %v, got %v", tt.result[i].ll, got)
 			}
