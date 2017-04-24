@@ -5,8 +5,8 @@ import (
 	"math"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/counting"
 	"github.com/britojr/kbn/filehandler"
-	"github.com/britojr/kbn/utils"
 )
 
 // Loglikelihood calculates the log-likelihood line by line
@@ -24,7 +24,7 @@ func Loglikelihood(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) (ll fl
 }
 
 // StructLoglikelihood calculates the log-likelihood based on the counting of observed variables
-func StructLoglikelihood(cliques, sepsets [][]int, counter utils.Counter) (ll float64) {
+func StructLoglikelihood(cliques, sepsets [][]int, counter counting.Counter) (ll float64) {
 	// for each node adds the count of every attribution of the clique and
 	// subtracts the count of every attribution of the sepset
 	for i := range cliques {
@@ -37,7 +37,7 @@ func StructLoglikelihood(cliques, sepsets [][]int, counter utils.Counter) (ll fl
 	return
 }
 
-func sumLogCount(varlist []int, counter utils.Counter) (ll float64) {
+func sumLogCount(varlist []int, counter counting.Counter) (ll float64) {
 	values := counter.CountAssignments(varlist)
 	for _, v := range values {
 		if v != 0 {

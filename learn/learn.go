@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/counting"
 	"github.com/britojr/kbn/counting/bitcounter"
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
@@ -172,7 +173,7 @@ func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting
 // for observed variables (empiric distribution), and expand uniformily or randomly for the hidden variables
 func CreateEmpiricPotentials(cliques [][]int, cardin []int,
-	numobs int, counter utils.Counter, initpot int, alphas ...float64) []*factor.Factor {
+	numobs int, counter counting.Counter, initpot int, alphas ...float64) []*factor.Factor {
 
 	if initpot == EmpiricDirichlet && len(alphas) == 0 {
 		panic("no parameters for dirichlet dirtributions")
