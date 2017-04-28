@@ -1,8 +1,11 @@
 package cliquetree
 
 import (
+	"bytes"
+	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
@@ -626,6 +629,305 @@ func TestConditionalProb(t *testing.T) {
 				}
 			}
 			c.RecoverPotentials()
+		}
+	}
+}
+
+func TestSaveOnLibdaiFormat(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       string
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		cardin:  []int{2, 2, 2},
+		values: [][]float64{
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
+		},
+		result: "2\n\n" +
+			"2\n" +
+			"0 1 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .25) +
+			fmt.Sprintf("%d     %.4f\n", 1, .35) +
+			fmt.Sprintf("%d     %.4f\n", 2, .35) +
+			fmt.Sprintf("%d     %.4f\n", 3, .05) +
+			"\n" +
+			"2\n" +
+			"1 2 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .20) +
+			fmt.Sprintf("%d     %.4f\n", 1, .22) +
+			fmt.Sprintf("%d     %.4f\n", 2, .40) +
+			fmt.Sprintf("%d     %.4f\n", 3, .18) +
+			"\n",
+	}, {
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: "5\n\n" +
+			"1\n" +
+			"0 \n" +
+			"2 \n" +
+			"2\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .999) +
+			fmt.Sprintf("%d     %.4f\n", 1, .001) +
+			"\n" +
+			"1\n" +
+			"1 \n" +
+			"2 \n" +
+			"2\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .998) +
+			fmt.Sprintf("%d     %.4f\n", 1, .002) +
+			"\n" +
+			"3\n" +
+			"0 1 2 \n" +
+			"2 2 2 \n" +
+			"8\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .999) +
+			fmt.Sprintf("%d     %.4f\n", 1, .06) +
+			fmt.Sprintf("%d     %.4f\n", 2, .71) +
+			fmt.Sprintf("%d     %.4f\n", 3, .05) +
+			fmt.Sprintf("%d     %.4f\n", 4, .001) +
+			fmt.Sprintf("%d     %.4f\n", 5, .94) +
+			fmt.Sprintf("%d     %.4f\n", 6, .29) +
+			fmt.Sprintf("%d     %.4f\n", 7, .95) +
+			"\n" +
+			"2\n" +
+			"2 3 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .95) +
+			fmt.Sprintf("%d     %.4f\n", 1, .10) +
+			fmt.Sprintf("%d     %.4f\n", 2, .05) +
+			fmt.Sprintf("%d     %.4f\n", 3, .90) +
+			"\n" +
+			"2\n" +
+			"2 4 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .99) +
+			fmt.Sprintf("%d     %.4f\n", 1, .30) +
+			fmt.Sprintf("%d     %.4f\n", 2, .01) +
+			fmt.Sprintf("%d     %.4f\n", 3, .70) +
+			"\n",
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		var b bytes.Buffer
+		c.SaveOnLibdaiFormat(&b)
+		got := b.String()
+		if got != tt.result {
+			for i := range tt.result {
+				if got[i] != tt.result[i] {
+					t.Errorf("Error on position %v, (%c)!=(%c)\nWant:\n[%v]\nGot:\n[%v]\n",
+						i, got[i], tt.result[i], tt.result, got)
+					break
+				}
+			}
+		}
+	}
+}
+
+func TestSaveOn(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       string
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		cardin:  []int{2, 2, 2},
+		values: [][]float64{
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
+		},
+		result: "2\n" +
+			"0 1 \n" +
+			"1 2 \n" +
+			"\n" +
+			"1 \n" +
+			"0 \n" +
+			"\n" +
+			"2 2 2 \n" +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .25, .35, .35, .05) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .20, .22, .40, .18) +
+			"\n",
+	}, {
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: "5\n" +
+			"0 \n" +
+			"1 \n" +
+			"0 1 2 \n" +
+			"2 3 \n" +
+			"2 4 \n" +
+			"\n" +
+			"2 \n" +
+			"2 \n" +
+			"0 1 3 4 \n" +
+			"2 \n" +
+			"2 \n" +
+			"\n" +
+			"2 2 2 2 2 \n" +
+			fmt.Sprintf("%.4f %.4f \n", .999, .001) +
+			fmt.Sprintf("%.4f %.4f \n", .998, .002) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f \n",
+				.999, .06, .71, .05, .001, .94, .29, .95) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .95, .10, .05, .90) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .99, .30, .01, .70) +
+			"\n",
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		var b bytes.Buffer
+		c.SaveOn(&b)
+		got := b.String()
+		if len(got) == 0 {
+			t.Fatalf("Empty string")
+		}
+		if got != tt.result {
+			for i := range got {
+				if got[i] != tt.result[i] {
+					t.Errorf("Error on position %v, (%c)!=(%c)\nWant:\n[%v]\nGot:\n[%v]\n",
+						i, got[i], tt.result[i], tt.result, got)
+					break
+				}
+			}
+		}
+	}
+}
+
+func TestLoadFrom(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		saved        string
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		cardin:  []int{2, 2, 2},
+		values: [][]float64{
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
+		},
+		saved: "2\n" +
+			"0 1 \n" +
+			"1 2 \n" +
+			"\n" +
+			"1 \n" +
+			"0 \n" +
+			"\n" +
+			"2 2 2 \n" +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .25, .35, .35, .05) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .20, .22, .40, .18) +
+			"\n",
+	}, {
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		saved: "5\n" +
+			"0 \n" +
+			"1 \n" +
+			"0 1 2 \n" +
+			"2 3 \n" +
+			"2 4 \n" +
+			"\n" +
+			"2 \n" +
+			"2 \n" +
+			"0 1 3 4 \n" +
+			"2 \n" +
+			"2 \n" +
+			"\n" +
+			"2 2 2 2 2 \n" +
+			fmt.Sprintf("%.4f %.4f \n", .999, .001) +
+			fmt.Sprintf("%.4f %.4f \n", .998, .002) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f \n",
+				.999, .06, .71, .05, .001, .94, .29, .95) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .95, .10, .05, .90) +
+			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .99, .30, .01, .70) +
+			"\n",
+	}}
+	for _, tt := range cases {
+		c := LoadFrom(strings.NewReader(tt.saved))
+		if c == nil {
+			t.Fatalf("Nil clique tree returned")
+		}
+		if c.Size() != len(tt.cliques) {
+			t.Errorf("wrong number of cliques, want %v, got %v", len(tt.cliques), c.Size())
+		}
+		for i := 0; i < c.Size(); i++ {
+			if !reflect.DeepEqual(c.Clique(i), tt.cliques[i]) {
+				t.Errorf("wrong variables, want %v, got %v", tt.cliques[i], c.Clique(i))
+			} else {
+				for _, v := range tt.cliques[i] {
+					if c.InitialPotential(i).Cardinality()[v] != tt.cardin[v] {
+						t.Errorf("wrong cardinality, want %v, got %v", tt.cardin[v],
+							c.InitialPotential(i).Cardinality()[v])
+					}
+				}
+			}
+			if !reflect.DeepEqual(tt.values[i], c.InitialPotential(i).Values()) {
+				t.Errorf("wrong values, want %v, got %v", tt.values[i], c.InitialPotential(i).Values())
+			}
+			got := append([]int(nil), c.Neighbours(i)...)
+			want := append([]int(nil), tt.adj[i]...)
+			sort.Ints(got)
+			sort.Ints(want)
+			if !reflect.DeepEqual(want, got) {
+				t.Errorf("wrong neighbours, want%v, got %v", want, got)
+			}
 		}
 	}
 }

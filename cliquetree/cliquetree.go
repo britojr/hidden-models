@@ -2,6 +2,7 @@ package cliquetree
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 	"sort"
 
@@ -443,4 +444,41 @@ func (c CliqueTree) Marginals() map[int][]float64 {
 		}
 	}
 	return m
+}
+
+// SaveOnLibdaiFormat saves a clique tree in libDAI factor graph format on the given writer
+func (c *CliqueTree) SaveOnLibdaiFormat(f io.Writer) {
+	// number of potentials
+	fmt.Fprintf(f, "%d\n", c.Size())
+	fmt.Fprintln(f)
+	for i := 0; i < c.Size(); i++ {
+		// number of variables
+		fmt.Fprintf(f, "%d\n", len(c.InitialPotential(i).Variables()))
+		// variables
+		for _, v := range c.InitialPotential(i).Variables() {
+			fmt.Fprintf(f, "%d ", v)
+		}
+		fmt.Fprintln(f)
+		// cardinalities
+		for _, v := range c.InitialPotential(i).Variables() {
+			fmt.Fprintf(f, "%d ", c.InitialPotential(i).Cardinality()[v])
+		}
+		fmt.Fprintln(f)
+		// number of factor values
+		fmt.Fprintf(f, "%d\n", len(c.InitialPotential(i).Values()))
+		// factor values
+		for j, v := range c.InitialPotential(i).Values() {
+			fmt.Fprintf(f, "%d     %.4f\n", j, v)
+		}
+		fmt.Fprintln(f)
+	}
+}
+
+// SaveOn saves a clique on the given writer
+func (c *CliqueTree) SaveOn(f io.Writer) {
+}
+
+// LoadFrom loads a clique tree from the given reader
+func LoadFrom(f io.Reader) *CliqueTree {
+	return nil
 }
