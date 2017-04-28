@@ -30,51 +30,30 @@ const (
 
 // Learner ..
 type Learner struct {
-	//parameters
-	iterations int
-	treewidth  int
-	n          int // number of variables
-	dataset    *filehandler.DataSet
-	counter    *bitcounter.BitCounter
+	dataset *filehandler.DataSet
+	counter *bitcounter.BitCounter
+	n       int   // number of variables
+	cardin  []int // cardinality slice
+	// parameters
+	k          int       // treewidth
 	hidden     int       // number of hidden variables
-	hiddencard int       // default cardinality of the hidden variables
-	cardin     []int     // cardinality slice
-	epslon     float64   // epslon for EM convergence
+	hiddencard int       // cardinality of the hidden variables
 	alphas     []float64 // parameters for dirichlet distribution
 }
 
 // New ..
-func New() *Learner {
+func New(k, hidden, hiddencard int, alpha ...float64) *Learner {
 	l := new(Learner)
-	l.treewidth = 3
-	l.hiddencard = 2
-	l.epslon = 1e-6
+	l.k = k
+	l.hidden = hidden
+	l.hiddencard = hiddencard
+	if len(alpha) > 0 {
+		l.alphas = make([]float64, int(math.Pow(2, float64(l.k+1))))
+		for i := range l.alphas {
+			l.alphas[i] = alpha[0]
+		}
+	}
 	return l
-}
-
-// SetTreeWidth ..
-func (l *Learner) SetTreeWidth(k int) {
-	l.treewidth = k
-}
-
-// SetAlpha creates alpha parameter vector for dirichlet
-func (l *Learner) SetAlpha(alpha float64) {
-	l.alphas = make([]float64, int(math.Pow(2, float64(l.treewidth+1))))
-	for i := range l.alphas {
-		l.alphas[i] = alpha
-	}
-}
-
-// SetHiddenVars ..
-func (l *Learner) SetHiddenVars(h int) {
-	l.hidden = h
-}
-
-// SetEpslon ..
-func (l *Learner) SetEpslon(epslon float64) {
-	if epslon != 0 {
-		l.epslon = epslon
-	}
 }
 
 // LoadDataSet ..
@@ -90,51 +69,18 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	for i := l.n; i < len(l.cardin); i++ {
 		l.cardin[i] = l.hiddencard
 	}
-	fmt.Printf("Tot var: %v\n", len(l.cardin))
-	fmt.Printf("Variables: %v, Instances: %v\n", l.n, len(l.dataset.Data()))
-}
-
-// GuessStructure tries a number of random structures and choses the best one and its log-likelihood
-func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float64) {
-	bestStruct, bestScore := l.randomStruct()
-	for i := 1; i < iterations; i++ {
-		currStruct, currScore := l.randomStruct()
-		if currScore > bestScore {
-			bestScore = currScore
-			bestStruct = currStruct
-		}
-	}
-	return bestStruct, bestScore
-}
-
-// creates a new cliquetree from a randomized chartree and calculates its log-likelihood
-func (l *Learner) randomStruct() (*cliquetree.CliqueTree, float64) {
-	T, iphi, err := generator.RandomCharTree(l.n+l.hidden, l.treewidth)
-	utils.ErrCheck(err, "")
-	ct := cliquetree.FromCharTree(T, iphi)
-	score := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), l.counter)
-	return ct, score
+	fmt.Printf("Variables: %v+%v, Instances: %v\n", l.n, l.hidden, len(l.dataset.Data()))
 }
 
 // InitializePotentials initialize clique tree potentials
-func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot int) {
-	if initpot == FullRandom {
-		// ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
-		// TODO: remove this temporary test
-		factors := CreateRandomPotentials(ct.Cliques(), l.cardin)
-		for i := range factors {
-			if len(ct.Varin(i)) != 0 {
-				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
-			}
-		}
-		ct.SetAllPotentials(factors)
+func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot int) {
+	if typePot == FullRandom {
+		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
 	} else {
-		factors := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, initpot, l.alphas...)
+		factors := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, typePot, l.alphas...)
 		for i := range factors {
 			if len(ct.Varin(i)) != 0 {
 				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
-				// } else {
-				// 	factors[i].Normalize()
 			}
 		}
 		ct.SetAllPotentials(factors)
@@ -142,17 +88,17 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, initpot int) {
 }
 
 // OptimizeParameters optimize the clique tree parameters
-func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, initpot, iterations int) {
-	l.InitializePotentials(ct, initpot)
-	em.ExpectationMaximization(ct, l.dataset, l.epslon)
+func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, typePot, iterations int, epslon float64) {
+	l.InitializePotentials(ct, typePot)
+	em.ExpectationMaximization(ct, l.dataset, epslon)
 	if iterations > 1 {
 		ll := l.CalculateLikelihood(ct)
 		fmt.Printf("curr LL %v\n", ll)
 		pot := make([]*factor.Factor, len(ct.Potentials()))
 		copy(pot, ct.Potentials())
 		for i := 1; i < iterations; i++ {
-			l.InitializePotentials(ct, initpot)
-			em.ExpectationMaximization(ct, l.dataset, l.epslon)
+			l.InitializePotentials(ct, typePot)
+			em.ExpectationMaximization(ct, l.dataset, epslon)
 			currll := l.CalculateLikelihood(ct)
 			fmt.Printf("curr LL %v\n", currll)
 			if currll > ll {
@@ -170,12 +116,35 @@ func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	return likelihood.Loglikelihood(ct, l.dataset)
 }
 
+// GuessStructure tries a number of random structures and choses the best one and its log-likelihood
+func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float64) {
+	bestStruct := RandomCliqueTree(l.n+l.hidden, l.k)
+	bestScore := likelihood.StructLoglikelihood(bestStruct.Cliques(), bestStruct.SepSets(), l.counter)
+	for i := 1; i < iterations; i++ {
+		currStruct := RandomCliqueTree(l.n+l.hidden, l.k)
+		currScore := likelihood.StructLoglikelihood(currStruct.Cliques(), currStruct.SepSets(), l.counter)
+		if currScore > bestScore {
+			bestScore = currScore
+			bestStruct = currStruct
+		}
+	}
+	return bestStruct, bestScore
+}
+
+// RandomCliqueTree creates a new cliquetree from a randomized chartree
+func RandomCliqueTree(n, k int) *cliquetree.CliqueTree {
+	T, iphi, err := generator.RandomCharTree(n, k)
+	utils.ErrCheck(err, "")
+	ct := cliquetree.FromCharTree(T, iphi)
+	return ct
+}
+
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting
 // for observed variables (empiric distribution), and expand uniformily or randomly for the hidden variables
-func CreateEmpiricPotentials(cliques [][]int, cardin []int,
-	numobs int, counter counting.Counter, initpot int, alphas ...float64) []*factor.Factor {
+func CreateEmpiricPotentials(counter counting.Counter, cliques [][]int, cardin []int,
+	numobs, typePot int, alphas ...float64) []*factor.Factor {
 
-	if initpot == EmpiricDirichlet && len(alphas) == 0 {
+	if typePot == EmpiricDirichlet && len(alphas) == 0 {
 		panic("no parameters for dirichlet dirtributions")
 	}
 	factors := make([]*factor.Factor, len(cliques))
@@ -188,21 +157,24 @@ func CreateEmpiricPotentials(cliques [][]int, cardin []int,
 		}
 		if len(observed) > 0 {
 			values := utils.SliceItoF64(counter.CountAssignments(observed))
+			// factors[i] = P(observed)
 			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {
-				g := latentFactor(cliques[i], cardin, len(observed), initpot, alphas)
+				// g = P(hidden/observed)
+				g := latentFactor(cliques[i], cardin, len(observed), typePot, alphas)
+				// P(observed, hidden) = P(observed) * P(hidden/observed)
 				factors[i] = factors[i].Product(g)
 			}
 		} else {
-			factors[i] = latentFactor(cliques[i], cardin, len(observed), initpot, alphas)
+			factors[i] = latentFactor(cliques[i], cardin, len(observed), typePot, alphas)
 		}
 	}
 	return factors
 }
 
-func latentFactor(varlist, cardin []int, obs, initpot int, alphas []float64) *factor.Factor {
+func latentFactor(varlist, cardin []int, obs, typePot int, alphas []float64) *factor.Factor {
 	g := factor.NewFactor(varlist, cardin)
-	switch initpot {
+	switch typePot {
 	case EmpiricDirichlet:
 		g.SetDirichlet(alphas[:len(g.Values())])
 	case EmpiricRandom:
@@ -210,6 +182,7 @@ func latentFactor(varlist, cardin []int, obs, initpot int, alphas []float64) *fa
 	case EmpiricUniform:
 		g.SetUniform()
 	}
+	// TODO: check this / add tests
 	// conditional normalization
 	obslen := 1
 	for i := 0; i < obs; i++ {
@@ -234,6 +207,24 @@ func CreateRandomPotentials(cliques [][]int, cardin []int) []*factor.Factor {
 	return factors
 }
 
+// SaveCliqueTree saves a clique tree on the given file
+func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	ct.SaveOn(f)
+}
+
+// LoadCliqueTree loads a clique tree from the given file
+func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
+	f, err := os.Open(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	return cliquetree.LoadFrom(f)
+}
+
+// =============================================================================
+
 // CheckTree ..
 func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 	ct.UpDownCalibration()
@@ -247,7 +238,7 @@ func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
 
 func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checkUniform")
-	uniform := CreateEmpiricPotentials(ct.Cliques(), l.cardin, l.n, l.counter, EmpiricUniform)
+	uniform := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, EmpiricUniform)
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	calibrated := make([]*factor.Factor, ct.Size())
 	for i := range calibrated {
@@ -345,34 +336,6 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 	}
 }
 
-// SaveCliqueTree saves a clique tree in libDAI factor graph format
-func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
-	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
-	defer f.Close()
-	// number of potentials
-	fmt.Fprintf(f, "%d\n", ct.Size())
-	fmt.Fprintln(f)
-	for i := 0; i < ct.Size(); i++ {
-		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Variables()))
-		for _, v := range ct.Calibrated(i).Variables() {
-			fmt.Fprintf(f, "%d ", v)
-		}
-		fmt.Fprintln(f)
-
-		for _, v := range ct.Calibrated(i).Variables() {
-			fmt.Fprintf(f, "%d ", ct.Calibrated(i).Cardinality()[v])
-		}
-		fmt.Fprintln(f)
-
-		fmt.Fprintf(f, "%d\n", len(ct.Calibrated(i).Values()))
-		for j, v := range ct.InitialPotential(i).Values() {
-			fmt.Fprintf(f, "%d     %.4f\n", j, v)
-		}
-		fmt.Fprintln(f)
-	}
-}
-
 // SaveMarginals saves all marginals of a cliquetree
 func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
 	f, err := os.Create(fname)
@@ -390,3 +353,10 @@ func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
 	}
 	fmt.Fprintf(f, "LL=%v\n", ll)
 }
+
+// SaveCliqueTree saves a clique tree in libDAI factor graph format
+// func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
+// 	f, err := os.Create(fname)
+// 	utils.ErrCheck(err, "")
+// 	defer f.Close()
+// }
