@@ -32,6 +32,13 @@ func ErrCheck(err error, message string) {
 	}
 }
 
+// Atoi converst string to int
+func Atoi(s string) int {
+	i, err := strconv.Atoi(s)
+	ErrCheck(err, fmt.Sprintf("Can't convert %v to int", s))
+	return i
+}
+
 // SliceAtoi creates an int slice from a string slice
 func SliceAtoi(ss []string) []int {
 	arr := make([]int, len(ss))
@@ -39,6 +46,17 @@ func SliceAtoi(ss []string) []int {
 	for k, v := range ss {
 		arr[k], err = strconv.Atoi(v)
 		ErrCheck(err, fmt.Sprintf("Can't convert %v to int", v))
+	}
+	return arr
+}
+
+// SliceAtoF64 creates a float64 slice from a string slice
+func SliceAtoF64(ss []string) []float64 {
+	arr := make([]float64, len(ss))
+	var err error
+	for k, v := range ss {
+		arr[k], err = strconv.ParseFloat(v, 64)
+		ErrCheck(err, fmt.Sprintf("Can't convert %v to float64", v))
 	}
 	return arr
 }

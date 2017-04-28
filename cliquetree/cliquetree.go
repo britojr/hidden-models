@@ -1,10 +1,12 @@
 package cliquetree
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/utils"
@@ -475,10 +477,71 @@ func (c *CliqueTree) SaveOnLibdaiFormat(f io.Writer) {
 }
 
 // SaveOn saves a clique on the given writer
-func (c *CliqueTree) SaveOn(f io.Writer) {
+func (c *CliqueTree) SaveOn(w io.Writer) {
+	// number of cliques
+	fmt.Fprintf(w, "%d\n", c.Size())
+	// cliques
+	for i := 0; i < c.Size(); i++ {
+		for _, v := range c.Clique(i) {
+			fmt.Fprintf(w, "%d ", v)
+		}
+		fmt.Fprintln(w)
+	}
+	fmt.Fprintln(w)
+	// adjacency
+	for i := 0; i < c.Size(); i++ {
+		for _, v := range c.Neighbours(i) {
+			fmt.Fprintf(w, "%d ", v)
+		}
+		fmt.Fprintln(w)
+	}
+	fmt.Fprintln(w)
+	// cardinality of all variables
+	cardin := c.InitialPotential(0).Cardinality()
+	for _, v := range cardin {
+		fmt.Fprintf(w, "%d ", v)
+	}
+	fmt.Fprintln(w)
+	// factor values
+	for i := 0; i < c.Size(); i++ {
+		for _, v := range c.InitialPotential(i).Values() {
+			fmt.Fprintf(w, "%.4f ", v)
+		}
+		fmt.Fprintln(w)
+	}
+	fmt.Fprintln(w)
 }
 
 // LoadFrom loads a clique tree from the given reader
-func LoadFrom(f io.Reader) *CliqueTree {
-	return nil
+func LoadFrom(r io.Reader) *CliqueTree {
+	scanner := bufio.NewScanner(r)
+	scanner.Scan()
+	size := utils.Atoi(scanner.Text())
+	cliques := make([][]int, size)
+	for i := 0; i < size; i++ {
+		scanner.Scan()
+		cliques[i] = append(cliques[i], utils.SliceAtoi(strings.Fields(scanner.Text()))...)
+	}
+	scanner.Scan()
+	adj := make([][]int, size)
+	for i := 0; i < size; i++ {
+		scanner.Scan()
+		adj[i] = append(adj[i], utils.SliceAtoi(strings.Fields(scanner.Text()))...)
+	}
+	scanner.Scan()
+	scanner.Scan()
+	cardin := utils.SliceAtoi(strings.Fields(scanner.Text()))
+	potentials := make([]*factor.Factor, size)
+	for i := range potentials {
+		scanner.Scan()
+		values := utils.SliceAtoF64(strings.Fields(scanner.Text()))
+		potentials[i] = factor.NewFactorValues(cliques[i], cardin, values)
+	}
+
+	c, err := NewStructure(cliques, adj)
+	utils.ErrCheck(err, "")
+	err = c.SetAllPotentials(potentials)
+	utils.ErrCheck(err, "")
+
+	return c
 }
