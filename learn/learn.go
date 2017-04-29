@@ -237,6 +237,7 @@ func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 }
 
 // =============================================================================
+// TODO: move this out
 
 // CheckTree ..
 func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
@@ -366,10 +367,3 @@ func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
 	}
 	fmt.Fprintf(f, "LL=%v\n", ll)
 }
-
-// SaveCliqueTree saves a clique tree in libDAI factor graph format
-// func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
-// 	f, err := os.Create(fname)
-// 	utils.ErrCheck(err, "")
-// 	defer f.Close()
-// }

@@ -84,7 +84,6 @@ func parseFlags() {
 func main() {
 	parseFlags()
 	initializeLearner()
-	// TODO: add here the MRF reading step
 
 	var ct *cliquetree.CliqueTree
 	var ll float64
@@ -108,7 +107,17 @@ func main() {
 		}
 	}
 
+	// TODO: add here the MRF reading step
 	// TODO: add inference step
+	/*
+		package mrf markovrf markrf
+		func LoadFrom(r reader) mrf*
+		func (m* mrf) mrfUnnormalidedMesures(l.dataset) []float64
+
+		func (*c cliquetree) ProbOfAll(l.dataset) []float64
+		func estimatePartitionFunction(phi, p []float64) float64
+		// show obtained Z
+	*/
 
 	fmt.Printf("(%v)\n", ct.Size())
 }
