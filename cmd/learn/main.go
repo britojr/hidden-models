@@ -3,12 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/likelihood"
+	"github.com/britojr/kbn/utils"
+)
+
+// StepFlags type is used to store the flags indicating the steps that should be executed
+// type StepFlags byte
+const (
+	// StructStep indicates execute structure learning step
+	StructStep int = 1 << iota
+	//ParamStep indicates parameter learning step
+	ParamStep
 )
 
 const (
@@ -27,9 +38,10 @@ var (
 	h          int     // number of hidden variables
 	initpot    int     // type of initial potential
 	check      bool    // validate cliquetree
-	treefile   string  // file to save cliquetree
 	epslon     float64 // minimum precision for EM convergence
 	alpha      float64 // alpha parameter for dirichlet distribution
+	ctfile     string  // cliquetree file
+	steps      int     // flags indicating what steps to execute
 )
 
 var (
@@ -51,9 +63,13 @@ func parseFlags() {
 		2- empiric + random,
 		3- empiric + uniform`)
 	flag.BoolVar(&check, "check", false, "check tree")
-	flag.StringVar(&treefile, "s", "", "saves the tree if informed a file name")
 	flag.Float64Var(&epslon, "e", 0, "minimum precision for EM convergence")
 	flag.Float64Var(&alpha, "a", 1, "alpha parameter for dirichlet distribution")
+	flag.StringVar(&ctfile, "s", "", "cliquetree file")
+	flag.IntVar(&steps, "steps", StructStep|ParamStep,
+		`		step flags:
+		1- structure learning,
+		2- parameter learning`)
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -70,14 +86,31 @@ func main() {
 	initializeLearner()
 	// TODO: add here the MRF reading step
 
-	ct, ll := learnStructureAndParamenters()
-	for i := 1; i < iterations; i++ {
-		currct, currll := learnStructureAndParamenters()
-		if currll > ll {
-			ct, ll = currct, currll
+	var ct *cliquetree.CliqueTree
+	var ll float64
+	if steps&StructStep > 0 {
+		ct, ll = learnStructureAndParamenters()
+		fmt.Printf("Best LL: %v\n", ll)
+		if len(ctfile) > 0 {
+			f, err := os.Create(ctfile)
+			utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", ctfile))
+			ct.SaveOn(f)
+			f.Close()
+		}
+	} else {
+		f, err := os.Open(ctfile)
+		utils.ErrCheck(err, fmt.Sprintf("Can't open file %v", ctfile))
+		ct = cliquetree.LoadFrom(f)
+		f.Close()
+		if steps&ParamStep > 0 {
+			ll = learnParameters(ct)
+			fmt.Printf("Best LL: %v\n", ll)
 		}
 	}
-	fmt.Printf("Best LL: %v (%v)\n", ll, ct.Size())
+
+	// TODO: add inference step
+
+	fmt.Printf("(%v)\n", ct.Size())
 }
 
 func initializeLearner() {
@@ -96,6 +129,7 @@ func learnStructure() *cliquetree.CliqueTree {
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 
+	// TODO: remove this structure likelihood
 	ll := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), learner.Counter())
 	fmt.Printf("Structure LogLikelihood: %v\n", ll)
 	return ct
@@ -107,6 +141,11 @@ func learnParameters(ct *cliquetree.CliqueTree) float64 {
 	ll := learner.OptimizeParameters(ct, initpot, iterEM, epslon)
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
+
+	// TODO: remove this check
+	if check {
+		learner.CheckTree(ct)
+	}
 	return ll
 }
 
@@ -121,11 +160,6 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 		if currll > ll {
 			ct, ll = currct, currll
 		}
-	}
-
-	if check {
-		// TODO: remove this check
-		learner.CheckTree(ct)
 	}
 	return ct, ll
 }
