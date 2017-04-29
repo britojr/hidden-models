@@ -8,25 +8,35 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/learn"
+	"github.com/britojr/kbn/likelihood"
 )
 
-func main() {
-	// Define Flag variables
-	var (
-		k          int
-		numktrees  int
-		iterEM     int
-		iterations int
-		dsfile     string
-		delimiter  uint
-		hdr        uint
-		h          int
-		initpot    int
-		check      bool
-		treefile   string
-		epslon     float64
-		alpha      float64
-	)
+const (
+	hiddencard = 2
+)
+
+// Define Flag variables
+var (
+	k          int     // treewidth
+	numktrees  int     // number of k-trees to sample
+	iterEM     int     // number of EM random restarts
+	iterations int     // number of iterations of the whole process
+	dsfile     string  // dataset file name
+	delimiter  uint    // dataset file delimiter
+	hdr        uint    // dataset file header type
+	h          int     // number of hidden variables
+	initpot    int     // type of initial potential
+	check      bool    // validate cliquetree
+	treefile   string  // file to save cliquetree
+	epslon     float64 // minimum precision for EM convergence
+	alpha      float64 // alpha parameter for dirichlet distribution
+)
+
+var (
+	learner *learn.Learner
+)
+
+func parseFlags() {
 	flag.IntVar(&k, "k", 5, "tree-width")
 	flag.IntVar(&numktrees, "numk", 1, "number of ktrees samples")
 	flag.IntVar(&iterEM, "iterem", 1, "number of EM iterations")
@@ -53,58 +63,69 @@ func main() {
 	}
 	fmt.Printf("Args: k=%v, h=%v, initpot=%v\n", k, h, initpot)
 	fmt.Printf("eps=%v, numk=%v, iterEM=%v\n", epslon, numktrees, iterEM)
+}
 
-	learner := learn.New()
-	learner.SetTreeWidth(k)
-	learner.SetHiddenVars(h)
-	learner.SetEpslon(epslon)
-	learner.SetAlpha(alpha)
+func main() {
+	parseFlags()
+	initializeLearner()
+	// TODO: add here the MRF reading step
 
-	fmt.Printf("Loading dataset: %v\n", dsfile)
-	start := time.Now()
-	learner.LoadDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
-	elapsed := time.Since(start)
-	fmt.Printf("Time: %v\n", elapsed)
-
-	ct, ll := learnStructureAndParamenters(learner, initpot, numktrees, iterEM, check)
+	ct, ll := learnStructureAndParamenters()
 	for i := 1; i < iterations; i++ {
-		currct, currll := learnStructureAndParamenters(learner, initpot, numktrees, iterEM, check)
+		currct, currll := learnStructureAndParamenters()
 		if currll > ll {
 			ct, ll = currct, currll
 		}
 	}
 	fmt.Printf("Best LL: %v (%v)\n", ll, ct.Size())
-
-	if len(treefile) > 0 {
-		saveTree(ct, ll, treefile)
-	}
 }
 
-func learnStructureAndParamenters(learner *learn.Learner,
-	initpot, numktrees, iterEM int, check bool) (*cliquetree.CliqueTree, float64) {
+func initializeLearner() {
+	learner = learn.New(k, h, hiddencard, alpha)
+	fmt.Printf("Loading dataset: %v\n", dsfile)
+	start := time.Now()
+	learner.LoadDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
+	elapsed := time.Since(start)
+	fmt.Printf("Time: %v\n", elapsed)
+}
 
+func learnStructure() *cliquetree.CliqueTree {
 	fmt.Println("Learning structure...")
 	start := time.Now()
-	ct, ll := learner.GuessStructure(numktrees)
+	ct := learn.RandomCliqueTree(learner.TotVar(), k)
 	elapsed := time.Since(start)
-	fmt.Printf("Time: %v; Structure LogLikelihood: %v\n", elapsed, ll)
+	fmt.Printf("Time: %v\n", elapsed)
 
+	ll := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), learner.Counter())
+	fmt.Printf("Structure LogLikelihood: %v\n", ll)
+	return ct
+}
+
+func learnParameters(ct *cliquetree.CliqueTree) float64 {
 	fmt.Println("Learning parameters...")
-	start = time.Now()
-	learner.OptimizeParameters(ct, initpot, iterEM)
-	elapsed = time.Since(start)
-	fmt.Printf("Time: %v; CT: %v\n", elapsed, ct.Size())
+	start := time.Now()
+	ll := learner.OptimizeParameters(ct, initpot, iterEM, epslon)
+	elapsed := time.Since(start)
+	fmt.Printf("Time: %v\n", elapsed)
+	return ll
+}
 
-	ll = learner.CalculateLikelihood(ct)
-	fmt.Printf("Final LL: %v\n", ll)
+func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
+	ct := learnStructure()
+	ll := learnParameters(ct)
+	fmt.Printf("Initial LL: %v\n", ll)
+	for i := 1; i < iterations; i++ {
+		currct := learnStructure()
+		currll := learnParameters(currct)
+		fmt.Printf("Current LL: %v\n", currll)
+		if currll > ll {
+			ct, ll = currct, currll
+		}
+	}
 
 	if check {
+		// TODO: remove this check
 		learner.CheckTree(ct)
 	}
 	return ct, ll
-}
-
-func saveTree(ct *cliquetree.CliqueTree, ll float64, treefile string) {
-	learn.SaveCliqueTree(ct, treefile)
-	learn.SaveMarginals(ct, ll, treefile+"_marg")
 }

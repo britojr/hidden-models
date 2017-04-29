@@ -72,6 +72,16 @@ func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandle
 	fmt.Printf("Variables: %v+%v, Instances: %v\n", l.n, l.hidden, len(l.dataset.Data()))
 }
 
+// Counter returns counter
+func (l *Learner) Counter() counting.Counter {
+	return l.counter
+}
+
+// TotVar returns total number of variables
+func (l *Learner) TotVar() int {
+	return l.n + l.hidden
+}
+
 // InitializePotentials initialize clique tree potentials
 func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot int) {
 	if typePot == FullRandom {
@@ -88,12 +98,14 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot int) {
 }
 
 // OptimizeParameters optimize the clique tree parameters
-func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, typePot, iterations int, epslon float64) {
+func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
+	typePot, iterations int, epslon float64) float64 {
+
 	l.InitializePotentials(ct, typePot)
 	em.ExpectationMaximization(ct, l.dataset, epslon)
+	bestll := l.CalculateLikelihood(ct)
 	if iterations > 1 {
-		ll := l.CalculateLikelihood(ct)
-		fmt.Printf("curr LL %v\n", ll)
+		fmt.Printf("curr LL %v\n", bestll)
 		pot := make([]*factor.Factor, len(ct.Potentials()))
 		copy(pot, ct.Potentials())
 		for i := 1; i < iterations; i++ {
@@ -101,13 +113,14 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree, typePot, iterati
 			em.ExpectationMaximization(ct, l.dataset, epslon)
 			currll := l.CalculateLikelihood(ct)
 			fmt.Printf("curr LL %v\n", currll)
-			if currll > ll {
-				ll = currll
+			if currll > bestll {
+				bestll = currll
 				copy(pot, ct.Potentials())
 			}
 		}
 		ct.SetAllPotentials(pot)
 	}
+	return bestll
 }
 
 // CalculateLikelihood calculates the likelihood of a clique tree
