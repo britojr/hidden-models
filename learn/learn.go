@@ -77,6 +77,11 @@ func (l *Learner) Counter() counting.Counter {
 	return l.counter
 }
 
+// Dataset returns dataset
+func (l *Learner) Dataset() filehandler.DataHandler {
+	return l.dataset
+}
+
 // TotVar returns total number of variables
 func (l *Learner) TotVar() int {
 	return l.n + l.hidden
