@@ -75,6 +75,15 @@ func (f *Factor) Get(assig *assignment.Assignment) float64 {
 	return f.values[assig.Index(f.stride)]
 }
 
+// GetEvidValue returnrs the value corresponding to the given evidence
+func (f *Factor) GetEvidValue(evid []int) float64 {
+	x := 0
+	for _, v := range f.varlist {
+		x += evid[v] * f.stride[v]
+	}
+	return f.values[x]
+}
+
 // SetValues updates the slice of values
 func (f *Factor) SetValues(values []float64) {
 	f.values = values
