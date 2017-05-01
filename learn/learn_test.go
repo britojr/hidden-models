@@ -59,10 +59,13 @@ func TestCreateUniformPortentials(t *testing.T) {
 		cardin:    []int{2, 2, 2},
 		numtuples: 100,
 		counts: map[string][]int{
-			fmt.Sprint([]int{0, 1}): {25, 10, 35, 30},
-			fmt.Sprint([]int{1, 2}): {40, 20, 10, 30},
-			fmt.Sprint([]int{1}):    {60, 40},
-			fmt.Sprint([]int{0}):    {35, 65},
+			fmt.Sprint([]int{0, 1, 2}): {15, 10, 5, 25, 5, 20, 15, 5},
+			fmt.Sprint([]int{0, 1}):    {20, 30, 20, 30},
+			fmt.Sprint([]int{0, 2}):    {20, 35, 20, 25},
+			fmt.Sprint([]int{1, 2}):    {25, 30, 25, 20},
+			fmt.Sprint([]int{0}):       {40, 60},
+			fmt.Sprint([]int{1}):       {50, 50},
+			fmt.Sprint([]int{2}):       {55, 45},
 		},
 	}
 	cases := []struct {
@@ -71,29 +74,25 @@ func TestCreateUniformPortentials(t *testing.T) {
 		numobs  int
 		counter FakeCounter
 		result  [][]float64
-	}{
-		{
-			cliques: [][]int{{0, 1}, {1, 2}},
-			cardin:  []int{2, 2, 2},
-			numobs:  2,
-			counter: fakeCounter,
-			result:  [][]float64{{.25, .10, .35, .30}, {.60 / 2.0, .40 / 2.0, .60 / 2.0, .40 / 2.0}},
-		},
-		{
-			cliques: [][]int{{0, 1}, {1, 2}},
-			cardin:  []int{2, 2, 2},
-			numobs:  3,
-			counter: fakeCounter,
-			result:  [][]float64{{.25, .10, .35, .30}, {.40, .20, .10, .30}},
-		},
-		{
-			cliques: [][]int{{0, 1}, {1, 2}},
-			cardin:  []int{2, 2, 2},
-			numobs:  1,
-			counter: fakeCounter,
-			result:  [][]float64{{.35 / 2.0, .65 / 2.0, .35 / 2.0, .65 / 2.0}, {.25, .25, .25, .25}},
-		},
-	}
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		cardin:  []int{2, 2, 2},
+		numobs:  2,
+		counter: fakeCounter,
+		result:  [][]float64{{.20, .30, .20, .30}, {.25 / .50, .30 / .50, .25 / .50, .20 / .50}},
+	}, {
+		cliques: [][]int{{0, 1}, {1, 2}},
+		cardin:  []int{2, 2, 2},
+		numobs:  3,
+		counter: fakeCounter,
+		result:  [][]float64{{.20, .30, .20, .30}, {.25, .30, .25, .20}},
+	}, {
+		cliques: [][]int{{0, 1}, {1, 2}},
+		cardin:  []int{2, 2, 2},
+		numobs:  1,
+		counter: fakeCounter,
+		result:  [][]float64{{.20 / .40, .30 / .60, .20 / .40, .30 / .60}, {.25, .25, .25, .25}},
+	}}
 	for _, tt := range cases {
 		faclist := CreateEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, EmpiricUniform)
 		if len(faclist) != len(tt.result) {
