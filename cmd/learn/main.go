@@ -10,6 +10,7 @@ import (
 	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/likelihood"
+	"github.com/britojr/kbn/mrf"
 	"github.com/britojr/kbn/utils"
 )
 
@@ -41,6 +42,7 @@ var (
 	epslon     float64 // minimum precision for EM convergence
 	alpha      float64 // alpha parameter for dirichlet distribution
 	ctfile     string  // cliquetree file
+	mkfile     string  // markov random field uai file
 	steps      int     // flags indicating what steps to execute
 )
 
@@ -107,19 +109,34 @@ func main() {
 		}
 	}
 
-	// TODO: add here the MRF reading step
-	// TODO: add inference step
-	/*
-		package mrf markovrf markrf
-		func LoadFrom(r reader) mrf*
-		func (m* mrf) mrfUnnormalidedMesures(l.dataset) []float64
+	// read MRF
+	var mk *mrf.Mrf
+	if len(mkfile) > 0 {
+		f, err := os.Open(mkfile)
+		utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", mkfile))
+		mk = mrf.LoadFromUAI(f)
+		f.Close()
+	}
 
-		func (*c cliquetree) ProbOfAll(l.dataset) []float64
-		func estimatePartitionFunction(phi, p []float64) float64
-		// show obtained Z
-	*/
+	// inference step
+	z := estimatePartitionFunction(ct, mk, learner.Dataset())
 
-	fmt.Printf("(%v)\n", ct.Size())
+	fmt.Printf("Partition function: %.8f\n", z)
+}
+
+func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf,
+	ds filehandler.DataHandler) float64 {
+	var z, p, phi float64
+	for _, m := range ds.Data() {
+		p = ct.ProbOfEvidence(m)
+		if p != 0 {
+			phi = mk.UnnormalizedMesure(m)
+			z += phi / p
+		} else {
+			panic(fmt.Sprintf("zero probability for evid: %v", m))
+		}
+	}
+	return z / float64(len(ds.Data()))
 }
 
 func initializeLearner() {
