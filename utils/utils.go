@@ -39,6 +39,13 @@ func Atoi(s string) int {
 	return i
 }
 
+// AtoF64 converst string to float64
+func AtoF64(s string) float64 {
+	i, err := strconv.ParseFloat(s, 64)
+	ErrCheck(err, fmt.Sprintf("Can't convert %v to float64", s))
+	return i
+}
+
 // SliceAtoi creates an int slice from a string slice
 func SliceAtoi(ss []string) []int {
 	arr := make([]int, len(ss))
