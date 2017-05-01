@@ -115,3 +115,28 @@ func TestCreateUniformPortentials(t *testing.T) {
 		}
 	}
 }
+
+func TestNew(t *testing.T) {
+	cases := []struct {
+		k, hidden, hiddencard int
+		alpha                 float64
+		alphalen              int
+	}{
+		{3, 7, 2, 3.14, 16},
+		{4, 5, 3, -0.75, 243},
+	}
+	for _, tt := range cases {
+		l := New(tt.k, tt.hidden, tt.hiddencard, tt.alpha)
+		if tt.k != l.k || tt.hidden != l.hidden || tt.hiddencard != l.hiddencard {
+			t.Errorf("Wrong argments")
+		}
+		if tt.alphalen != len(l.alphas) {
+			t.Errorf("wrong alpha size, want %v got %v", tt.alphalen, len(l.alphas))
+		}
+		for _, v := range l.alphas {
+			if tt.alpha != v {
+				t.Errorf("wrong value of alpha, want %v got %v", tt.alpha, l.alphas)
+			}
+		}
+	}
+}

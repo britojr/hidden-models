@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/likelihood"
@@ -119,15 +121,17 @@ func main() {
 	}
 
 	// inference step
-	z := estimatePartitionFunction(ct, mk, learner.Dataset())
+	var z float64
+	if mk != nil {
+		z = estimatePartitionFunction(ct, mk, learner.Data())
+	}
 
 	fmt.Printf("Partition function: %.8f\n", z)
 }
 
-func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf,
-	ds filehandler.DataHandler) float64 {
+func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) float64 {
 	var z, p, phi float64
-	for _, m := range ds.Data() {
+	for _, m := range data {
 		p = ct.ProbOfEvidence(m)
 		if p != 0 {
 			phi = mk.UnnormalizedMesure(m)
@@ -136,7 +140,7 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf,
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
 		}
 	}
-	return z / float64(len(ds.Data()))
+	return z / float64(len(data))
 }
 
 func initializeLearner() {
@@ -170,7 +174,7 @@ func learnParameters(ct *cliquetree.CliqueTree) float64 {
 
 	// TODO: remove this check
 	if check {
-		learner.CheckTree(ct)
+		CheckTree(ct)
 	}
 	return ll
 }
@@ -188,4 +192,129 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 		}
 	}
 	return ct, ll
+}
+
+// =============================================================================
+
+// SaveMarginals saves all marginals of a cliquetree
+func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	m := ct.Marginals()
+
+	var keys []int
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for _, k := range keys {
+		fmt.Fprintf(f, "{%d} %v\n", k, m[k])
+	}
+	fmt.Fprintf(f, "LL=%v\n", ll)
+}
+
+// CheckTree ..
+func CheckTree(ct *cliquetree.CliqueTree) {
+	ct.UpDownCalibration()
+	// check if they are uniform
+	checkUniform(ct)
+	// check if after summing out the hidden variables they are the same as initial count
+	checkWithInitialCount(ct)
+	// check if tre have any zero factor
+	checkCliqueTree(ct)
+}
+
+func checkUniform(ct *cliquetree.CliqueTree) {
+	fmt.Println("checking uniform...")
+	uniform := learn.CreateEmpiricPotentials(learner.Counter(),
+		ct.Cliques(), learner.Cardinality(), learner.TotVar()-h, learn.EmpiricUniform)
+	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
+	calibrated := make([]*factor.Factor, ct.Size())
+	for i := range calibrated {
+		// calibrated[i] = ct.Calibrated(i)
+		calibrated[i] = ct.InitialPotential(i)
+	}
+	diff, i, j, err := factor.MaxDifference(uniform, calibrated)
+	utils.ErrCheck(err, "")
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, calibrated[i].Values()[j])
+	fmt.Printf(" maxdiff = %v\n", diff)
+	if diff > 1e-6 {
+		fmt.Println(" >>> Not uniform")
+	}
+}
+
+func checkWithInitialCount(ct *cliquetree.CliqueTree) {
+	fmt.Println("checking count...")
+	initialCount := make([]*factor.Factor, ct.Size())
+	sumOutHidden := make([]*factor.Factor, ct.Size())
+	for i := range initialCount {
+		var observed, hidden []int
+		if h > 0 {
+			observed, hidden = utils.SliceSplit(ct.Clique(i), learner.TotVar()-h)
+		} else {
+			observed = ct.Clique(i)
+		}
+		if len(observed) > 0 {
+			values := utils.SliceItoF64(learner.Counter().CountAssignments(observed))
+			// sumOutHidden[i] = ct.InitialPotential(i)
+			sumOutHidden[i] = ct.Calibrated(i)
+			if len(hidden) > 0 {
+				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
+			}
+			initialCount[i] = factor.NewFactorValues(observed, learner.Cardinality(), values)
+			initialCount[i].Normalize()
+			// sumOutHidden[i].Normalize()
+		}
+	}
+
+	if initialCount[0] != nil {
+		fmt.Printf("IniCount param: %v (%v)=0\n", initialCount[0].Values()[0], initialCount[0].Variables())
+		fmt.Printf("sumOut param: %v (%v)=0\n", sumOutHidden[0].Values()[0], sumOutHidden[0].Variables())
+	}
+	diff, i, j, err := factor.MaxDifference(initialCount, sumOutHidden)
+	utils.ErrCheck(err, "")
+	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, initialCount[i].Values()[j], i, j, sumOutHidden[i].Values()[j])
+	fmt.Printf(" maxdiff = %v\n", diff)
+	if diff > 1e-6 {
+		fmt.Println(" >> Different from initial counting")
+	}
+}
+
+// checkCliqueTree ..
+func checkCliqueTree(ct *cliquetree.CliqueTree) {
+	printTree := func(f *factor.Factor) {
+		fmt.Printf("(%v)\n", f.Variables())
+		fmt.Println("tree:")
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("node %v: neighb: %v clique: %v septset: %v parent: %v\n",
+				i, ct.Neighbours(i), ct.Clique(i), ct.SepSet(i), ct.Parents()[i])
+		}
+		fmt.Println("original potentials:")
+		for i := 0; i < ct.Size(); i++ {
+			fmt.Printf("node %v:\n var: %v\n values: %v\n",
+				i, ct.InitialPotential(i).Variables(), ct.InitialPotential(i).Values())
+		}
+	}
+
+	for i := range ct.Potentials() {
+		f := ct.InitialPotential(i)
+		sum := 0.0
+		for _, v := range f.Values() {
+			sum += v
+		}
+		if utils.FuzzyEqual(sum, 0) {
+			printTree(f)
+			panic("original zero factor")
+		}
+		f = ct.Calibrated(i)
+		sum = 0.0
+		for _, v := range f.Values() {
+			sum += v
+		}
+		if utils.FuzzyEqual(sum, 0) {
+			printTree(f)
+			panic("original zero factor")
+		}
+	}
 }

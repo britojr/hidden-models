@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"sort"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting"
@@ -41,14 +40,14 @@ type Learner struct {
 	alphas     []float64 // parameters for dirichlet distribution
 }
 
-// New ..
+// New creates new learner object with parameters
 func New(k, hidden, hiddencard int, alpha ...float64) *Learner {
 	l := new(Learner)
 	l.k = k
 	l.hidden = hidden
 	l.hiddencard = hiddencard
 	if len(alpha) > 0 {
-		l.alphas = make([]float64, int(math.Pow(2, float64(l.k+1))))
+		l.alphas = make([]float64, int(math.Pow(float64(hiddencard), float64(l.k+1))))
 		for i := range l.alphas {
 			l.alphas[i] = alpha[0]
 		}
@@ -77,9 +76,14 @@ func (l *Learner) Counter() counting.Counter {
 	return l.counter
 }
 
-// Dataset returns dataset
-func (l *Learner) Dataset() filehandler.DataHandler {
-	return l.dataset
+// Data returns dataset matrix
+func (l *Learner) Data() [][]int {
+	return l.dataset.Data()
+}
+
+// Cardinality returns cardinality slice
+func (l *Learner) Cardinality() []int {
+	return l.cardin
 }
 
 // TotVar returns total number of variables
@@ -107,7 +111,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 	typePot, iterations int, epslon float64) float64 {
 
 	l.InitializePotentials(ct, typePot)
-	em.ExpectationMaximization(ct, l.dataset, epslon)
+	em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
 	bestll := l.CalculateLikelihood(ct)
 	if iterations > 1 {
 		fmt.Printf("curr LL %v\n", bestll)
@@ -115,7 +119,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 		copy(pot, ct.Potentials())
 		for i := 1; i < iterations; i++ {
 			l.InitializePotentials(ct, typePot)
-			em.ExpectationMaximization(ct, l.dataset, epslon)
+			em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
 			currll := l.CalculateLikelihood(ct)
 			fmt.Printf("curr LL %v\n", currll)
 			if currll > bestll {
@@ -131,7 +135,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 // CalculateLikelihood calculates the likelihood of a clique tree
 func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	ct.UpDownCalibration()
-	return likelihood.Loglikelihood(ct, l.dataset)
+	return likelihood.Loglikelihood(ct, l.dataset.Data())
 }
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
@@ -239,136 +243,4 @@ func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 	utils.ErrCheck(err, "")
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
-}
-
-// =============================================================================
-// TODO: move this out
-
-// CheckTree ..
-func (l *Learner) CheckTree(ct *cliquetree.CliqueTree) {
-	ct.UpDownCalibration()
-	// check if they are uniform
-	l.checkUniform(ct)
-	// check if after summing out the hidden variables they are the same as initial count
-	l.checkWithInitialCount(ct)
-
-	checkCliqueTree(ct)
-}
-
-func (l *Learner) checkUniform(ct *cliquetree.CliqueTree) {
-	fmt.Println("checkUniform")
-	uniform := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, EmpiricUniform)
-	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
-	calibrated := make([]*factor.Factor, ct.Size())
-	for i := range calibrated {
-		calibrated[i] = ct.Calibrated(i)
-	}
-	diff, i, j, err := factor.MaxDifference(uniform, calibrated)
-	utils.ErrCheck(err, "")
-	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, ct.Calibrated(i).Values()[j])
-	if diff > 0 {
-		fmt.Printf(" > Not uniform: maxdiff = %v\n", diff)
-		if diff > 1e-6 {
-			fmt.Println(" !! Significant difference!")
-		}
-	} else {
-		fmt.Printf(" > Is uniform: maxdiff = %v\n", diff)
-	}
-}
-
-func (l *Learner) checkWithInitialCount(ct *cliquetree.CliqueTree) {
-	fmt.Println("checkWithInitialCount")
-	initialCount := make([]*factor.Factor, ct.Size())
-	sumOutHidden := make([]*factor.Factor, ct.Size())
-	for i := range initialCount {
-		var observed, hidden []int
-		if l.hidden > 0 {
-			observed, hidden = utils.SliceSplit(ct.Clique(i), l.n)
-		} else {
-			observed = ct.Clique(i)
-		}
-		if len(observed) > 0 {
-			values := utils.SliceItoF64(l.counter.CountAssignments(observed))
-			// sumOutHidden[i] = ct.InitialPotential(i)
-			sumOutHidden[i] = ct.Calibrated(i)
-			if len(hidden) > 0 {
-				sumOutHidden[i] = sumOutHidden[i].SumOut(hidden)
-			}
-			initialCount[i] = factor.NewFactorValues(observed, l.cardin, values)
-			initialCount[i].Normalize()
-			// sumOutHidden[i].Normalize()
-		}
-	}
-
-	if initialCount[0] != nil {
-		fmt.Printf("IniCount param: %v (%v)=0\n", initialCount[0].Values()[0], initialCount[0].Variables())
-		fmt.Printf("sumOut param: %v (%v)=0\n", sumOutHidden[0].Values()[0], sumOutHidden[0].Variables())
-	}
-	diff, i, j, err := factor.MaxDifference(initialCount, sumOutHidden)
-	utils.ErrCheck(err, "")
-	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, initialCount[i].Values()[j], i, j, sumOutHidden[i].Values()[j])
-	if diff > 0 {
-		fmt.Printf(" > Different from initial counting: maxdiff = %v\n", diff)
-		if diff > 1e-6 {
-			fmt.Println(" >> Significant difference!")
-		}
-	} else {
-		fmt.Printf(" > Exactly the initial counting: maxdiff = %v\n", diff)
-	}
-}
-
-// checkCliqueTree ..
-func checkCliqueTree(ct *cliquetree.CliqueTree) {
-	printTree := func(f *factor.Factor) {
-		fmt.Printf("(%v)\n", f.Variables())
-		fmt.Println("tree:")
-		for i := 0; i < ct.Size(); i++ {
-			fmt.Printf("node %v: neighb: %v clique: %v septset: %v parent: %v\n",
-				i, ct.Neighbours(i), ct.Clique(i), ct.SepSet(i), ct.Parents()[i])
-		}
-		fmt.Println("original potentials:")
-		for i := 0; i < ct.Size(); i++ {
-			fmt.Printf("node %v:\n var: %v\n values: %v\n",
-				i, ct.InitialPotential(i).Variables(), ct.InitialPotential(i).Values())
-		}
-	}
-
-	for i := range ct.Potentials() {
-		f := ct.InitialPotential(i)
-		sum := 0.0
-		for _, v := range f.Values() {
-			sum += v
-		}
-		if utils.FuzzyEqual(sum, 0) {
-			printTree(f)
-			panic("original zero factor")
-		}
-		f = ct.Calibrated(i)
-		sum = 0.0
-		for _, v := range f.Values() {
-			sum += v
-		}
-		if utils.FuzzyEqual(sum, 0) {
-			printTree(f)
-			panic("original zero factor")
-		}
-	}
-}
-
-// SaveMarginals saves all marginals of a cliquetree
-func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
-	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
-	defer f.Close()
-	m := ct.Marginals()
-
-	var keys []int
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	for _, k := range keys {
-		fmt.Fprintf(f, "{%d} %v\n", k, m[k])
-	}
-	fmt.Fprintf(f, "LL=%v\n", ll)
 }
