@@ -79,7 +79,7 @@ func TestCreateUniformPortentials(t *testing.T) {
 		cardin:  []int{2, 2, 2},
 		numobs:  2,
 		counter: fakeCounter,
-		result:  [][]float64{{.20, .30, .20, .30}, {.25 / .50, .30 / .50, .25 / .50, .20 / .50}},
+		result:  [][]float64{{.20, .30, .20, .30}, {.25, .25, .25, .25}},
 	}, {
 		cliques: [][]int{{0, 1}, {1, 2}},
 		cardin:  []int{2, 2, 2},
@@ -91,7 +91,7 @@ func TestCreateUniformPortentials(t *testing.T) {
 		cardin:  []int{2, 2, 2},
 		numobs:  1,
 		counter: fakeCounter,
-		result:  [][]float64{{.20 / .40, .30 / .60, .20 / .40, .30 / .60}, {.25, .25, .25, .25}},
+		result:  [][]float64{{.20, .30, .20, .30}, {.25, .25, .25, .25}},
 	}}
 	for _, tt := range cases {
 		faclist := CreateEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, EmpiricUniform)
@@ -139,3 +139,59 @@ func TestNew(t *testing.T) {
 		}
 	}
 }
+
+func TestLatentFactorUniform(t *testing.T) {
+	cases := []struct {
+		varlist, cardin []int
+		obs, typePot    int
+		alphas          []float64
+		result          []float64
+	}{{
+		[]int{0, 1}, []int{2, 2}, 0, EmpiricUniform, nil,
+		[]float64{.25, .25, .25, .25},
+	}, {
+		[]int{0, 1}, []int{2, 2}, 1, EmpiricUniform, nil,
+		[]float64{.5, .5, .5, .5},
+	}, {
+		[]int{0, 1}, []int{2, 2}, 2, EmpiricUniform, nil,
+		[]float64{1, 1, 1, 1},
+	}, {
+		[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricUniform, nil,
+		[]float64{.25, .25, .25, .25, .25, .25, .25, .25},
+	}, {
+		[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricUniform, nil,
+		[]float64{.5, .5, .5, .5, .5, .5, .5, .5},
+	}}
+	for _, tt := range cases {
+		got := latentFactor(tt.varlist, tt.cardin, tt.obs, tt.typePot, tt.alphas)
+		if !reflect.DeepEqual(tt.result, got.Values()) {
+			t.Errorf("Wrong values, want %v, got %v", tt.result, got.Values())
+		}
+	}
+}
+
+// cases := []struct {
+// 	cliques [][]int
+// 	cardin  []int
+// 	numobs  int
+// 	counter FakeCounter
+// 	result  [][]float64
+// }{{
+// 	cliques: [][]int{{0, 1}, {1, 2}},
+// 	cardin:  []int{2, 2, 2},
+// 	numobs:  2,
+// 	counter: fakeCounter,
+// 	result:  [][]float64{{.20, .30, .20, .30}, {.25 / .50, .30 / .50, .25 / .50, .20 / .50}},
+// }, {
+// 	cliques: [][]int{{0, 1}, {1, 2}},
+// 	cardin:  []int{2, 2, 2},
+// 	numobs:  3,
+// 	counter: fakeCounter,
+// 	result:  [][]float64{{.20, .30, .20, .30}, {.25, .30, .25, .20}},
+// }, {
+// 	cliques: [][]int{{0, 1}, {1, 2}},
+// 	cardin:  []int{2, 2, 2},
+// 	numobs:  1,
+// 	counter: fakeCounter,
+// 	result:  [][]float64{{.20 / .40, .30 / .60, .20 / .40, .30 / .60}, {.25, .25, .25, .25}},
+// }}
