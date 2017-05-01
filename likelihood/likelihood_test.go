@@ -29,14 +29,6 @@ func (f FakeCounter) NumTuples() int {
 	return f.numtuples
 }
 
-type FakeDataHandler struct {
-	data [][]int
-}
-
-func (f FakeDataHandler) Data() [][]int {
-	return f.data
-}
-
 func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {
 	c, err := cliquetree.NewStructure(cliques, adj)
 	if err != nil {
@@ -89,8 +81,8 @@ func TestLoglikelihood(t *testing.T) {
 		cardin       []int
 		values       [][]float64
 		result       []struct {
-			ds FakeDataHandler
-			ll float64
+			data [][]int
+			ll   float64
 		}
 	}{{
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
@@ -104,16 +96,14 @@ func TestLoglikelihood(t *testing.T) {
 			{.99, .30, .01, .70},
 		},
 		result: []struct {
-			ds FakeDataHandler
-			ll float64
+			data [][]int
+			ll   float64
 		}{{
-			ds: FakeDataHandler{
-				data: [][]int{
-					{0, 1, 1, 0, 1},
-					{0, 1, 1, 0, 1},
-					{1, 1, 1, 1, 1},
-					{0, 1, 1, 0, 1},
-				},
+			data: [][]int{
+				{0, 1, 1, 0, 1},
+				{0, 1, 1, 0, 1},
+				{1, 1, 1, 1, 1},
+				{0, 1, 1, 0, 1},
 			},
 			ll: -43.97392118,
 		}},
@@ -125,7 +115,7 @@ func TestLoglikelihood(t *testing.T) {
 		}
 		c.UpDownCalibration()
 		for i := range tt.result {
-			got := Loglikelihood(c, tt.result[i].ds)
+			got := Loglikelihood(c, tt.result[i].data)
 			if !utils.FuzzyEqual(tt.result[i].ll, got, 1e-7) {
 				t.Errorf("wrong ll2, want %v, got %v", tt.result[i].ll, got)
 			}

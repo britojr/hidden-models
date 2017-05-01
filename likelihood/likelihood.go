@@ -6,12 +6,11 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/counting"
-	"github.com/britojr/kbn/filehandler"
 )
 
 // Loglikelihood calculates the log-likelihood line by line
-func Loglikelihood(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) (ll float64) {
-	for _, m := range ds.Data() {
+func Loglikelihood(ct *cliquetree.CliqueTree, data [][]int) (ll float64) {
+	for _, m := range data {
 		v := ct.ProbOfEvidence(m)
 		if v != 0 {
 			ll += math.Log(v)

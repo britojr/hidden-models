@@ -7,19 +7,18 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/likelihood"
 )
 
 // ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandler, epslon float64) {
+func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64) {
 	diff := epslon * 10
 	var llnew, llant float64
-	llant = likelihood.Loglikelihood(ct, ds)
+	llant = likelihood.Loglikelihood(ct, data)
 	i := 0
 	for ; diff >= epslon; i++ {
 		fmt.Printf(".")
-		newpot := expectationStep(ct, ds)
+		newpot := expectationStep(ct, data)
 		for j := range newpot {
 			if ct.Parents()[j] >= 0 {
 				newpot[j] = newpot[j].Division(newpot[j].SumOut(ct.Varin(j)))
@@ -28,7 +27,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 			}
 		}
 		ct.SetAllPotentials(newpot)
-		llnew = likelihood.Loglikelihood(ct, ds)
+		llnew = likelihood.Loglikelihood(ct, data)
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
@@ -36,7 +35,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, ds filehandler.DataHandl
 }
 
 // expectationStep calculates the expected count of a list of observations and a cliquetree
-func expectationStep(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) []*factor.Factor {
+func expectationStep(ct *cliquetree.CliqueTree, data [][]int) []*factor.Factor {
 	// initialize counter
 	count := make([]*factor.Factor, ct.Size())
 	for i := range count {
@@ -45,7 +44,7 @@ func expectationStep(ct *cliquetree.CliqueTree, ds filehandler.DataHandler) []*f
 
 	// calculate probability of every instance
 	ct.StorePotentials()
-	for _, m := range ds.Data() {
+	for _, m := range data {
 		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
 		for i := range count {

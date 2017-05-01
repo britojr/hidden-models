@@ -8,14 +8,6 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-type FakeDataHandler struct {
-	data [][]int
-}
-
-func (f FakeDataHandler) Data() [][]int {
-	return f.data
-}
-
 func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {
 	c, err := cliquetree.NewStructure(cliques, adj)
 	if err != nil {
@@ -38,7 +30,7 @@ func TestExpectationStep(t *testing.T) {
 		cardin       []int
 		values       [][]float64
 		result       []struct {
-			ds     FakeDataHandler
+			data   [][]int
 			values [][]float64
 		}
 	}{{
@@ -53,16 +45,14 @@ func TestExpectationStep(t *testing.T) {
 			{.99, .30, .01, .70},
 		},
 		result: []struct {
-			ds     FakeDataHandler
+			data   [][]int
 			values [][]float64
 		}{{
-			ds: FakeDataHandler{
-				data: [][]int{
-					{0, 1, 1, 0, 1},
-					{0, 1, 1, 0, 1},
-					{1, 1, 1, 1, 1},
-					{0, 1, 1, 0, 1},
-				},
+			data: [][]int{
+				{0, 1, 1, 0, 1},
+				{0, 1, 1, 0, 1},
+				{1, 1, 1, 1, 1},
+				{0, 1, 1, 0, 1},
 			},
 			values: [][]float64{
 				{3, 1},
@@ -72,13 +62,11 @@ func TestExpectationStep(t *testing.T) {
 				{0, 0, 0, 4},
 			},
 		}, {
-			ds: FakeDataHandler{
-				data: [][]int{
-					{0, 1, -1, 0, 1},
-					{0, 1, -1, 0, 1},
-					{1, 1, -1, 1, 1},
-					{0, 1, -1, 0, 1},
-				},
+			data: [][]int{
+				{0, 1, -1, 0, 1},
+				{0, 1, -1, 0, 1},
+				{1, 1, -1, 1, 1},
+				{0, 1, -1, 0, 1},
 			},
 			values: [][]float64{
 				{3, 1},
@@ -95,7 +83,7 @@ func TestExpectationStep(t *testing.T) {
 			t.Errorf(err.Error())
 		}
 		for _, r := range tt.result {
-			got := expectationStep(c, r.ds)
+			got := expectationStep(c, r.data)
 			if len(got) != len(r.values) {
 				t.Errorf("wrong number of factors, want %v, got %v", len(got), len(r.values))
 			}
@@ -116,7 +104,7 @@ func TestExpectationMaximization(t *testing.T) {
 		cliques, adj [][]int
 		cardin       []int
 		values       [][]float64
-		ds           FakeDataHandler
+		data         [][]int
 		result       [][]float64
 	}{{
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
@@ -129,13 +117,11 @@ func TestExpectationMaximization(t *testing.T) {
 			{.95, .10, .05, .90},
 			{.99, .30, .01, .70},
 		},
-		ds: FakeDataHandler{
-			data: [][]int{
-				{0, 1, 1, 0, 1},
-				{0, 1, 1, 0, 1},
-				{1, 1, 1, 1, 1},
-				{0, 1, 1, 0, 1},
-			},
+		data: [][]int{
+			{0, 1, 1, 0, 1},
+			{0, 1, 1, 0, 1},
+			{1, 1, 1, 1, 1},
+			{0, 1, 1, 0, 1},
 		},
 		result: [][]float64{
 			{.75, .25},
@@ -150,7 +136,7 @@ func TestExpectationMaximization(t *testing.T) {
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-		ExpectationMaximization(c, tt.ds, 1e-8)
+		ExpectationMaximization(c, tt.data, 1e-8)
 		c.UpDownCalibration()
 		for i := range tt.result {
 			for j := range tt.result[i] {
