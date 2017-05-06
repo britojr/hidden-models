@@ -30,13 +30,11 @@ func LoadFromUAI(r io.Reader) *Mrf {
 		varlist := utils.SliceAtoi(strings.Fields(scanner.Text()))
 		potentials[i] = factor.NewFactor(varlist[1:], cardin)
 	}
+	scanner.Scan()
 	for i := range potentials {
 		scanner.Scan()
-		for j := range potentials[i].Values() {
-			scanner.Scan()
-			potentials[i].Values()[j] = utils.AtoF64(scanner.Text())
-		}
 		scanner.Scan()
+		potentials[i].SetValues(utils.SliceAtoF64(strings.Fields(scanner.Text())))
 	}
 	return &Mrf{cardin, potentials}
 }
