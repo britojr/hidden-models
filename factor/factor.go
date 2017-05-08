@@ -8,8 +8,6 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/utils"
-	"github.com/dtromb/gogsl/randist"
-	"github.com/dtromb/gogsl/rng"
 )
 
 // Factor ..
@@ -109,12 +107,7 @@ func (f *Factor) SetRandom() *Factor {
 
 // SetDirichlet sets the factor with normalized Dirichlet distribution
 func (f *Factor) SetDirichlet(alpha []float64) *Factor {
-	rand.Seed(time.Now().UTC().UnixNano())
-	rng.EnvSetup()
-	r := rng.RngAlloc(rng.DefaultRngType())
-	rng.Set(r, rand.Int())
-
-	randist.Dirichlet(r, len(alpha), alpha, f.values)
+	utils.Dirichlet(alpha, f.values)
 	return f
 }
 
