@@ -183,40 +183,37 @@ func CreateEmpiricPotentials(counter counting.Counter, cliques [][]int, cardin [
 			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {
 				// g = P(hidden/observed)
-				g := latentFactor(cliques[i], cardin, len(observed), typePot, alphas)
+				g := factor.NewFactor(cliques[i], cardin)
+				lenobs := len(factors[i].Values())
+				g.SetValues(proportionalValues(lenobs, len(g.Values())/lenobs, typePot, alphas))
 				// P(observed, hidden) = P(observed) * P(hidden/observed)
 				factors[i] = factors[i].Product(g)
 			}
 		} else {
-			factors[i] = latentFactor(cliques[i], cardin, len(observed), typePot, alphas)
+			factors[i] = factor.NewFactor(cliques[i], cardin)
+			factors[i].SetValues(proportionalValues(1, len(factors[i].Values()), typePot, alphas))
 		}
 	}
 	return factors
 }
 
-func latentFactor(varlist, cardin []int, obs, typePot int, alphas []float64) *factor.Factor {
-	g := factor.NewFactor(varlist, cardin)
-	switch typePot {
-	case EmpiricDirichlet:
-		g.SetDirichlet(alphas[:len(g.Values())])
-	case EmpiricRandom:
-		g.SetRandom()
-	case EmpiricUniform:
-		g.SetUniform()
+func proportionalValues(lenobs, lenhidden, typePot int, alphas []float64) []float64 {
+	values := make([]float64, lenobs*lenhidden)
+	aux := make([]float64, lenhidden)
+	for i := 0; i < lenobs; i++ {
+		switch typePot {
+		case EmpiricDirichlet:
+			utils.Dirichlet(alphas[:lenhidden], aux)
+		case EmpiricRandom:
+			utils.Random(aux)
+		case EmpiricUniform:
+			utils.Uniform(aux)
+		}
+		for j := 0; j < lenhidden; j++ {
+			values[i+(j*lenobs)] = aux[j]
+		}
 	}
-	// conditional normalization
-	obslen := 1
-	for i := 0; i < obs; i++ {
-		obslen *= cardin[varlist[i]]
-	}
-	norm := make([]float64, obslen)
-	for i, v := range g.Values() {
-		norm[i%obslen] += v
-	}
-	for i, v := range g.Values() {
-		g.Values()[i] = v / norm[i%obslen]
-	}
-	return g
+	return values
 }
 
 // CreateRandomPotentials creates a list of clique potentials with random values

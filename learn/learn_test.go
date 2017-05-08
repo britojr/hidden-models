@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
+	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/utils"
 )
 
@@ -140,98 +141,41 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestLatentFactorUniform(t *testing.T) {
+func TestLatentFactor2(t *testing.T) {
 	cases := []struct {
-		varlist, cardin []int
-		obs, typePot    int
-		alphas          []float64
-		result          []float64
-	}{{
-		[]int{0, 1}, []int{2, 2}, 0, EmpiricUniform, nil,
-		[]float64{.25, .25, .25, .25},
-	}, {
-		[]int{0, 1}, []int{2, 2}, 1, EmpiricUniform, nil,
-		[]float64{.5, .5, .5, .5},
-	}, {
-		[]int{0, 1}, []int{2, 2}, 2, EmpiricUniform, nil,
-		[]float64{1, 1, 1, 1},
-	}, {
-		[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricUniform, nil,
-		[]float64{.25, .25, .25, .25, .25, .25, .25, .25},
-	}, {
-		[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricUniform, nil,
-		[]float64{.5, .5, .5, .5, .5, .5, .5, .5},
-	}}
-	for _, tt := range cases {
-		got := latentFactor(tt.varlist, tt.cardin, tt.obs, tt.typePot, tt.alphas)
-		if !reflect.DeepEqual(tt.result, got.Values()) {
-			t.Errorf("Wrong values, want %v, got %v", tt.result, got.Values())
-		}
-	}
-}
-
-func TestLatentFactor(t *testing.T) {
-	cases := []struct {
-		varlist, cardin []int
-		obs, typePot    int
-		alphas          []float64
+		varlist, hidden, cardin    []int
+		lenobs, lenhidden, typePot int
+		alphas                     []float64
 	}{
-		{[]int{0, 1}, []int{2, 2}, 0, EmpiricUniform, nil},
-		{[]int{0, 1}, []int{2, 2}, 1, EmpiricUniform, nil},
-		{[]int{0, 1}, []int{2, 2}, 2, EmpiricUniform, nil},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricUniform, nil},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricUniform, nil},
-		{[]int{0, 1}, []int{2, 2}, 0, EmpiricRandom, nil},
-		{[]int{0, 1}, []int{2, 2}, 1, EmpiricRandom, nil},
-		{[]int{0, 1}, []int{2, 2}, 2, EmpiricRandom, nil},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricRandom, nil},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricRandom, nil},
-		{[]int{0, 1}, []int{2, 2}, 0, EmpiricDirichlet, []float64{1.5, 1.5, 1.5, 1.5}},
-		{[]int{0, 1}, []int{2, 2}, 1, EmpiricDirichlet, []float64{0.3, 0.3, 0.3, 0.3}},
-		{[]int{0, 1}, []int{2, 2}, 2, EmpiricDirichlet, []float64{0.5, 0.5, 0.5, 0.5}},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricDirichlet, []float64{0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3}},
-		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricDirichlet, []float64{1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8}},
+		{[]int{0, 1}, []int{0, 1}, []int{2, 2}, 1, 4, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{1}, []int{2, 2}, 2, 2, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{}, []int{2, 2}, 4, 1, EmpiricUniform, nil},
+		{[]int{0, 1, 2}, []int{1, 2}, []int{2, 2, 2}, 2, 4, EmpiricUniform, nil},
+		{[]int{0, 1, 2}, []int{2}, []int{2, 2, 2}, 4, 2, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{0, 1}, []int{2, 2}, 1, 4, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{1}, []int{2, 2}, 2, 2, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{}, []int{2, 2}, 4, 1, EmpiricRandom, nil},
+		{[]int{0, 1, 2}, []int{1, 2}, []int{2, 2, 2}, 2, 4, EmpiricRandom, nil},
+		{[]int{0, 1, 2}, []int{2}, []int{2, 2, 2}, 4, 2, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{0, 1}, []int{2, 2}, 1, 4, EmpiricDirichlet, []float64{1.5, 1.5, 1.5, 1.5}},
+		{[]int{0, 1}, []int{1}, []int{2, 2}, 2, 2, EmpiricDirichlet, []float64{0.3, 0.3, 0.3, 0.3}},
+		{[]int{0, 1}, []int{}, []int{2, 2}, 4, 1, EmpiricDirichlet, []float64{0.5, 0.5, 0.5, 0.5}},
+		{[]int{0, 1, 2}, []int{1, 2}, []int{2, 2, 2}, 2, 4, EmpiricDirichlet,
+			[]float64{0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3}},
+		{[]int{0, 1, 2}, []int{2}, []int{2, 2, 2}, 4, 2, EmpiricDirichlet,
+			[]float64{1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8}},
 	}
 	for _, tt := range cases {
-		observed, hidden := utils.SliceSplit(tt.varlist, tt.obs)
-		c := 1
-		for _, v := range observed {
-			c *= tt.cardin[v]
+		values := proportionalValues(tt.lenobs, tt.lenhidden, tt.typePot, tt.alphas)
+		g := factor.NewFactorValues(tt.varlist, tt.cardin, values).SumOut(tt.hidden)
+		if tt.lenobs != len(g.Values()) {
+			t.Errorf("wrong size, want %v got %v", tt.lenobs, len(g.Values()))
 		}
-		got := latentFactor(tt.varlist, tt.cardin, tt.obs, tt.typePot, tt.alphas).SumOut(hidden)
-		if c != len(got.Values()) {
-			t.Errorf("wrong size, want %v got %v", c, len(got.Values()))
-		}
-		for _, v := range got.Values() {
+		for _, v := range g.Values() {
 			if !utils.FuzzyEqual(v, float64(1)) {
-				t.Errorf("wrong value, want 1.0, got %v", v)
+				t.Errorf("wrong value, want 1.0, got %v (typePot %v) val=%v", v, tt.typePot, g.Values())
+				break
 			}
 		}
 	}
 }
-
-// cases := []struct {
-// 	cliques [][]int
-// 	cardin  []int
-// 	numobs  int
-// 	counter FakeCounter
-// 	result  [][]float64
-// }{{
-// 	cliques: [][]int{{0, 1}, {1, 2}},
-// 	cardin:  []int{2, 2, 2},
-// 	numobs:  2,
-// 	counter: fakeCounter,
-// 	result:  [][]float64{{.20, .30, .20, .30}, {.25 / .50, .30 / .50, .25 / .50, .20 / .50}},
-// }, {
-// 	cliques: [][]int{{0, 1}, {1, 2}},
-// 	cardin:  []int{2, 2, 2},
-// 	numobs:  3,
-// 	counter: fakeCounter,
-// 	result:  [][]float64{{.20, .30, .20, .30}, {.25, .30, .25, .20}},
-// }, {
-// 	cliques: [][]int{{0, 1}, {1, 2}},
-// 	cardin:  []int{2, 2, 2},
-// 	numobs:  1,
-// 	counter: fakeCounter,
-// 	result:  [][]float64{{.20 / .40, .30 / .60, .20 / .40, .30 / .60}, {.25, .25, .25, .25}},
-// }}
