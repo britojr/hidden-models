@@ -204,7 +204,6 @@ func latentFactor(varlist, cardin []int, obs, typePot int, alphas []float64) *fa
 	case EmpiricUniform:
 		g.SetUniform()
 	}
-	// TODO: check this / add tests
 	// conditional normalization
 	obslen := 1
 	for i := 0; i < obs; i++ {

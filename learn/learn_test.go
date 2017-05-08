@@ -170,6 +170,46 @@ func TestLatentFactorUniform(t *testing.T) {
 	}
 }
 
+func TestLatentFactor(t *testing.T) {
+	cases := []struct {
+		varlist, cardin []int
+		obs, typePot    int
+		alphas          []float64
+	}{
+		{[]int{0, 1}, []int{2, 2}, 0, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{2, 2}, 1, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{2, 2}, 2, EmpiricUniform, nil},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricUniform, nil},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricUniform, nil},
+		{[]int{0, 1}, []int{2, 2}, 0, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{2, 2}, 1, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{2, 2}, 2, EmpiricRandom, nil},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricRandom, nil},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricRandom, nil},
+		{[]int{0, 1}, []int{2, 2}, 0, EmpiricDirichlet, []float64{1.5, 1.5, 1.5, 1.5}},
+		{[]int{0, 1}, []int{2, 2}, 1, EmpiricDirichlet, []float64{0.3, 0.3, 0.3, 0.3}},
+		{[]int{0, 1}, []int{2, 2}, 2, EmpiricDirichlet, []float64{0.5, 0.5, 0.5, 0.5}},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 1, EmpiricDirichlet, []float64{0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3}},
+		{[]int{0, 1, 2}, []int{2, 2, 2}, 2, EmpiricDirichlet, []float64{1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8, 1.8}},
+	}
+	for _, tt := range cases {
+		observed, hidden := utils.SliceSplit(tt.varlist, tt.obs)
+		c := 1
+		for _, v := range observed {
+			c *= tt.cardin[v]
+		}
+		got := latentFactor(tt.varlist, tt.cardin, tt.obs, tt.typePot, tt.alphas).SumOut(hidden)
+		if c != len(got.Values()) {
+			t.Errorf("wrong size, want %v got %v", c, len(got.Values()))
+		}
+		for _, v := range got.Values() {
+			if !utils.FuzzyEqual(v, float64(1)) {
+				t.Errorf("wrong value, want 1.0, got %v", v)
+			}
+		}
+	}
+}
+
 // cases := []struct {
 // 	cliques [][]int
 // 	cardin  []int
