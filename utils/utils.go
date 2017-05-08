@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 	"strconv"
+	"time"
 
+	"github.com/dtromb/gogsl/randist"
+	"github.com/dtromb/gogsl/rng"
 	"github.com/willf/bitset"
 )
 
@@ -30,6 +34,31 @@ func ErrCheck(err error, message string) {
 		log.Printf("%v: err(%v)\n", message, err)
 		panic(err)
 	}
+}
+
+// Dirichlet sets values as a Dirichlet distribution
+func Dirichlet(alpha, values []float64) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	rng.EnvSetup()
+	r := rng.RngAlloc(rng.DefaultRngType())
+	rng.Set(r, rand.Int())
+	randist.Dirichlet(r, len(alpha), alpha, values)
+}
+
+// Uniform sets values uniformly
+func Uniform(values []float64) {
+	for i := range values {
+		values[i] = 1.0 / float64(len(values))
+	}
+}
+
+// Random sets random values
+func Random(values []float64) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range values {
+		values[i] = rand.Float64()
+	}
+	NormalizeSlice(values)
 }
 
 // Atoi converst string to int

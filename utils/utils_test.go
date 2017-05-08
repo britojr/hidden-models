@@ -28,6 +28,42 @@ func TestFuzzyEqual(t *testing.T) {
 	}
 }
 
+func TestDirichlet(t *testing.T) {
+	cases := []struct {
+		alphas []float64
+	}{
+		{[]float64{3.2, 3.2, 3.2, 3.2}},
+		{[]float64{0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1}},
+		{[]float64{0.01, 0.01}},
+		{[]float64{5}},
+	}
+	for _, tt := range cases {
+		values := make([]float64, len(tt.alphas))
+		Dirichlet(tt.alphas, values)
+		if len(tt.alphas) != len(values) {
+			t.Errorf("wrong size, want %v, got %v", len(tt.alphas), len(values))
+		}
+		if len(tt.alphas) != 0 && !FuzzyEqual(1, SliceSumFloat64(values)) {
+			t.Errorf("not normalized %v", values)
+		}
+	}
+
+	// test different outcomes
+	alphas := []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}
+	a, b := make([]float64, len(alphas)), make([]float64, len(alphas))
+	Dirichlet(alphas, a)
+	Dirichlet(alphas, b)
+	count := 0
+	for i := range alphas {
+		if FuzzyEqual(a[i], b[i]) {
+			count++
+		}
+	}
+	if count == len(alphas) {
+		t.Errorf("Sampled the same distribution:\n%v\n%v", a, b)
+	}
+}
+
 var testSliceSplit = []struct {
 	slice []int
 	n     int
