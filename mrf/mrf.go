@@ -2,6 +2,7 @@ package mrf
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
@@ -35,6 +36,7 @@ func LoadFromUAI(r io.Reader) *Mrf {
 		scanner.Scan()
 		scanner.Scan()
 		potentials[i].SetValues(utils.SliceAtoF64(strings.Fields(scanner.Text())))
+		scanner.Scan()
 	}
 	return &Mrf{cardin, potentials}
 }
@@ -46,4 +48,12 @@ func (m *Mrf) UnnormalizedMesure(evid []int) float64 {
 		q *= f.GetEvidValue(evid)
 	}
 	return q
+}
+
+// Print prints all mrf values
+func (m *Mrf) Print() {
+	fmt.Println(m.cardin)
+	for _, f := range m.potentials {
+		fmt.Println(f.Variables(), f.Values())
+	}
 }

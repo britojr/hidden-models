@@ -30,9 +30,9 @@ func TestLoadFromUAI(t *testing.T) {
 			"2 0 1 \n" +
 			"2 1 2 \n" +
 			"\n4" +
-			fmt.Sprintf("\n%.6f %.6f %.6f %.6f ", .25, .35, .35, .05) +
+			fmt.Sprintf("\n%.6f %.6f %.6f %.6f \n", .25, .35, .35, .05) +
 			"\n4" +
-			fmt.Sprintf("\n%.6f %.6f %.6f %.6f ", .20, .22, .40, .18),
+			fmt.Sprintf("\n%.6f %.6f %.6f %.6f \n", .20, .22, .40, .18),
 	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		cardin:  []int{2, 2, 2, 2, 2},
@@ -53,16 +53,16 @@ func TestLoadFromUAI(t *testing.T) {
 			"2 2 3 \n" +
 			"2 2 4 \n" +
 			"\n2" +
-			fmt.Sprintf("\n%.6f %.6f ", .999, .001) +
+			fmt.Sprintf("\n%.6f %.6f \n", .999, .001) +
 			"\n2" +
-			fmt.Sprintf("\n%.6f %.6f ", .998, .002) +
+			fmt.Sprintf("\n%.6f %.6f \n", .998, .002) +
 			"\n8" +
-			fmt.Sprintf("\n%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f ",
+			fmt.Sprintf("\n%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f \n",
 				.999, .06, .71, .05, .001, .94, .29, .95) +
 			"\n4" +
-			fmt.Sprintf("\n%.6f %.6f %.6f %.6f ", .95, .10, .05, .90) +
+			fmt.Sprintf("\n%.6f %.6f %.6f %.6f \n", .95, .10, .05, .90) +
 			"\n4" +
-			fmt.Sprintf("\n%.6f %.6f %.6f %.6f ", .99, .30, .01, .70),
+			fmt.Sprintf("\n%.6f %.6f %.6f %.6f \n", .99, .30, .01, .70),
 	}}
 	for _, tt := range cases {
 		m := LoadFromUAI(strings.NewReader(tt.saved))
