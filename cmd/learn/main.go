@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"time"
@@ -23,6 +24,8 @@ const (
 	StructStep int = 1 << iota
 	//ParamStep indicates parameter learning step
 	ParamStep
+	//InferStep indicates inference step
+	InferStep
 )
 
 const (
@@ -67,13 +70,15 @@ func parseFlags() {
 		2- empiric + random,
 		3- empiric + uniform`)
 	flag.BoolVar(&check, "check", false, "check tree")
-	flag.Float64Var(&epslon, "e", 0, "minimum precision for EM convergence")
-	flag.Float64Var(&alpha, "a", 1, "alpha parameter for dirichlet distribution")
-	flag.StringVar(&ctfile, "s", "", "cliquetree file")
+	flag.Float64Var(&epslon, "e", 1e-2, "minimum precision for EM convergence")
+	flag.Float64Var(&alpha, "a", 0.5, "alpha parameter for dirichlet distribution")
+	flag.StringVar(&ctfile, "c", "", "cliquetree file")
+	flag.StringVar(&mkfile, "m", "", "MRF file")
 	flag.IntVar(&steps, "steps", StructStep|ParamStep,
 		`		step flags:
 		1- structure learning,
-		2- parameter learning`)
+		2- parameter learning,
+		3- inference step`)
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -82,7 +87,7 @@ func parseFlags() {
 		return
 	}
 	fmt.Printf("Args: k=%v, h=%v, initpot=%v\n", k, h, initpot)
-	fmt.Printf("eps=%v, numk=%v, iterEM=%v\n", epslon, numktrees, iterEM)
+	fmt.Printf("eps=%v, alph=%v, numk=%v, iterEM=%v\n", epslon, alpha, numktrees, iterEM)
 }
 
 func main() {
@@ -101,6 +106,10 @@ func main() {
 			f.Close()
 		}
 	} else {
+		if len(ctfile) == 0 {
+			fmt.Println("Inform a valid clique tree filename")
+			return
+		}
 		f, err := os.Open(ctfile)
 		utils.ErrCheck(err, fmt.Sprintf("Can't open file %v", ctfile))
 		ct = cliquetree.LoadFrom(f)
@@ -110,23 +119,34 @@ func main() {
 			fmt.Printf("Best LL: %v\n", ll)
 		}
 	}
+	if steps&InferStep > 0 {
+		if len(mkfile) == 0 {
+			fmt.Println("Please inform a valid MRF file")
+			return
+		}
+		inferenceStep(ct)
+	}
+}
 
+func inferenceStep(ct *cliquetree.CliqueTree) {
 	// read MRF
-	var mk *mrf.Mrf
-	if len(mkfile) > 0 {
-		f, err := os.Open(mkfile)
-		utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", mkfile))
-		mk = mrf.LoadFromUAI(f)
-		f.Close()
+	fmt.Printf("Loading MRF file: %v\n", mkfile)
+	f, err := os.Open(mkfile)
+	utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", mkfile))
+	mk := mrf.LoadFromUAI(f)
+	f.Close()
+	if mk == nil {
+		fmt.Printf("an error occurred while loading file %v\n", mkfile)
+		return
 	}
 
 	// inference step
-	var z float64
-	if mk != nil {
-		z = estimatePartitionFunction(ct, mk, learner.Data())
-	}
-
-	fmt.Printf("Partition function: %.8f\n", z)
+	fmt.Println("Calculating partition function...")
+	start := time.Now()
+	z := estimatePartitionFunction(ct, mk, learner.Data())
+	elapsed := time.Since(start)
+	fmt.Printf("Time: %v\n", elapsed)
+	fmt.Printf("Partition function (Log): %.8f\n", math.Log(z))
 }
 
 func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) float64 {
@@ -229,6 +249,12 @@ func checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checking uniform...")
 	uniform := learn.CreateEmpiricPotentials(learner.Counter(),
 		ct.Cliques(), learner.Cardinality(), learner.TotVar()-h, learn.EmpiricUniform)
+	// normalize uniform using tree direction
+	for i := range uniform {
+		if len(ct.Varin(i)) != 0 {
+			uniform[i] = uniform[i].Division(uniform[i].SumOut(ct.Varin(i)))
+		}
+	}
 	fmt.Printf("Uniform param: %v (%v)=0\n", uniform[0].Values()[0], uniform[0].Variables())
 	calibrated := make([]*factor.Factor, ct.Size())
 	for i := range calibrated {
