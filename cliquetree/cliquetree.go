@@ -505,7 +505,7 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 	// factor values
 	for i := 0; i < c.Size(); i++ {
 		for _, v := range c.InitialPotential(i).Values() {
-			fmt.Fprintf(w, "%.4f ", v)
+			fmt.Fprintf(w, "%.8f ", v)
 		}
 		fmt.Fprintln(w)
 	}

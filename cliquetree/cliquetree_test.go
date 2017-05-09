@@ -774,8 +774,8 @@ func TestSaveOn(t *testing.T) {
 			"0 \n" +
 			"\n" +
 			"2 2 2 \n" +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .25, .35, .35, .05) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .20, .22, .40, .18) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .25, .35, .35, .05) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .20, .22, .40, .18) +
 			"\n",
 	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
@@ -802,12 +802,12 @@ func TestSaveOn(t *testing.T) {
 			"2 \n" +
 			"\n" +
 			"2 2 2 2 2 \n" +
-			fmt.Sprintf("%.4f %.4f \n", .999, .001) +
-			fmt.Sprintf("%.4f %.4f \n", .998, .002) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f \n",
+			fmt.Sprintf("%.8f %.8f \n", .999, .001) +
+			fmt.Sprintf("%.8f %.8f \n", .998, .002) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f \n",
 				.999, .06, .71, .05, .001, .94, .29, .95) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .95, .10, .05, .90) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .99, .30, .01, .70) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .95, .10, .05, .90) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .99, .30, .01, .70) +
 			"\n",
 	}}
 	for _, tt := range cases {
@@ -863,8 +863,8 @@ func TestLoadFrom(t *testing.T) {
 			"0 \n" +
 			"\n" +
 			"2 2 2 \n" +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .25, .35, .35, .05) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .20, .22, .40, .18) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .25, .35, .35, .05) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .20, .22, .40, .18) +
 			"\n",
 	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
@@ -891,12 +891,12 @@ func TestLoadFrom(t *testing.T) {
 			"2 \n" +
 			"\n" +
 			"2 2 2 2 2 \n" +
-			fmt.Sprintf("%.4f %.4f \n", .999, .001) +
-			fmt.Sprintf("%.4f %.4f \n", .998, .002) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f \n",
+			fmt.Sprintf("%.8f %.8f \n", .999, .001) +
+			fmt.Sprintf("%.8f %.8f \n", .998, .002) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f \n",
 				.999, .06, .71, .05, .001, .94, .29, .95) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .95, .10, .05, .90) +
-			fmt.Sprintf("%.4f %.4f %.4f %.4f \n", .99, .30, .01, .70) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .95, .10, .05, .90) +
+			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .99, .30, .01, .70) +
 			"\n",
 	}}
 	for _, tt := range cases {
