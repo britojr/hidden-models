@@ -111,6 +111,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 	typePot, iterations int, epslon float64) float64 {
 
 	l.InitializePotentials(ct, typePot)
+	fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
 	em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
 	bestll := l.CalculateLikelihood(ct)
 	if iterations > 1 {
