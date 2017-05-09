@@ -683,3 +683,26 @@ func TestDivision(t *testing.T) {
 		}
 	}
 }
+
+func TestGetEvidValue(t *testing.T) {
+	cases := []struct {
+		f      *Factor
+		evid   []int
+		result float64
+	}{{
+		NewFactorValues([]int{0, 1}, []int{2, 2}, []float64{10, 20, 30, 40}),
+		[]int{1, 1, 1, 1}, 40,
+	}, {
+		NewFactorValues([]int{1}, []int{2, 2}, []float64{5, 30}),
+		[]int{0, 1, 0, 0}, 30,
+	}, {
+		NewFactorValues([]int{1, 2}, []int{2, 2, 2}, []float64{20, 22, 40, 18}),
+		[]int{0, 1, 0, 0}, 22,
+	}}
+	for _, tt := range cases {
+		got := tt.f.GetEvidValue(tt.evid)
+		if tt.result != got {
+			t.Errorf("wrong value, want %v, got %v", tt.result, got)
+		}
+	}
+}
