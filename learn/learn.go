@@ -120,6 +120,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 		copy(pot, ct.Potentials())
 		for i := 1; i < iterations; i++ {
 			l.InitializePotentials(ct, typePot)
+			fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
 			em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
 			currll := l.CalculateLikelihood(ct)
 			fmt.Printf("curr LL %v\n", currll)

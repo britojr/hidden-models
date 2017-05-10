@@ -117,6 +117,8 @@ func main() {
 		if steps&ParamStep > 0 {
 			ll = learnParameters(ct)
 			fmt.Printf("Best LL: %v\n", ll)
+		} else {
+			fmt.Printf("Loaded LL: %v\n", learner.CalculateLikelihood(ct))
 		}
 	}
 	if steps&InferStep > 0 {
