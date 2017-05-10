@@ -150,28 +150,29 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	// inference step
 	fmt.Println("Calculating partition function...")
 	start := time.Now()
-	z := estimatePartitionFunction(ct, mk, learner.Data())
+	z, sd := estimatePartitionFunction(ct, mk, learner.Data())
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
-	fmt.Printf("Partition function (Log): %.8f\n", math.Log(z))
+	fmt.Printf("Partition function (Log): %.8f, stdev: %.3f\n", math.Log(z), sd)
 
 	// if len(marfile) > 0 {
 	// 	SaveMRFMarginals(mk, z, marfile)
 	// }
 }
 
-func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) float64 {
-	var z, p, phi float64
+func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) (float64, float64) {
+	var p, phi float64
+	var zs []float64
 	for _, m := range data {
 		p = ct.ProbOfEvidence(m)
 		if p != 0 {
 			phi = mk.UnnormalizedMesure(m)
-			z += phi / p
+			zs = append(zs, phi/p)
 		} else {
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
 		}
 	}
-	return z / float64(len(data))
+	return utils.Mean(zs), utils.Stdev(zs)
 }
 
 func initializeLearner() {
