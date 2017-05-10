@@ -62,7 +62,7 @@ func parseFlags() {
 	flag.IntVar(&iterations, "iterations", 1, "number of iterations of the whole process")
 	flag.StringVar(&dsfile, "f", "", "dataset file")
 	flag.UintVar(&delimiter, "delimiter", ',', "field delimiter")
-	flag.UintVar(&hdr, "hdr", 1, "1- name header, 2- cardinality header")
+	flag.UintVar(&hdr, "hdr", 4, "1- name header, 2- cardinality header,  4- name_card header")
 	flag.IntVar(&h, "h", 0, "hidden variables")
 	flag.IntVar(&initpot, "initpot", 0,
 		`		0- random values,
