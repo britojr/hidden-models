@@ -48,6 +48,7 @@ var (
 	alpha      float64 // alpha parameter for dirichlet distribution
 	ctfile     string  // cliquetree file
 	mkfile     string  // markov random field uai file
+	marfile    string  // mrf save marginals file
 	steps      int     // flags indicating what steps to execute
 )
 
@@ -74,6 +75,7 @@ func parseFlags() {
 	flag.Float64Var(&alpha, "a", 0.5, "alpha parameter for dirichlet distribution")
 	flag.StringVar(&ctfile, "c", "", "cliquetree file")
 	flag.StringVar(&mkfile, "m", "", "MRF file")
+	flag.StringVar(&marfile, "mar", "", "MRF marginals save file")
 	flag.IntVar(&steps, "steps", StructStep|ParamStep,
 		`		step flags:
 		1- structure learning,
@@ -149,6 +151,10 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 	fmt.Printf("Partition function (Log): %.8f\n", math.Log(z))
+
+	if len(marfile) > 0 {
+		SaveMRFMarginals(mk, z, marfile)
+	}
 }
 
 func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) float64 {
@@ -217,6 +223,28 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 }
 
 // =============================================================================
+
+// SaveMRFMarginals saves marginals of observed variables of a MRF in UAI format
+func SaveMRFMarginals(m *mrf.Mrf, z float64, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	ma := m.Marginals(z)
+
+	var keys []int
+	for k := range ma {
+		keys = append(keys, k)
+	}
+	fmt.Fprintf(f, "MAR\n")
+	fmt.Fprintf(f, "%d ", len(keys))
+	sort.Ints(keys)
+	for _, k := range keys {
+		fmt.Fprintf(f, "%d ", len(ma[k]))
+		for _, v := range ma[k] {
+			fmt.Fprintf(f, "%.5f ", v)
+		}
+	}
+}
 
 // SaveMarginals saves all marginals of a cliquetree
 func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {

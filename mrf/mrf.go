@@ -50,6 +50,25 @@ func (m *Mrf) UnnormalizedMesure(evid []int) float64 {
 	return q
 }
 
+// Marginals return a map with all marginals normalized by given partition func z
+func (m *Mrf) Marginals(z float64) map[int][]float64 {
+	// TODO: fix marginals calculation
+	ma := make(map[int][]float64)
+	for _, p := range m.potentials {
+		for j, v := range p.Variables() {
+			if _, ok := ma[v]; !ok {
+				q := p.SumOut(p.Variables()[:j])
+				q = q.SumOut(p.Variables()[j+1:])
+				ma[v] = q.Values()
+				for k := range ma[v] {
+					ma[v][k] /= z
+				}
+			}
+		}
+	}
+	return ma
+}
+
 // Print prints all mrf values
 func (m *Mrf) Print() {
 	fmt.Println(m.cardin)
