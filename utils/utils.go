@@ -36,6 +36,32 @@ func ErrCheck(err error, message string) {
 	}
 }
 
+// Mean calculates the Mean of a float64 slice
+func Mean(xs []float64) (v float64) {
+	// return stats.Mean(xs, 1, len(xs))
+	for _, x := range xs {
+		v += x
+	}
+	v /= float64(len(xs))
+	return
+}
+
+// Variance calculates the variance of a float64 slice
+func Variance(xs []float64) (v float64) {
+	m := Mean(xs)
+	for _, x := range xs {
+		v += (m - x) * (m - x)
+	}
+	v /= float64(len(xs))
+	return
+}
+
+// Stdev calculates the standard deviation of a float64 slice
+func Stdev(xs []float64) float64 {
+	// return stats.Sd(xs, 1, len(xs))
+	return math.Sqrt(Variance(xs))
+}
+
 // Dirichlet sets values as a Dirichlet distribution
 func Dirichlet(alpha, values []float64) {
 	rand.Seed(time.Now().UTC().UnixNano())

@@ -28,6 +28,40 @@ func TestFuzzyEqual(t *testing.T) {
 	}
 }
 
+func TestMean(t *testing.T) {
+	cases := []struct {
+		xs   []float64
+		mean float64
+	}{
+		{[]float64{1, 2, 3}, 2},
+		{[]float64{2, 2, 2}, 2},
+		{[]float64{5, 4, 1, 2, 3, 6}, 3.5},
+	}
+	for _, tt := range cases {
+		got := Mean(tt.xs)
+		if !FuzzyEqual(tt.mean, got) {
+			t.Errorf("wrong value,  want %v, got %v", tt.mean, got)
+		}
+	}
+}
+
+func TestStdev(t *testing.T) {
+	cases := []struct {
+		xs []float64
+		sd float64
+	}{
+		{[]float64{1, 2, 3}, 0.816496581},
+		{[]float64{2, 2, 2}, 0},
+		{[]float64{5, 4, 1, 2, 3, 6}, 1.707825128},
+	}
+	for _, tt := range cases {
+		got := Stdev(tt.xs)
+		if !FuzzyEqual(tt.sd, got, 1e-6) {
+			t.Errorf("wrong value,  want %v, got %v", tt.sd, got)
+		}
+	}
+}
+
 func TestDirichlet(t *testing.T) {
 	cases := []struct {
 		alphas []float64
