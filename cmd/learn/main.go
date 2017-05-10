@@ -129,6 +129,9 @@ func main() {
 			return
 		}
 		inferenceStep(ct)
+		if len(marfile) > 0 {
+			SaveCTMarginals(ct, learner.TotVar()-h, marfile)
+		}
 	}
 }
 
@@ -152,9 +155,9 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	fmt.Printf("Time: %v\n", elapsed)
 	fmt.Printf("Partition function (Log): %.8f\n", math.Log(z))
 
-	if len(marfile) > 0 {
-		SaveMRFMarginals(mk, z, marfile)
-	}
+	// if len(marfile) > 0 {
+	// 	SaveMRFMarginals(mk, z, marfile)
+	// }
 }
 
 func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) float64 {
@@ -241,6 +244,28 @@ func SaveMRFMarginals(m *mrf.Mrf, z float64, fname string) {
 	for _, k := range keys {
 		fmt.Fprintf(f, "%d ", len(ma[k]))
 		for _, v := range ma[k] {
+			fmt.Fprintf(f, "%.5f ", v)
+		}
+	}
+}
+
+// SaveCTMarginals saves marginals of observed variables of a clique tree in UAI format
+func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
+	f, err := os.Create(fname)
+	utils.ErrCheck(err, "")
+	defer f.Close()
+	ma := ct.Marginals()
+
+	var keys []int
+	for k := range ma {
+		keys = append(keys, k)
+	}
+	fmt.Fprintf(f, "MAR\n")
+	fmt.Fprintf(f, "%d ", obs)
+	sort.Ints(keys)
+	for i := 0; i < obs; i++ {
+		fmt.Fprintf(f, "%d ", len(ma[keys[i]]))
+		for _, v := range ma[keys[i]] {
 			fmt.Fprintf(f, "%.5f ", v)
 		}
 	}
