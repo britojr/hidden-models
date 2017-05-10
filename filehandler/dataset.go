@@ -24,6 +24,8 @@ const (
 	NameHeader HeaderFlags = 1 << iota
 	//CardinHeader indicates that there is a line with cardinality of each variable
 	CardinHeader
+	//NameCardHeader indicates that there one line in the format Name_Card
+	NameCardHeader
 )
 
 // DataSet is used  to read a file and store the data
@@ -54,14 +56,26 @@ func (d *DataSet) Read() {
 	file := openFile(d.fileName)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	if d.headerlns&NameHeader != 0 {
+	if d.headerlns&NameCardHeader != 0 {
 		scanner.Scan()
-		d.varNames = strings.FieldsFunc(scanner.Text(), d.splitFunc)
-	}
-	if d.headerlns&CardinHeader != 0 {
-		scanner.Scan()
-		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
-		d.cardinality = utils.SliceAtoi(cells)
+		nameCard := strings.FieldsFunc(scanner.Text(), d.splitFunc)
+		for _, v := range nameCard {
+			x := strings.FieldsFunc(v, func(c rune) bool {
+				return c == '_'
+			})
+			d.varNames = append(d.varNames, x[0])
+			d.cardinality = append(d.cardinality, utils.Atoi(x[1]))
+		}
+	} else {
+		if d.headerlns&NameHeader != 0 {
+			scanner.Scan()
+			d.varNames = strings.FieldsFunc(scanner.Text(), d.splitFunc)
+		}
+		if d.headerlns&CardinHeader != 0 {
+			scanner.Scan()
+			cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
+			d.cardinality = utils.SliceAtoi(cells)
+		}
 	}
 	for i := 0; scanner.Scan(); i++ {
 		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
