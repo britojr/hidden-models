@@ -50,23 +50,32 @@ func (m *Mrf) UnnormalizedMesure(evid []int) float64 {
 	return q
 }
 
-// Marginals return a map with all marginals normalized by given partition func z
-func (m *Mrf) Marginals(z float64) map[int][]float64 {
-	// TODO: fix marginals calculation
-	ma := make(map[int][]float64)
+// SaveOnLibdaiFormat saves a Mrf in libDAI factor graph format on the given writer
+func (m *Mrf) SaveOnLibdaiFormat(w io.Writer) {
+	// number of potentials
+	fmt.Fprintf(w, "%d\n", len(m.potentials))
+	fmt.Fprintln(w)
 	for _, p := range m.potentials {
-		for j, v := range p.Variables() {
-			if _, ok := ma[v]; !ok {
-				q := p.SumOut(p.Variables()[:j])
-				q = q.SumOut(p.Variables()[j+1:])
-				ma[v] = q.Values()
-				for k := range ma[v] {
-					ma[v][k] /= z
-				}
-			}
+		// number of variables
+		fmt.Fprintf(w, "%d\n", len(p.Variables()))
+		// variables
+		for _, v := range p.Variables() {
+			fmt.Fprintf(w, "%d ", v)
 		}
+		fmt.Fprintln(w)
+		// cardinalities
+		for _, v := range p.Variables() {
+			fmt.Fprintf(w, "%d ", p.Cardinality()[v])
+		}
+		fmt.Fprintln(w)
+		// number of factor values
+		fmt.Fprintf(w, "%d\n", len(p.Values()))
+		// factor values
+		for j, v := range p.Values() {
+			fmt.Fprintf(w, "%d     %.4f\n", j, v)
+		}
+		fmt.Fprintln(w)
 	}
-	return ma
 }
 
 // Print prints all mrf values
@@ -76,3 +85,22 @@ func (m *Mrf) Print() {
 		fmt.Println(f.Variables(), f.Values())
 	}
 }
+
+// Marginals return a map with all marginals normalized by given partition func z
+// func (m *Mrf) Marginals(z float64) map[int][]float64 {
+// 	// TODO: fix marginals calculation
+// 	ma := make(map[int][]float64)
+// 	for _, p := range m.potentials {
+// 		for j, v := range p.Variables() {
+// 			if _, ok := ma[v]; !ok {
+// 				q := p.SumOut(p.Variables()[:j])
+// 				q = q.SumOut(p.Variables()[j+1:])
+// 				ma[v] = q.Values()
+// 				for k := range ma[v] {
+// 					ma[v][k] /= z
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return ma
+// }

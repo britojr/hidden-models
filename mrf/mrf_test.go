@@ -1,6 +1,7 @@
 package mrf
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -133,6 +134,116 @@ func TestUnnormalizedMesure(t *testing.T) {
 			got := m.UnnormalizedMesure(r.evid)
 			if !utils.FuzzyEqual(r.prob, got) {
 				t.Errorf("wrong value, want %v, got %v", r.prob, got)
+			}
+		}
+	}
+}
+
+func TestSaveOnLibdaiFormat(t *testing.T) {
+	cases := []struct {
+		cliques [][]int
+		cardin  []int
+		values  [][]float64
+		result  string
+	}{{
+		cliques: [][]int{{0, 1}, {1, 2}},
+		cardin:  []int{2, 2, 2},
+		values: [][]float64{
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
+		},
+		result: "2\n\n" +
+			"2\n" +
+			"0 1 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .25) +
+			fmt.Sprintf("%d     %.4f\n", 1, .35) +
+			fmt.Sprintf("%d     %.4f\n", 2, .35) +
+			fmt.Sprintf("%d     %.4f\n", 3, .05) +
+			"\n" +
+			"2\n" +
+			"1 2 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .20) +
+			fmt.Sprintf("%d     %.4f\n", 1, .22) +
+			fmt.Sprintf("%d     %.4f\n", 2, .40) +
+			fmt.Sprintf("%d     %.4f\n", 3, .18) +
+			"\n",
+	}, {
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: "5\n\n" +
+			"1\n" +
+			"0 \n" +
+			"2 \n" +
+			"2\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .999) +
+			fmt.Sprintf("%d     %.4f\n", 1, .001) +
+			"\n" +
+			"1\n" +
+			"1 \n" +
+			"2 \n" +
+			"2\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .998) +
+			fmt.Sprintf("%d     %.4f\n", 1, .002) +
+			"\n" +
+			"3\n" +
+			"0 1 2 \n" +
+			"2 2 2 \n" +
+			"8\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .999) +
+			fmt.Sprintf("%d     %.4f\n", 1, .06) +
+			fmt.Sprintf("%d     %.4f\n", 2, .71) +
+			fmt.Sprintf("%d     %.4f\n", 3, .05) +
+			fmt.Sprintf("%d     %.4f\n", 4, .001) +
+			fmt.Sprintf("%d     %.4f\n", 5, .94) +
+			fmt.Sprintf("%d     %.4f\n", 6, .29) +
+			fmt.Sprintf("%d     %.4f\n", 7, .95) +
+			"\n" +
+			"2\n" +
+			"2 3 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .95) +
+			fmt.Sprintf("%d     %.4f\n", 1, .10) +
+			fmt.Sprintf("%d     %.4f\n", 2, .05) +
+			fmt.Sprintf("%d     %.4f\n", 3, .90) +
+			"\n" +
+			"2\n" +
+			"2 4 \n" +
+			"2 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%d     %.4f\n", 0, .99) +
+			fmt.Sprintf("%d     %.4f\n", 1, .30) +
+			fmt.Sprintf("%d     %.4f\n", 2, .01) +
+			fmt.Sprintf("%d     %.4f\n", 3, .70) +
+			"\n",
+	}}
+	for _, tt := range cases {
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		m := &Mrf{tt.cardin, potentials}
+		var b bytes.Buffer
+		m.SaveOnLibdaiFormat(&b)
+		got := b.String()
+		if got != tt.result {
+			for i := range tt.result {
+				if got[i] != tt.result[i] {
+					t.Errorf("Error on position %v, (%c)!=(%c)\nWant:\n[%v]\nGot:\n[%v]\n",
+						i, got[i], tt.result[i], tt.result, got)
+					break
+				}
 			}
 		}
 	}

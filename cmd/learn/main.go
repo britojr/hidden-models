@@ -153,11 +153,7 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	z, sd := estimatePartitionFunction(ct, mk, learner.Data())
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
-	fmt.Printf("Partition function (Log): %.8f, stdev: %.3f\n", math.Log(z), sd)
-
-	// if len(marfile) > 0 {
-	// 	SaveMRFMarginals(mk, z, marfile)
-	// }
+	fmt.Printf("Partition function (Log): %.8f, stdev: %.3f\n", math.Log(z), math.Log(sd))
 }
 
 func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) (float64, float64) {
@@ -229,26 +225,26 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 // =============================================================================
 
 // SaveMRFMarginals saves marginals of observed variables of a MRF in UAI format
-func SaveMRFMarginals(m *mrf.Mrf, z float64, fname string) {
-	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
-	defer f.Close()
-	ma := m.Marginals(z)
-
-	var keys []int
-	for k := range ma {
-		keys = append(keys, k)
-	}
-	fmt.Fprintf(f, "MAR\n")
-	fmt.Fprintf(f, "%d ", len(keys))
-	sort.Ints(keys)
-	for _, k := range keys {
-		fmt.Fprintf(f, "%d ", len(ma[k]))
-		for _, v := range ma[k] {
-			fmt.Fprintf(f, "%.5f ", v)
-		}
-	}
-}
+// func SaveMRFMarginals(m *mrf.Mrf, z float64, fname string) {
+// 	f, err := os.Create(fname)
+// 	utils.ErrCheck(err, "")
+// 	defer f.Close()
+// 	ma := m.Marginals(z)
+//
+// 	var keys []int
+// 	for k := range ma {
+// 		keys = append(keys, k)
+// 	}
+// 	fmt.Fprintf(f, "MAR\n")
+// 	fmt.Fprintf(f, "%d ", len(keys))
+// 	sort.Ints(keys)
+// 	for _, k := range keys {
+// 		fmt.Fprintf(f, "%d ", len(ma[k]))
+// 		for _, v := range ma[k] {
+// 			fmt.Fprintf(f, "%.5f ", v)
+// 		}
+// 	}
+// }
 
 // SaveCTMarginals saves marginals of observed variables of a clique tree in UAI format
 func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
