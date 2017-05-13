@@ -62,6 +62,24 @@ func TestMin(t *testing.T) {
 	}
 }
 
+func TestMedian(t *testing.T) {
+	cases := []struct {
+		xs   []float64
+		mean float64
+	}{
+		{[]float64{1, 2, 3}, 2},
+		{[]float64{2, 2, 2}, 2},
+		{[]float64{5, 4, 1, 2, 3, 6}, 3.5},
+		{[]float64{3, 1, 7}, 3},
+	}
+	for _, tt := range cases {
+		got := Median(tt.xs)
+		if !FuzzyEqual(tt.mean, got) {
+			t.Errorf("wrong value,  want %v, got %v", tt.mean, got)
+		}
+	}
+}
+
 func TestMean(t *testing.T) {
 	cases := []struct {
 		xs   []float64

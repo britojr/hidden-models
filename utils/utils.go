@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sort"
 	"strconv"
 	"time"
 
@@ -68,6 +69,19 @@ func Mode(xs []float64) (v float64) {
 			c = d[x]
 			v = x
 		}
+	}
+	return
+}
+
+// Median calculates the media of a float64 slice
+func Median(xs []float64) (v float64) {
+	aux := append([]float64(nil), xs...)
+	sort.Float64s(aux)
+	i := len(aux) / 2
+	if len(aux)%2 != 0 {
+		v = aux[i]
+	} else {
+		v = (aux[i] + aux[i-1]) / 2
 	}
 	return
 }
