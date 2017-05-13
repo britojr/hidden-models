@@ -58,6 +58,20 @@ func Min(xs []float64) float64 {
 	return v
 }
 
+// Mode calculates the mode of a float64 slice
+func Mode(xs []float64) (v float64) {
+	d := make(map[float64]int)
+	c := 0
+	for _, x := range xs {
+		d[x]++
+		if d[x] > c {
+			c = d[x]
+			v = x
+		}
+	}
+	return
+}
+
 // Mean calculates the Mean of a float64 slice
 func Mean(xs []float64) (v float64) {
 	// return stats.Mean(xs, 1, len(xs))
