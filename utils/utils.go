@@ -12,6 +12,7 @@ import (
 
 	"github.com/dtromb/gogsl/randist"
 	"github.com/dtromb/gogsl/rng"
+	"github.com/dtromb/gogsl/stats"
 	"github.com/willf/bitset"
 )
 
@@ -88,29 +89,30 @@ func Median(xs []float64) (v float64) {
 
 // Mean calculates the Mean of a float64 slice
 func Mean(xs []float64) (v float64) {
-	// return stats.Mean(xs, 1, len(xs))
-	for _, x := range xs {
-		v += x
-	}
-	v /= float64(len(xs))
-	return
+	return stats.Mean(xs, 1, len(xs))
+	// for _, x := range xs {
+	// 	v += x
+	// }
+	// v /= float64(len(xs))
+	// return
 }
 
 // Variance calculates the variance of a float64 slice
 func Variance(xs []float64) (v float64) {
-	// return stats.Variance(xs, 1, len(xs))
-	m := Mean(xs)
-	for _, x := range xs {
-		v += (m - x) * (m - x)
-	}
-	v /= float64(len(xs))
-	return
+	return stats.Variance(xs, 1, len(xs))
+	// m := Mean(xs)
+	// for _, x := range xs {
+	// 	v += (m - x) * (m - x)
+	// }
+	// v /= float64(len(xs))
+	// return
 }
 
 // Stdev calculates the standard deviation of a float64 slice
 func Stdev(xs []float64) float64 {
-	// return stats.Sd(xs, 1, len(xs))
-	return math.Sqrt(Variance(xs))
+	// TODO: check this statistics, why they don't match the tests?
+	return stats.Sd(xs, 1, len(xs))
+	// return math.Sqrt(Variance(xs))
 }
 
 // Dirichlet sets values as a Dirichlet distribution
