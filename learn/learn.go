@@ -10,7 +10,6 @@ import (
 	"github.com/britojr/kbn/counting/bitcounter"
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/utils"
 	"github.com/britojr/tcc/generator"
@@ -29,46 +28,41 @@ const (
 
 // Learner ..
 type Learner struct {
-	dataset *filehandler.DataSet
+	data    [][]int
 	counter *bitcounter.BitCounter
 	n       int   // number of variables
 	cardin  []int // cardinality slice
 	// parameters
-	k          int       // treewidth
-	hidden     int       // number of hidden variables
-	hiddencard int       // cardinality of the hidden variables
-	alphas     []float64 // parameters for dirichlet distribution
+	k      int       // treewidth
+	h      int       // number of hidden variables
+	hcard  int       // cardinality of the hidden variables
+	alphas []float64 // parameters for dirichlet distribution
 }
 
 // New creates new learner object with parameters
-func New(k, hidden, hiddencard int, alpha ...float64) *Learner {
+func New(data [][]int, cardin []int, k, h, hcard int, alpha ...float64) *Learner {
 	l := new(Learner)
 	l.k = k
-	l.hidden = hidden
-	l.hiddencard = hiddencard
-	if len(alpha) > 0 {
-		l.alphas = make([]float64, int(math.Pow(float64(hiddencard), float64(l.k+1))))
+	l.h = h
+	l.hcard = hcard
+	// create slice of alpha parameters
+	if len(alpha) > 0 && alpha[0] > 0 {
+		l.alphas = make([]float64, int(math.Pow(float64(hcard), float64(l.k+1))))
 		for i := range l.alphas {
 			l.alphas[i] = alpha[0]
 		}
 	}
-	return l
-}
-
-// LoadDataSet ..
-func (l *Learner) LoadDataSet(dsfile string, delimiter rune, dsHdrlns filehandler.HeaderFlags) {
-	l.dataset = filehandler.NewDataSet(dsfile, delimiter, dsHdrlns)
-	l.dataset.Read()
 	l.counter = bitcounter.NewBitCounter()
-	l.counter.LoadFromData(l.dataset.Data(), l.dataset.Cardinality())
-	l.n = len(l.dataset.Cardinality())
+	l.counter.LoadFromData(data, cardin)
+	l.n = len(cardin)
 	// extend cardinality to hidden variables
-	l.cardin = make([]int, l.n+l.hidden)
-	copy(l.cardin, l.dataset.Cardinality())
+	l.cardin = make([]int, l.n+l.h)
+	copy(l.cardin, cardin)
 	for i := l.n; i < len(l.cardin); i++ {
-		l.cardin[i] = l.hiddencard
+		l.cardin[i] = l.hcard
 	}
-	fmt.Printf("Variables: %v+%v, Instances: %v\n", l.n, l.hidden, len(l.dataset.Data()))
+	l.data = data
+	return l
 }
 
 // Counter returns counter
@@ -78,7 +72,7 @@ func (l *Learner) Counter() counting.Counter {
 
 // Data returns dataset matrix
 func (l *Learner) Data() [][]int {
-	return l.dataset.Data()
+	return l.data
 }
 
 // Cardinality returns cardinality slice
@@ -88,7 +82,7 @@ func (l *Learner) Cardinality() []int {
 
 // TotVar returns total number of variables
 func (l *Learner) TotVar() int {
-	return l.n + l.hidden
+	return l.n + l.h
 }
 
 // InitializePotentials initialize clique tree potentials
@@ -112,7 +106,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 
 	l.InitializePotentials(ct, typePot)
 	fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
-	em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
+	em.ExpectationMaximization(ct, l.data, epslon)
 	bestll := l.CalculateLikelihood(ct)
 	if iterations > 1 {
 		fmt.Printf("curr LL %v\n", bestll)
@@ -121,7 +115,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 		for i := 1; i < iterations; i++ {
 			l.InitializePotentials(ct, typePot)
 			fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
-			em.ExpectationMaximization(ct, l.dataset.Data(), epslon)
+			em.ExpectationMaximization(ct, l.data, epslon)
 			currll := l.CalculateLikelihood(ct)
 			fmt.Printf("curr LL %v\n", currll)
 			if currll > bestll {
@@ -137,15 +131,15 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 // CalculateLikelihood calculates the likelihood of a clique tree
 func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 	ct.UpDownCalibration()
-	return likelihood.Loglikelihood(ct, l.dataset.Data())
+	return likelihood.Loglikelihood(ct, l.data)
 }
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
 func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float64) {
-	bestStruct := RandomCliqueTree(l.n+l.hidden, l.k)
+	bestStruct := RandomCliqueTree(l.n+l.h, l.k)
 	bestScore := likelihood.StructLoglikelihood(bestStruct.Cliques(), bestStruct.SepSets(), l.counter)
 	for i := 1; i < iterations; i++ {
-		currStruct := RandomCliqueTree(l.n+l.hidden, l.k)
+		currStruct := RandomCliqueTree(l.n+l.h, l.k)
 		currScore := likelihood.StructLoglikelihood(currStruct.Cliques(), currStruct.SepSets(), l.counter)
 		if currScore > bestScore {
 			bestScore = currScore

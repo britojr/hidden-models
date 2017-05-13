@@ -17,8 +17,7 @@ import (
 	"github.com/britojr/kbn/utils"
 )
 
-// StepFlags type is used to store the flags indicating the steps that should be executed
-// type StepFlags byte
+// Define the flags indicating the steps that should be executed
 const (
 	// StructStep indicates execute structure learning step
 	StructStep int = 1 << iota
@@ -29,7 +28,7 @@ const (
 )
 
 const (
-	hiddencard = 2
+	hiddencard = 2 // default cardinality of the hidden variables
 )
 
 // Define Flag variables
@@ -52,8 +51,10 @@ var (
 	steps      int     // flags indicating what steps to execute
 )
 
+// Define working variables
 var (
 	learner *learn.Learner
+	dataset *filehandler.DataSet
 )
 
 func parseFlags() {
@@ -94,11 +95,12 @@ func parseFlags() {
 
 func main() {
 	parseFlags()
-	initializeLearner()
+	loadDataset()
 
 	var ct *cliquetree.CliqueTree
 	var ll float64
 	if steps&StructStep > 0 {
+		initializeLearner()
 		ct, ll = learnStructureAndParamenters()
 		fmt.Printf("Best LL: %v\n", ll)
 		if len(ctfile) > 0 {
@@ -116,6 +118,9 @@ func main() {
 		utils.ErrCheck(err, fmt.Sprintf("Can't open file %v", ctfile))
 		ct = cliquetree.LoadFrom(f)
 		f.Close()
+		h = len(ct.InitialPotential(0).Cardinality()) - len(dataset.Cardinality())
+		k = len(ct.Clique(0))
+		initializeLearner()
 		if steps&ParamStep > 0 {
 			ll = learnParameters(ct)
 			fmt.Printf("Best LL: %v\n", ll)
@@ -133,6 +138,21 @@ func main() {
 			SaveCTMarginals(ct, learner.TotVar()-h, marfile)
 		}
 	}
+}
+
+func loadDataset() {
+	fmt.Printf("Loading dataset: %v\n", dsfile)
+	start := time.Now()
+	dataset = filehandler.NewDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
+	dataset.Read()
+	elapsed := time.Since(start)
+	fmt.Printf("Time: %v\n", elapsed)
+}
+
+func initializeLearner() {
+	fmt.Println("initializing learner...")
+	learner = learn.New(dataset.Data(), dataset.Cardinality(), k, h, hiddencard, alpha)
+	fmt.Printf("Variables: %v+%v, k:%v, Instances: %v\n", len(dataset.Cardinality()), h, k, len(dataset.Data()))
 }
 
 func inferenceStep(ct *cliquetree.CliqueTree) {
@@ -168,16 +188,11 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
 		}
 	}
+	fmt.Println("Partition function:")
+	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f\n",
+		math.Log(utils.Min(zs)), math.Log(utils.Max(zs)), math.Log(utils.Mean(zs)),
+		math.Log(utils.Stdev(zs)), math.Log(utils.Mode(zs)))
 	return utils.Mean(zs), utils.Stdev(zs)
-}
-
-func initializeLearner() {
-	learner = learn.New(k, h, hiddencard, alpha)
-	fmt.Printf("Loading dataset: %v\n", dsfile)
-	start := time.Now()
-	learner.LoadDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
-	elapsed := time.Since(start)
-	fmt.Printf("Time: %v\n", elapsed)
 }
 
 func learnStructure() *cliquetree.CliqueTree {

@@ -118,16 +118,19 @@ func TestCreateUniformPortentials(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	cases := []struct {
-		k, hidden, hiddencard int
-		alpha                 float64
-		alphalen              int
+		data        [][]int
+		cardin      []int
+		k, h, hcard int
+		alpha       float64
+		alphalen    int
 	}{
-		{3, 7, 2, 3.14, 16},
-		{4, 5, 3, -0.75, 243},
+		{[][]int{{0, 0, 0, 0, 0}}, []int{2, 2, 2, 2, 2}, 3, 7, 2, 3.14, 16},
+		{[][]int{{0, 0, 0, 0, 0}}, []int{2, 2, 2, 2, 2}, 4, 5, 3, 0.75, 243},
+		{[][]int{{0, 0, 0, 0, 0}}, []int{2, 2, 2, 2, 2}, 4, 5, 3, 0.0, 0},
 	}
 	for _, tt := range cases {
-		l := New(tt.k, tt.hidden, tt.hiddencard, tt.alpha)
-		if tt.k != l.k || tt.hidden != l.hidden || tt.hiddencard != l.hiddencard {
+		l := New(tt.data, tt.cardin, tt.k, tt.h, tt.hcard, tt.alpha)
+		if tt.k != l.k || tt.h != l.h || tt.hcard != l.hcard {
 			t.Errorf("Wrong argments")
 		}
 		if tt.alphalen != len(l.alphas) {
@@ -137,6 +140,20 @@ func TestNew(t *testing.T) {
 			if tt.alpha != v {
 				t.Errorf("wrong value of alpha, want %v got %v", tt.alpha, l.alphas)
 			}
+		}
+		if len(l.cardin) != len(tt.cardin)+tt.h {
+			t.Errorf("wrong cardin size, want %v+%v, got %v", len(tt.cardin), tt.h, len(l.cardin))
+		}
+		if !reflect.DeepEqual(tt.cardin, l.cardin[:len(tt.cardin)]) {
+			t.Errorf("wrong observed cardinalities: %v", l.cardin)
+		}
+		for i := len(tt.cardin); i < len(l.cardin); i++ {
+			if l.cardin[i] != tt.hcard {
+				t.Errorf("wrong hiddencard, want %v, got %v", tt.hcard, l.cardin[i])
+			}
+		}
+		if !reflect.DeepEqual(tt.data, l.data) {
+			t.Errorf("wrong data: %v", l.data)
 		}
 	}
 }
