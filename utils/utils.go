@@ -36,6 +36,28 @@ func ErrCheck(err error, message string) {
 	}
 }
 
+// Max returns the max number
+func Max(xs []float64) float64 {
+	v := xs[0]
+	for _, x := range xs {
+		if x > v {
+			v = x
+		}
+	}
+	return v
+}
+
+// Min returns the min number
+func Min(xs []float64) float64 {
+	v := xs[0]
+	for _, x := range xs {
+		if x < v {
+			v = x
+		}
+	}
+	return v
+}
+
 // Mean calculates the Mean of a float64 slice
 func Mean(xs []float64) (v float64) {
 	// return stats.Mean(xs, 1, len(xs))

@@ -28,6 +28,40 @@ func TestFuzzyEqual(t *testing.T) {
 	}
 }
 
+func TestMax(t *testing.T) {
+	cases := []struct {
+		xs     []float64
+		result float64
+	}{
+		{[]float64{1, 2, 3}, 3},
+		{[]float64{2, 2, 2}, 2},
+		{[]float64{2, 3, 6, 5, 4, 1}, 6},
+	}
+	for _, tt := range cases {
+		got := Max(tt.xs)
+		if !FuzzyEqual(tt.result, got) {
+			t.Errorf("wrong value,  want %v, got %v", tt.result, got)
+		}
+	}
+}
+
+func TestMin(t *testing.T) {
+	cases := []struct {
+		xs     []float64
+		result float64
+	}{
+		{[]float64{1, 2, 3}, 1},
+		{[]float64{2, 2, 2}, 2},
+		{[]float64{2, 3, 6, 5, 4, 1}, 1},
+	}
+	for _, tt := range cases {
+		got := Min(tt.xs)
+		if !FuzzyEqual(tt.result, got) {
+			t.Errorf("wrong value,  want %v, got %v", tt.result, got)
+		}
+	}
+}
+
 func TestMean(t *testing.T) {
 	cases := []struct {
 		xs   []float64
