@@ -30,6 +30,23 @@ func TestLoadFromUAI(t *testing.T) {
 			"2\n" +
 			"2 0 1 \n" +
 			"2 1 2 \n" +
+			"4\n" +
+			fmt.Sprintf("%.6f\n%.6f\n%.6f\n%.6f\n\n", .25, .35, .35, .05) +
+			"4\n" +
+			fmt.Sprintf("%.6f\n%.6f\n%.6f\n%.6f\n\n", .20, .22, .40, .18),
+	}, {
+		cardin:  []int{2, 2, 2},
+		cliques: [][]int{{0, 1}, {1, 2}},
+		values: [][]float64{
+			{.25, .35, .35, .05},
+			{.20, .22, .40, .18},
+		},
+		saved: "MARKOV\n" +
+			"3\n" +
+			"2 2 2 \n" +
+			"2\n" +
+			"2 0 1 \n" +
+			"2 1 2 \n" +
 			"\n4" +
 			fmt.Sprintf("\n%.6f %.6f %.6f %.6f \n", .25, .35, .35, .05) +
 			"\n4" +

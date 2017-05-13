@@ -31,12 +31,24 @@ func LoadFromUAI(r io.Reader) *Mrf {
 		varlist := utils.SliceAtoi(strings.Fields(scanner.Text()))
 		potentials[i] = factor.NewFactor(varlist[1:], cardin)
 	}
+	// here we have problem with different UAI formats
 	scanner.Scan()
-	for i := range potentials {
-		scanner.Scan()
-		scanner.Scan()
-		potentials[i].SetValues(utils.SliceAtoF64(strings.Fields(scanner.Text())))
-		scanner.Scan()
+	if len(scanner.Text()) == 0 {
+		for i := range potentials {
+			scanner.Scan()
+			scanner.Scan()
+			potentials[i].SetValues(utils.SliceAtoF64(strings.Fields(scanner.Text())))
+			scanner.Scan()
+		}
+	} else {
+		for i := range potentials {
+			for j := range potentials[i].Values() {
+				scanner.Scan()
+				potentials[i].Values()[j] = utils.AtoF64(scanner.Text())
+			}
+			scanner.Scan()
+			scanner.Scan()
+		}
 	}
 	return &Mrf{cardin, potentials}
 }
