@@ -131,7 +131,7 @@ func TestUnnormalizedMesure(t *testing.T) {
 	for _, tt := range cases {
 		m := &Mrf{tt.cardin, tt.pot}
 		for _, r := range tt.result {
-			got := m.UnnormalizedMesure(r.evid)
+			got := m.UnnormalizedProb(r.evid)
 			if !utils.FuzzyEqual(r.prob, got) {
 				t.Errorf("wrong value, want %v, got %v", r.prob, got)
 			}

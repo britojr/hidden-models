@@ -182,7 +182,7 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 	for _, m := range data {
 		p = ct.ProbOfEvidence(m)
 		if p != 0 {
-			phi = mk.UnnormalizedMesure(m)
+			phi = mk.UnnormalizedProb(m)
 			zs = append(zs, phi/p)
 		} else {
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
