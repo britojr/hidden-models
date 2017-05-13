@@ -98,6 +98,7 @@ func Mean(xs []float64) (v float64) {
 
 // Variance calculates the variance of a float64 slice
 func Variance(xs []float64) (v float64) {
+	// return stats.Variance(xs, 1, len(xs))
 	m := Mean(xs)
 	for _, x := range xs {
 		v += (m - x) * (m - x)

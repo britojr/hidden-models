@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"reflect"
 	"sort"
 	"testing"
@@ -88,11 +89,31 @@ func TestMean(t *testing.T) {
 		{[]float64{1, 2, 3}, 2},
 		{[]float64{2, 2, 2}, 2},
 		{[]float64{5, 4, 1, 2, 3, 6}, 3.5},
+		{[]float64{12, 12, 12, 12, 13013}, 2612.2},
 	}
 	for _, tt := range cases {
 		got := Mean(tt.xs)
 		if !FuzzyEqual(tt.mean, got) {
 			t.Errorf("wrong value,  want %v, got %v", tt.mean, got)
+		}
+	}
+}
+
+func TestVariance(t *testing.T) {
+	cases := []struct {
+		xs   []float64
+		want float64
+	}{
+		{[]float64{1, 2, 3}, 2.0 / 3.0},
+		{[]float64{2, 2, 2}, 0},
+		{[]float64{5, 4, 1, 2, 3, 6}, 2.916666667},
+		// {[]float64{12, 12, 12, 12, 13013}, 28171000},
+		{[]float64{12, 12, 12, 12, 13013}, 27044160.16},
+	}
+	for _, tt := range cases {
+		got := Variance(tt.xs)
+		if !FuzzyEqual(tt.want, got, 1e-6) {
+			t.Errorf("wrong value,  want %v, got %v", tt.want, got)
 		}
 	}
 }
@@ -105,6 +126,8 @@ func TestStdev(t *testing.T) {
 		{[]float64{1, 2, 3}, 0.816496581},
 		{[]float64{2, 2, 2}, 0},
 		{[]float64{5, 4, 1, 2, 3, 6}, 1.707825128},
+		// {[]float64{12, 12, 12, 12, 13013}, math.Sqrt(28171000)},
+		{[]float64{12, 12, 12, 12, 13013}, math.Sqrt(27044160.16)},
 	}
 	for _, tt := range cases {
 		got := Stdev(tt.xs)
