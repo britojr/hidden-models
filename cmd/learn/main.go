@@ -188,10 +188,19 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
 		}
 	}
-	fmt.Println("Partition function:")
-	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f\n",
+	fmt.Println("Partition function (log):")
+	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
 		math.Log(utils.Min(zs)), math.Log(utils.Max(zs)), math.Log(utils.Mean(zs)),
-		math.Log(utils.Stdev(zs)), math.Log(utils.Mode(zs)))
+		math.Log(utils.Stdev(zs)), math.Log(utils.Mode(zs)), math.Log(utils.Median(zs)))
+
+	c := .22
+	a, b := int(float64(len(zs))*c), int(len(zs)+1-int(float64(len(zs))*c))
+	fmt.Printf("Partition function (log) discarding %.1f%% on each side: [%v,%v]\n", c*100, a, b)
+	sort.Float64s(zs)
+	ws := zs[a:b]
+	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
+		math.Log(utils.Min(ws)), math.Log(utils.Max(ws)), math.Log(utils.Mean(ws)),
+		math.Log(utils.Stdev(ws)), math.Log(utils.Mode(ws)), math.Log(utils.Median(ws)))
 	return utils.Mean(zs), utils.Stdev(zs)
 }
 
