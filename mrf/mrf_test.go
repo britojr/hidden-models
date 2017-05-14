@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 )
 
 func TestLoadFromUAI(t *testing.T) {
@@ -149,7 +149,7 @@ func TestUnnormalizedMesure(t *testing.T) {
 		m := &Mrf{tt.cardin, tt.pot}
 		for _, r := range tt.result {
 			got := m.UnnormalizedProb(r.evid)
-			if !utils.FuzzyEqual(r.prob, got) {
+			if !floats.AlmostEqual(r.prob, got) {
 				t.Errorf("wrong value, want %v, got %v", r.prob, got)
 			}
 		}

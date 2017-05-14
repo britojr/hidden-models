@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/mrf"
-	"github.com/britojr/kbn/utils"
 )
 
 var (
@@ -26,7 +26,7 @@ func main() {
 	parseArgs()
 	// read MRF
 	f, err := os.Open(mkfile)
-	utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", mkfile))
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", mkfile))
 	mk := mrf.LoadFromUAI(f)
 	f.Close()
 	if mk == nil {
@@ -36,7 +36,7 @@ func main() {
 
 	// save FG
 	f, err = os.Create(fgfile)
-	utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", fgfile))
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", fgfile))
 	mk.SaveOnLibdaiFormat(f)
 	f.Close()
 }

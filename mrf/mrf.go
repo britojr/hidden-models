@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/britojr/kbn/conv"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
 )
 
 // Mrf markov random field
@@ -23,12 +23,12 @@ func LoadFromUAI(r io.Reader) *Mrf {
 	scanner.Scan()
 	// numvar := utils.Atoi(scanner.Text())
 	scanner.Scan()
-	cardin := utils.SliceAtoi(strings.Fields(scanner.Text()))
+	cardin := conv.Satoi(strings.Fields(scanner.Text()))
 	scanner.Scan()
-	potentials := make([]*factor.Factor, utils.Atoi(scanner.Text()))
+	potentials := make([]*factor.Factor, conv.Atoi(scanner.Text()))
 	for i := range potentials {
 		scanner.Scan()
-		varlist := utils.SliceAtoi(strings.Fields(scanner.Text()))
+		varlist := conv.Satoi(strings.Fields(scanner.Text()))
 		potentials[i] = factor.NewFactor(varlist[1:], cardin)
 	}
 	// here we have problem with different UAI formats
@@ -37,14 +37,14 @@ func LoadFromUAI(r io.Reader) *Mrf {
 		for i := range potentials {
 			scanner.Scan()
 			scanner.Scan()
-			potentials[i].SetValues(utils.SliceAtoF64(strings.Fields(scanner.Text())))
+			potentials[i].SetValues(conv.Satof(strings.Fields(scanner.Text())))
 			scanner.Scan()
 		}
 	} else {
 		for i := range potentials {
 			for j := range potentials[i].Values() {
 				scanner.Scan()
-				potentials[i].Values()[j] = utils.AtoF64(scanner.Text())
+				potentials[i].Values()[j] = conv.Atof(scanner.Text())
 			}
 			scanner.Scan()
 			scanner.Scan()

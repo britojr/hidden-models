@@ -9,12 +9,16 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/conv"
+	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/filehandler"
+	"github.com/britojr/kbn/floats"
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/likelihood"
+	"github.com/britojr/kbn/list"
 	"github.com/britojr/kbn/mrf"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/stats"
 )
 
 // Define the flags indicating the steps that should be executed
@@ -105,7 +109,7 @@ func main() {
 		fmt.Printf("Best LL: %v\n", ll)
 		if len(ctfile) > 0 {
 			f, err := os.Create(ctfile)
-			utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", ctfile))
+			errchk.Check(err, fmt.Sprintf("Can't create file %v", ctfile))
 			ct.SaveOn(f)
 			f.Close()
 		}
@@ -115,7 +119,7 @@ func main() {
 			return
 		}
 		f, err := os.Open(ctfile)
-		utils.ErrCheck(err, fmt.Sprintf("Can't open file %v", ctfile))
+		errchk.Check(err, fmt.Sprintf("Can't open file %v", ctfile))
 		ct = cliquetree.LoadFrom(f)
 		f.Close()
 		h = len(ct.InitialPotential(0).Cardinality()) - len(dataset.Cardinality())
@@ -159,7 +163,7 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	// read MRF
 	fmt.Printf("Loading MRF file: %v\n", mkfile)
 	f, err := os.Open(mkfile)
-	utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", mkfile))
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", mkfile))
 	mk := mrf.LoadFromUAI(f)
 	f.Close()
 	if mk == nil {
@@ -190,8 +194,8 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 	}
 	fmt.Println("Partition function (log):")
 	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
-		math.Log(utils.Min(zs)), math.Log(utils.Max(zs)), math.Log(utils.Mean(zs)),
-		math.Log(utils.Stdev(zs)), math.Log(utils.Mode(zs)), math.Log(utils.Median(zs)))
+		math.Log(floats.Min(zs)), math.Log(floats.Max(zs)), math.Log(stats.Mean(zs)),
+		math.Log(stats.Stdev(zs)), math.Log(stats.Mode(zs)), math.Log(stats.Median(zs)))
 
 	c := .22
 	a, b := int(float64(len(zs))*c), int(len(zs)+1-int(float64(len(zs))*c))
@@ -199,9 +203,9 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 	sort.Float64s(zs)
 	ws := zs[a:b]
 	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
-		math.Log(utils.Min(ws)), math.Log(utils.Max(ws)), math.Log(utils.Mean(ws)),
-		math.Log(utils.Stdev(ws)), math.Log(utils.Mode(ws)), math.Log(utils.Median(ws)))
-	return utils.Mean(zs), utils.Stdev(zs)
+		math.Log(floats.Min(ws)), math.Log(floats.Max(ws)), math.Log(stats.Mean(ws)),
+		math.Log(stats.Stdev(ws)), math.Log(stats.Mode(ws)), math.Log(stats.Median(ws)))
+	return stats.Mean(zs), stats.Stdev(zs)
 }
 
 func learnStructure() *cliquetree.CliqueTree {
@@ -251,7 +255,7 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 // SaveMRFMarginals saves marginals of observed variables of a MRF in UAI format
 // func SaveMRFMarginals(m *mrf.Mrf, z float64, fname string) {
 // 	f, err := os.Create(fname)
-// 	utils.ErrCheck(err, "")
+// 	errchk.Check(err, "")
 // 	defer f.Close()
 // 	ma := m.Marginals(z)
 //
@@ -273,7 +277,7 @@ func learnStructureAndParamenters() (*cliquetree.CliqueTree, float64) {
 // SaveCTMarginals saves marginals of observed variables of a clique tree in UAI format
 func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
 	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	defer f.Close()
 	ma := ct.Marginals()
 
@@ -295,7 +299,7 @@ func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
 // SaveMarginals saves all marginals of a cliquetree
 func SaveMarginals(ct *cliquetree.CliqueTree, ll float64, fname string) {
 	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	defer f.Close()
 	m := ct.Marginals()
 
@@ -338,7 +342,7 @@ func checkUniform(ct *cliquetree.CliqueTree) {
 		calibrated[i] = ct.InitialPotential(i)
 	}
 	diff, i, j, err := factor.MaxDifference(uniform, calibrated)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, uniform[i].Values()[j], i, j, calibrated[i].Values()[j])
 	fmt.Printf(" maxdiff = %v\n", diff)
 	if diff > 1e-6 {
@@ -353,12 +357,12 @@ func checkWithInitialCount(ct *cliquetree.CliqueTree) {
 	for i := range initialCount {
 		var observed, hidden []int
 		if h > 0 {
-			observed, hidden = utils.SliceSplit(ct.Clique(i), learner.TotVar()-h)
+			observed, hidden = list.Split(ct.Clique(i), learner.TotVar()-h)
 		} else {
 			observed = ct.Clique(i)
 		}
 		if len(observed) > 0 {
-			values := utils.SliceItoF64(learner.Counter().CountAssignments(observed))
+			values := conv.Sitof(learner.Counter().CountAssignments(observed))
 			// sumOutHidden[i] = ct.InitialPotential(i)
 			sumOutHidden[i] = ct.Calibrated(i)
 			if len(hidden) > 0 {
@@ -375,7 +379,7 @@ func checkWithInitialCount(ct *cliquetree.CliqueTree) {
 		fmt.Printf("sumOut param: %v (%v)=0\n", sumOutHidden[0].Values()[0], sumOutHidden[0].Variables())
 	}
 	diff, i, j, err := factor.MaxDifference(initialCount, sumOutHidden)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	fmt.Printf("f[%v][%v]=%v; g[%v][%v]=%v\n", i, j, initialCount[i].Values()[j], i, j, sumOutHidden[i].Values()[j])
 	fmt.Printf(" maxdiff = %v\n", diff)
 	if diff > 1e-6 {
@@ -405,7 +409,7 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 		for _, v := range f.Values() {
 			sum += v
 		}
-		if utils.FuzzyEqual(sum, 0) {
+		if floats.AlmostEqual(sum, 0) {
 			printTree(f)
 			panic("original zero factor")
 		}
@@ -414,7 +418,7 @@ func checkCliqueTree(ct *cliquetree.CliqueTree) {
 		for _, v := range f.Values() {
 			sum += v
 		}
-		if utils.FuzzyEqual(sum, 0) {
+		if floats.AlmostEqual(sum, 0) {
 			printTree(f)
 			panic("original zero factor")
 		}

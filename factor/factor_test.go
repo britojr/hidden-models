@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 )
 
 type testStruct struct {
@@ -144,7 +144,7 @@ func TestProduct(t *testing.T) {
 	i := 0
 	for assig.Next() {
 		v := got.Get(assig)
-		if !utils.FuzzyEqual(v, f012.values[i]) {
+		if !floats.AlmostEqual(v, f012.values[i]) {
 			t.Errorf("want(%v); got(%v)", f012.values[i], v)
 		}
 		i++
@@ -187,7 +187,7 @@ func TestProduct2(t *testing.T) {
 			t.Errorf("Wrong variables, want %v, got %v", tt.varRes, got.Variables())
 		}
 		for i, v := range tt.valRes {
-			if !utils.FuzzyEqual(v, got.Values()[i]) {
+			if !floats.AlmostEqual(v, got.Values()[i]) {
 				t.Errorf("Wrong values, want %v, got %v", v, got.Values()[i])
 			}
 		}
@@ -202,7 +202,7 @@ func TestSumOutOne(t *testing.T) {
 		i := 0
 		for assig.Next() {
 			v := got.Get(assig)
-			if !utils.FuzzyEqual(v, w.values[i]) {
+			if !floats.AlmostEqual(v, w.values[i]) {
 				t.Errorf("want(%v); got(%v)", w.values[i], v)
 			}
 			i++
@@ -487,8 +487,8 @@ func TestSetRandom(t *testing.T) {
 		if v.size != len(got.Values()) {
 			t.Errorf("want %v, got %v", v.size, got.Values())
 		}
-		if v.size != 0 && !utils.FuzzyEqual(1, utils.SliceSumFloat64(got.Values())) {
-			t.Errorf("not normalized, sum %v", utils.SliceSumFloat64(got.Values()))
+		if v.size != 0 && !floats.AlmostEqual(1, floats.Sum(got.Values())) {
+			t.Errorf("not normalized, sum %v", floats.Sum(got.Values()))
 		}
 	}
 
@@ -499,7 +499,7 @@ func TestSetRandom(t *testing.T) {
 	f.SetRandom()
 	count := 0
 	for i := range values {
-		if utils.FuzzyEqual(values[i], f.values[i]) {
+		if floats.AlmostEqual(values[i], f.values[i]) {
 			count++
 		}
 	}
@@ -535,8 +535,8 @@ func TestSetDirichlet(t *testing.T) {
 		if tt.size != len(got.Values()) {
 			t.Errorf("want %v, got %v", tt.size, got.Values())
 		}
-		if tt.size != 0 && !utils.FuzzyEqual(1, utils.SliceSumFloat64(got.Values())) {
-			t.Errorf("not normalized, sum %v", utils.SliceSumFloat64(got.Values()))
+		if tt.size != 0 && !floats.AlmostEqual(1, floats.Sum(got.Values())) {
+			t.Errorf("not normalized, sum %v", floats.Sum(got.Values()))
 		}
 	}
 
@@ -548,7 +548,7 @@ func TestSetDirichlet(t *testing.T) {
 	f.SetDirichlet(alphas)
 	count := 0
 	for i := range values {
-		if utils.FuzzyEqual(values[i], f.values[i]) {
+		if floats.AlmostEqual(values[i], f.values[i]) {
 			count++
 		}
 	}
@@ -635,7 +635,7 @@ func TestSumOut(t *testing.T) {
 			t.Errorf("want %v, got %v", v.r.Variables(), got.Variables())
 		}
 		for i, x := range v.r.Values() {
-			if !utils.FuzzyEqual(x, got.Values()[i]) {
+			if !floats.AlmostEqual(x, got.Values()[i]) {
 				t.Errorf("want %v, got %v", v.r.Values(), got.Values())
 			}
 		}
@@ -666,7 +666,7 @@ func TestDivision(t *testing.T) {
 			t.Errorf("want %v, got %v", tt.result.Variables(), got.Variables())
 		}
 		for j, v := range tt.result.Values() {
-			if !utils.FuzzyEqual(v, got.Values()[j], 1e-6) {
+			if !floats.AlmostEqual(v, got.Values()[j], 1e-6) {
 				t.Errorf("want %v, got %v", tt.result.Values(), got.Values())
 			}
 		}

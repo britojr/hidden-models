@@ -8,8 +8,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/britojr/kbn/conv"
+	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
+	"github.com/britojr/kbn/list"
 	"github.com/britojr/tcc/characteristic"
 )
 
@@ -67,7 +70,7 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 	c.sepsets = make([][]int, n)
 	c.varin, c.varout = make([][]int, n), make([][]int, n)
 	for i := 1; i < n; i++ {
-		c.sepsets[i], c.varin[i], c.varout[i] = utils.OrderedSliceDiff(c.cliques[c.parent[i]], c.cliques[i])
+		c.sepsets[i], c.varin[i], c.varout[i] = list.OrderedDiff(c.cliques[c.parent[i]], c.cliques[i])
 	}
 	return c, nil
 }
@@ -244,7 +247,7 @@ func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
 	send := make([]*factor.Factor, c.Size())
 	c.upwardreduction(root, -1, evid, send)
 	// summout all variables of the resulting (calibrated) root factor
-	return utils.SliceSumFloat64(send[root].Values())
+	return floats.Sum(send[root].Values())
 }
 
 func (c *CliqueTree) upwardreduction(v, pa int, evid []int, send []*factor.Factor) {
@@ -516,32 +519,32 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 func LoadFrom(r io.Reader) *CliqueTree {
 	scanner := bufio.NewScanner(r)
 	scanner.Scan()
-	size := utils.Atoi(scanner.Text())
+	size := conv.Atoi(scanner.Text())
 	cliques := make([][]int, size)
 	for i := 0; i < size; i++ {
 		scanner.Scan()
-		cliques[i] = append(cliques[i], utils.SliceAtoi(strings.Fields(scanner.Text()))...)
+		cliques[i] = append(cliques[i], conv.Satoi(strings.Fields(scanner.Text()))...)
 	}
 	scanner.Scan()
 	adj := make([][]int, size)
 	for i := 0; i < size; i++ {
 		scanner.Scan()
-		adj[i] = append(adj[i], utils.SliceAtoi(strings.Fields(scanner.Text()))...)
+		adj[i] = append(adj[i], conv.Satoi(strings.Fields(scanner.Text()))...)
 	}
 	scanner.Scan()
 	scanner.Scan()
-	cardin := utils.SliceAtoi(strings.Fields(scanner.Text()))
+	cardin := conv.Satoi(strings.Fields(scanner.Text()))
 	potentials := make([]*factor.Factor, size)
 	for i := range potentials {
 		scanner.Scan()
-		values := utils.SliceAtoF64(strings.Fields(scanner.Text()))
+		values := conv.Satof(strings.Fields(scanner.Text()))
 		potentials[i] = factor.NewFactorValues(cliques[i], cardin, values)
 	}
 
 	c, err := NewStructure(cliques, adj)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	err = c.SetAllPotentials(potentials)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 
 	return c
 }

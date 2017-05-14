@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/list"
 	"github.com/willf/bitset"
 )
 
@@ -77,7 +77,7 @@ func (b *BitCounter) Count(assig *assignment.Assignment) (int, bool) {
 		}
 	}
 	if len(setlist) > 0 {
-		return int(utils.ListIntersection(setlist).Count()), true
+		return int(list.IntersectionBits(setlist).Count()), true
 	}
 	// TODO: what to send when the clique is all of hidden variables?
 	return -1, false

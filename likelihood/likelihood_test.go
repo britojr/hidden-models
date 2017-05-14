@@ -7,7 +7,7 @@ import (
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 )
 
 type FakeCounter struct {
@@ -69,7 +69,7 @@ func TestStructloglikelihood(t *testing.T) {
 	}
 	for _, tt := range cases {
 		got := StructLoglikelihood(tt.cliques, tt.sepsets, tt.counter)
-		if !utils.FuzzyEqual(tt.result, got, 1e-4) {
+		if !floats.AlmostEqual(tt.result, got, 1e-4) {
 			t.Errorf("want %v, got %v", tt.result, got)
 		}
 	}
@@ -116,7 +116,7 @@ func TestLoglikelihood(t *testing.T) {
 		c.UpDownCalibration()
 		for i := range tt.result {
 			got := Loglikelihood(c, tt.result[i].data)
-			if !utils.FuzzyEqual(tt.result[i].ll, got, 1e-7) {
+			if !floats.AlmostEqual(tt.result[i].ll, got, 1e-7) {
 				t.Errorf("wrong ll2, want %v, got %v", tt.result[i].ll, got)
 			}
 		}

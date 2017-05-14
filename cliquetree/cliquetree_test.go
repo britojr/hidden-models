@@ -10,7 +10,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 	"github.com/britojr/tcc/characteristic"
 )
 
@@ -227,7 +227,7 @@ func TestUpDownCalibration(t *testing.T) {
 		for assig.Next() {
 			u := f.Get(assig)
 			v := got.Get(assig)
-			if !utils.FuzzyEqual(u, v) {
+			if !floats.AlmostEqual(u, v) {
 				t.Errorf("F[%v][%v]: want(%v); got(%v)", i, assig, u, v)
 			}
 		}
@@ -287,7 +287,7 @@ func TestUpDownCalibration2(t *testing.T) {
 		c.UpDownCalibration()
 		for i := range tt.cliques {
 			for j, x := range tt.result[i] {
-				if !utils.FuzzyEqual(x, c.Calibrated(i).Values()[j], 1e-5) {
+				if !floats.AlmostEqual(x, c.Calibrated(i).Values()[j], 1e-5) {
 					t.Errorf("wrong values for clique %v, want %v, got %v", tt.cliques[i], tt.result[i], c.Calibrated(i).Values())
 				}
 			}
@@ -296,10 +296,10 @@ func TestUpDownCalibration2(t *testing.T) {
 				v1 := c.Calibrated(i).SumOut(c.varin[i]).Values()
 				v2 := c.Calibrated(pa).SumOut(c.varout[i]).Values()
 				for j, x := range c.CalibratedSepSet(i).Values() {
-					if !utils.FuzzyEqual(x, v1[j]) {
+					if !floats.AlmostEqual(x, v1[j]) {
 						t.Errorf("wrong values for sepset of clique %v, want %v, got %v", tt.cliques[i], x, v1[j])
 					}
-					if !utils.FuzzyEqual(x, v2[j]) {
+					if !floats.AlmostEqual(x, v2[j]) {
 						t.Errorf("wrong values for sepset of clique %v, want %v, got %v", tt.cliques[i], x, v2[j])
 					}
 				}
@@ -530,7 +530,7 @@ func TestProbOfEvidence(t *testing.T) {
 		c.UpDownCalibration()
 		for _, r := range tt.result {
 			got := c.ProbOfEvidence(r.evidence)
-			if !utils.FuzzyEqual(r.prob, got, 1e-7) {
+			if !floats.AlmostEqual(r.prob, got, 1e-7) {
 				t.Errorf("wrong prob of evidence %v, want %v, got %v", r.evidence, r.prob, got)
 			}
 		}
@@ -623,7 +623,7 @@ func TestConditionalProb(t *testing.T) {
 					}
 				}
 				for j := range r.prob[i] {
-					if !utils.FuzzyEqual(r.prob[i][j], f.Values()[j], 1e-3) {
+					if !floats.AlmostEqual(r.prob[i][j], f.Values()[j], 1e-3) {
 						t.Errorf("wrong probabilities for evid %v,  want %v, got %v", r.evidence, r.prob[i], f.Values())
 					}
 				}

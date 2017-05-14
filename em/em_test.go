@@ -5,7 +5,7 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 )
 
 func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {
@@ -89,7 +89,7 @@ func TestExpectationStep(t *testing.T) {
 			}
 			for i := range r.values {
 				for j := range r.values[i] {
-					if !utils.FuzzyEqual(r.values[i][j], got[i].Values()[j], 1e-6) {
+					if !floats.AlmostEqual(r.values[i][j], got[i].Values()[j], 1e-6) {
 						t.Errorf("wrong counting, want %v, got %v", r.values[i], got[i].Values())
 						break
 					}
@@ -140,7 +140,7 @@ func TestExpectationMaximization(t *testing.T) {
 		c.UpDownCalibration()
 		for i := range tt.result {
 			for j := range tt.result[i] {
-				if !utils.FuzzyEqual(tt.result[i][j], c.Calibrated(i).Values()[j]) {
+				if !floats.AlmostEqual(tt.result[i][j], c.Calibrated(i).Values()[j]) {
 					t.Errorf("wrong counting, want %v, got %v", tt.result[i], c.Calibrated(i).Values())
 					break
 				}

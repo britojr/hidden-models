@@ -7,7 +7,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/floats"
 )
 
 type FakeCounter struct {
@@ -42,8 +42,8 @@ func TestCreateRandomPortentials(t *testing.T) {
 	for _, tt := range cases {
 		faclist := CreateRandomPotentials(tt.cliques, tt.cardin)
 		for _, f := range faclist {
-			tot := utils.SliceSumFloat64(f.Values())
-			if !utils.FuzzyEqual(tot, 1) {
+			tot := floats.Sum(f.Values())
+			if !floats.AlmostEqual(tot, 1) {
 				t.Errorf("random factor not normalized, sums to: %v", tot)
 			}
 			for _, v := range f.Values() {
@@ -100,8 +100,8 @@ func TestCreateUniformPortentials(t *testing.T) {
 			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
 		}
 		for i, f := range faclist {
-			tot := utils.SliceSumFloat64(f.Values())
-			if !utils.FuzzyEqual(tot, 1) {
+			tot := floats.Sum(f.Values())
+			if !floats.AlmostEqual(tot, 1) {
 				t.Errorf("uniform factor not normalized, sums to: %v", tot)
 			}
 			for _, v := range f.Values() {
@@ -189,7 +189,7 @@ func TestLatentFactor2(t *testing.T) {
 			t.Errorf("wrong size, want %v got %v", tt.lenobs, len(g.Values()))
 		}
 		for _, v := range g.Values() {
-			if !utils.FuzzyEqual(v, float64(1)) {
+			if !floats.AlmostEqual(v, float64(1)) {
 				t.Errorf("wrong value, want 1.0, got %v (typePot %v) val=%v", v, tt.typePot, g.Values())
 				break
 			}

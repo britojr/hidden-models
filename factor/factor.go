@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/list"
+	"github.com/britojr/kbn/stats"
 )
 
 // Factor ..
@@ -101,13 +102,13 @@ func (f *Factor) SetRandom() *Factor {
 	for i := range f.values {
 		f.values[i] = rand.Float64()
 	}
-	utils.NormalizeSlice(f.values)
+	stats.Normalize(f.values)
 	return f
 }
 
 // SetDirichlet sets the factor with normalized Dirichlet distribution
 func (f *Factor) SetDirichlet(alpha []float64) *Factor {
-	utils.Dirichlet(alpha, f.values)
+	stats.Dirichlet(alpha, f.values)
 	return f
 }
 
@@ -145,7 +146,7 @@ func (f *Factor) Add(assig *assignment.Assignment, v float64) {
 func (f *Factor) Product(g *Factor) *Factor {
 	h := new(Factor)
 	h.cardin = f.cardin
-	h.varlist = utils.SliceUnion(f.varlist, g.varlist, uint(len(f.cardin)))
+	h.varlist = list.Union(f.varlist, g.varlist, uint(len(f.cardin)))
 	h.stride = makeStride(h.varlist, h.cardin)
 	size := 1
 	if len(h.varlist) > 0 {
@@ -168,7 +169,7 @@ func (f *Factor) Division(g *Factor) *Factor {
 	h.varlist = f.varlist
 	h.stride = f.stride
 	h.values = append([]float64(nil), f.values...)
-	_, in, _ := utils.OrderedSliceDiff(f.varlist, g.varlist)
+	_, in, _ := list.OrderedDiff(f.varlist, g.varlist)
 	g = g.SumOut(in)
 	// TODO: create version without assig an bench to see how better it is
 	assig := assignment.New(h.varlist, h.cardin)
@@ -263,7 +264,7 @@ func (f *Factor) Reduce(evid []int) *Factor {
 // Normalize normalizes the factor so all values sum to 1
 func (f *Factor) Normalize() *Factor {
 	if len(f.values) > 0 {
-		utils.NormalizeSlice(f.values)
+		stats.Normalize(f.values)
 	}
 	return f
 }

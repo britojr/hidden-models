@@ -7,7 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/conv"
+	"github.com/britojr/kbn/errchk"
 )
 
 // DataHandler interface, returns data as an int matrix
@@ -64,7 +65,7 @@ func (d *DataSet) Read() {
 				return c == '_'
 			})
 			d.varNames = append(d.varNames, x[0])
-			d.cardinality = append(d.cardinality, utils.Atoi(x[1]))
+			d.cardinality = append(d.cardinality, conv.Atoi(x[1]))
 		}
 	} else {
 		if d.headerlns&NameHeader != 0 {
@@ -74,12 +75,12 @@ func (d *DataSet) Read() {
 		if d.headerlns&CardinHeader != 0 {
 			scanner.Scan()
 			cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
-			d.cardinality = utils.SliceAtoi(cells)
+			d.cardinality = conv.Satoi(cells)
 		}
 	}
 	for i := 0; scanner.Scan(); i++ {
 		cells := strings.FieldsFunc(scanner.Text(), d.splitFunc)
-		d.data = append(d.data, utils.SliceAtoi(cells))
+		d.data = append(d.data, conv.Satoi(cells))
 	}
 }
 
@@ -121,6 +122,6 @@ func (d *DataSet) calcCardinality() {
 
 func openFile(name string) *os.File {
 	fp, err := os.Open(name)
-	utils.ErrCheck(err, fmt.Sprintf("Can't open file %v", name))
+	errchk.Check(err, fmt.Sprintf("Can't open file %v", name))
 	return fp
 }

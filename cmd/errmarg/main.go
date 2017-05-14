@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/conv"
+	"github.com/britojr/kbn/errchk"
 )
 
 var (
@@ -32,19 +33,19 @@ func main() {
 
 func loadMarg(name string) [][]float64 {
 	f, err := os.Open(name)
-	utils.ErrCheck(err, fmt.Sprintf("Can't create file %v", name))
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", name))
 
 	scanner := bufio.NewScanner(f)
 	scanner.Scan()
 	scanner.Scan()
 	line := strings.Fields(scanner.Text())
-	values := make([][]float64, utils.Atoi(line[0]))
+	values := make([][]float64, conv.Atoi(line[0]))
 	j := 1
 	for i := range values {
-		n := utils.Atoi(line[j])
+		n := conv.Atoi(line[j])
 		j++
 		for k := 0; k < n; k++ {
-			values[i] = append(values[i], utils.AtoF64(line[j+k]))
+			values[i] = append(values[i], conv.Atof(line[j+k]))
 		}
 		j += n
 	}

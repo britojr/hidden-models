@@ -6,12 +6,15 @@ import (
 	"os"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/conv"
 	"github.com/britojr/kbn/counting"
 	"github.com/britojr/kbn/counting/bitcounter"
 	"github.com/britojr/kbn/em"
+	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/likelihood"
-	"github.com/britojr/kbn/utils"
+	"github.com/britojr/kbn/list"
+	"github.com/britojr/kbn/stats"
 	"github.com/britojr/tcc/generator"
 )
 
@@ -152,7 +155,7 @@ func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float6
 // RandomCliqueTree creates a new cliquetree from a randomized chartree
 func RandomCliqueTree(n, k int) *cliquetree.CliqueTree {
 	T, iphi, err := generator.RandomCharTree(n, k)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	ct := cliquetree.FromCharTree(T, iphi)
 	return ct
 }
@@ -169,12 +172,12 @@ func CreateEmpiricPotentials(counter counting.Counter, cliques [][]int, cardin [
 	for i := range factors {
 		var observed, hidden []int
 		if len(cardin) > numobs {
-			observed, hidden = utils.SliceSplit(cliques[i], numobs)
+			observed, hidden = list.Split(cliques[i], numobs)
 		} else {
 			observed = cliques[i]
 		}
 		if len(observed) > 0 {
-			values := utils.SliceItoF64(counter.CountAssignments(observed))
+			values := conv.Sitof(counter.CountAssignments(observed))
 			// factors[i] = P(observed)
 			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {
@@ -199,11 +202,11 @@ func proportionalValues(lenobs, lenhidden, typePot int, alphas []float64) []floa
 	for i := 0; i < lenobs; i++ {
 		switch typePot {
 		case EmpiricDirichlet:
-			utils.Dirichlet(alphas[:lenhidden], aux)
+			stats.Dirichlet(alphas[:lenhidden], aux)
 		case EmpiricRandom:
-			utils.Random(aux)
+			stats.Random(aux)
 		case EmpiricUniform:
-			utils.Uniform(aux)
+			stats.Uniform(aux)
 		}
 		for j := 0; j < lenhidden; j++ {
 			values[i+(j*lenobs)] = aux[j]
@@ -224,7 +227,7 @@ func CreateRandomPotentials(cliques [][]int, cardin []int) []*factor.Factor {
 // SaveCliqueTree saves a clique tree on the given file
 func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 	f, err := os.Create(fname)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	defer f.Close()
 	ct.SaveOn(f)
 }
@@ -232,7 +235,7 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 // LoadCliqueTree loads a clique tree from the given file
 func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 	f, err := os.Open(fname)
-	utils.ErrCheck(err, "")
+	errchk.Check(err, "")
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
