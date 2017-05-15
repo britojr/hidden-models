@@ -17,10 +17,10 @@ for FILE in *.csv
 	# number of times to repeat the whole experiment
 	for I in {1..5}
 		do
-		# variate tree-width
+		# variate treewidth
 		for K in {3,5,7,11}
 			do
-			# check if this network supports this tree-width
+			# check if this network supports this treewidth
 			if [ $NVAR -ge $(( $K + 2 )) ]
 				then
 				# variate amount of hidden variables

@@ -63,7 +63,7 @@ var (
 )
 
 func parseFlags() {
-	flag.IntVar(&k, "k", 5, "tree-width")
+	flag.IntVar(&k, "k", 5, "treewidth")
 	flag.IntVar(&numktrees, "numk", 1, "number of ktrees samples")
 	flag.IntVar(&iterEM, "iterem", 1, "number of EM iterations")
 	flag.IntVar(&iterations, "iterations", 1, "number of iterations of the whole process")
