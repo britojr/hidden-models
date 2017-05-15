@@ -46,6 +46,7 @@ var (
 	hdr        uint    // dataset file header type
 	h          int     // number of hidden variables
 	initpot    int     // type of initial potential
+	indepot    int     // initial potential conditional or independent
 	check      bool    // validate cliquetree
 	epslon     float64 // minimum precision for EM convergence
 	alpha      float64 // alpha parameter for dirichlet distribution
@@ -71,10 +72,13 @@ func parseFlags() {
 	flag.UintVar(&hdr, "hdr", 4, "1- name header, 2- cardinality header,  4- name_card header")
 	flag.IntVar(&h, "h", 0, "hidden variables")
 	flag.IntVar(&initpot, "initpot", 0,
-		`		0- random values,
+		`	0- random values,
 		1- empiric + dirichlet,
 		2- empiric + random,
 		3- empiric + uniform`)
+	flag.IntVar(&indepot, "indepot", 0,
+		`	0- conditional potentials -> p(x,y) = p(x)*p(y/x),
+		1- independent potentials -> p(x,y) = p(x)*p(y)`)
 	flag.BoolVar(&check, "check", false, "check tree")
 	flag.Float64Var(&epslon, "e", 1e-2, "minimum precision for EM convergence")
 	flag.Float64Var(&alpha, "a", 0.5, "alpha parameter for dirichlet distribution")
@@ -82,7 +86,7 @@ func parseFlags() {
 	flag.StringVar(&mkfile, "m", "", "MRF file")
 	flag.StringVar(&marfile, "mar", "", "MRF marginals save file")
 	flag.IntVar(&steps, "steps", StructStep|ParamStep,
-		`		step flags:
+		`	step flags:
 		1- structure learning,
 		2- parameter learning,
 		3- inference step`)
@@ -224,7 +228,7 @@ func learnStructure() *cliquetree.CliqueTree {
 func learnParameters(ct *cliquetree.CliqueTree) float64 {
 	fmt.Println("Learning parameters...")
 	start := time.Now()
-	ll := learner.OptimizeParameters(ct, initpot, iterEM, epslon)
+	ll := learner.OptimizeParameters(ct, initpot, indepot, iterEM, epslon)
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 
@@ -328,7 +332,7 @@ func CheckTree(ct *cliquetree.CliqueTree) {
 func checkUniform(ct *cliquetree.CliqueTree) {
 	fmt.Println("checking uniform...")
 	uniform := learn.CreateEmpiricPotentials(learner.Counter(),
-		ct.Cliques(), learner.Cardinality(), learner.TotVar()-h, learn.EmpiricUniform)
+		ct.Cliques(), learner.Cardinality(), learner.TotVar()-h, learn.EmpiricUniform, 0)
 	// normalize uniform using tree direction
 	for i := range uniform {
 		if len(ct.Varin(i)) != 0 {

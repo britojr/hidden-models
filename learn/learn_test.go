@@ -94,8 +94,9 @@ func TestCreateUniformPortentials(t *testing.T) {
 		counter: fakeCounter,
 		result:  [][]float64{{.20, .30, .20, .30}, {.25, .25, .25, .25}},
 	}}
+	// test conditional uniform
 	for _, tt := range cases {
-		faclist := CreateEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, EmpiricUniform)
+		faclist := CreateEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, EmpiricUniform, 0)
 		if len(faclist) != len(tt.result) {
 			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
 		}
@@ -111,6 +112,42 @@ func TestCreateUniformPortentials(t *testing.T) {
 			}
 			if !reflect.DeepEqual(tt.result[i], f.Values()) {
 				t.Errorf("Wrong values, want %v, got %v", tt.result[i], f.Values())
+			}
+		}
+	}
+	// test random independent
+	for _, tt := range cases {
+		faclist := CreateEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, EmpiricRandom, 1)
+		if len(faclist) != len(tt.result) {
+			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
+		}
+		for _, f := range faclist {
+			tot := floats.Sum(f.Values())
+			if !floats.AlmostEqual(tot, 1) {
+				t.Errorf("random factor not normalized, sums to: %v", tot)
+			}
+			for _, v := range f.Values() {
+				if v == 0 {
+					t.Errorf("random factor has zero values: %v", f.Values())
+				}
+			}
+			hid := []int(nil)
+			for j := range tt.cardin {
+				if j >= tt.numobs {
+					hid = append(hid, j)
+				}
+			}
+			q := f.SumOut(hid)
+			stridobs := len(q.Values())
+
+			for i := 0; i < len(f.Values()); i += stridobs {
+				prop := q.Values()[0] / f.Values()[i]
+				for j := 1; j < stridobs; j++ {
+					prop2 := q.Values()[j] / f.Values()[i+j]
+					if !floats.AlmostEqual(prop, prop2) {
+						t.Errorf("wrong proportion %v, %v", prop, prop2)
+					}
+				}
 			}
 		}
 	}

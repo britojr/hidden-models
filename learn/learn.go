@@ -89,11 +89,11 @@ func (l *Learner) TotVar() int {
 }
 
 // InitializePotentials initialize clique tree potentials
-func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot int) {
+func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot, indePot int) {
 	if typePot == FullRandom {
 		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
 	} else {
-		factors := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, typePot, l.alphas...)
+		factors := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, typePot, indePot, l.alphas...)
 		for i := range factors {
 			if len(ct.Varin(i)) != 0 {
 				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
@@ -105,9 +105,9 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot int) {
 
 // OptimizeParameters optimize the clique tree parameters
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
-	typePot, iterations int, epslon float64) float64 {
+	typePot, indePot, iterations int, epslon float64) float64 {
 
-	l.InitializePotentials(ct, typePot)
+	l.InitializePotentials(ct, typePot, indePot)
 	fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
 	em.ExpectationMaximization(ct, l.data, epslon)
 	bestll := l.CalculateLikelihood(ct)
@@ -116,7 +116,7 @@ func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 		pot := make([]*factor.Factor, len(ct.Potentials()))
 		copy(pot, ct.Potentials())
 		for i := 1; i < iterations; i++ {
-			l.InitializePotentials(ct, typePot)
+			l.InitializePotentials(ct, typePot, indePot)
 			fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
 			em.ExpectationMaximization(ct, l.data, epslon)
 			currll := l.CalculateLikelihood(ct)
@@ -163,7 +163,7 @@ func RandomCliqueTree(n, k int) *cliquetree.CliqueTree {
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting
 // for observed variables (empiric distribution), and expand uniformily or randomly for the hidden variables
 func CreateEmpiricPotentials(counter counting.Counter, cliques [][]int, cardin []int,
-	numobs, typePot int, alphas ...float64) []*factor.Factor {
+	numobs, typePot, indePot int, alphas ...float64) []*factor.Factor {
 
 	if typePot == EmpiricDirichlet && len(alphas) == 0 {
 		panic("no parameters for dirichlet dirtributions")
@@ -181,12 +181,20 @@ func CreateEmpiricPotentials(counter counting.Counter, cliques [][]int, cardin [
 			// factors[i] = P(observed)
 			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {
-				// g = P(hidden/observed)
-				g := factor.NewFactor(cliques[i], cardin)
-				lenobs := len(factors[i].Values())
-				g.SetValues(proportionalValues(lenobs, len(g.Values())/lenobs, typePot, alphas))
-				// P(observed, hidden) = P(observed) * P(hidden/observed)
-				factors[i] = factors[i].Product(g)
+				if indePot != 0 {
+					// g = P(hidden)
+					g := factor.NewFactor(hidden, cardin)
+					g.SetValues(proportionalValues(1, len(g.Values()), typePot, alphas))
+					// P(observed, hidden) = P(observed) * P(hidden)
+					factors[i] = factors[i].Product(g)
+				} else {
+					// g = P(hidden/observed)
+					g := factor.NewFactor(cliques[i], cardin)
+					lenobs := len(factors[i].Values())
+					g.SetValues(proportionalValues(lenobs, len(g.Values())/lenobs, typePot, alphas))
+					// P(observed, hidden) = P(observed) * P(hidden/observed)
+					factors[i] = factors[i].Product(g)
+				}
 			}
 		} else {
 			factors[i] = factor.NewFactor(cliques[i], cardin)
