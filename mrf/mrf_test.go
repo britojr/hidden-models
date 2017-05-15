@@ -3,6 +3,7 @@ package mrf
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -104,7 +105,7 @@ func TestLoadFromUAI(t *testing.T) {
 	}
 }
 
-func TestUnnormalizedMesure(t *testing.T) {
+func TestUnnormalizedProb(t *testing.T) {
 	cases := []struct {
 		cardin []int
 		pot    []*factor.Factor
@@ -151,6 +152,61 @@ func TestUnnormalizedMesure(t *testing.T) {
 			got := m.UnnormalizedProb(r.evid)
 			if !floats.AlmostEqual(r.prob, got) {
 				t.Errorf("wrong value, want %v, got %v", r.prob, got)
+			}
+		}
+	}
+}
+
+func TestUnnormLogProb(t *testing.T) {
+	cases := []struct {
+		cardin []int
+		pot    []*factor.Factor
+		result []struct {
+			evid []int
+			prob float64
+		}
+	}{{
+		cardin: []int{2, 2, 2},
+		pot: []*factor.Factor{
+			factor.NewFactorValues([]int{0, 1}, []int{2, 2, 2}, []float64{.25, .35, .35, .05}),
+			factor.NewFactorValues([]int{1, 2}, []int{2, 2, 2}, []float64{.20, .22, .40, .18}),
+		},
+		result: []struct {
+			evid []int
+			prob float64
+		}{
+			{[]int{0, 0, 0}, math.Log(.25) + math.Log(.20)},
+			{[]int{1, 1, 1}, math.Log(.05 * .18)},
+			{[]int{0, 1, 0}, math.Log(.35) + math.Log(.22)},
+		},
+	}, {
+		cardin: []int{2, 2, 2, 2, 2},
+		pot: []*factor.Factor{
+			factor.NewFactorValues([]int{0}, []int{2, 2, 2, 2, 2}, []float64{.999, .001}),
+			factor.NewFactorValues([]int{1}, []int{2, 2, 2, 2, 2}, []float64{.998, .002}),
+			factor.NewFactorValues([]int{0, 1, 2}, []int{2, 2, 2, 2, 2},
+				[]float64{.999, .06, .71, .05, .001, .94, .29, .95}),
+			factor.NewFactorValues([]int{2, 3}, []int{2, 2, 2, 2, 2}, []float64{.95, .10, .05, .90}),
+			factor.NewFactorValues([]int{2, 4}, []int{2, 2, 2, 2, 2}, []float64{.99, .30, .01, .70}),
+		},
+		result: []struct {
+			evid []int
+			prob float64
+		}{
+			{[]int{0, 0, 0, 0, 0},
+				math.Log(.999) + math.Log(.998) + math.Log(.999) + math.Log(.95) + math.Log(.99)},
+			{[]int{1, 1, 1, 1, 1},
+				math.Log(.001) + math.Log(.002) + math.Log(.95) + math.Log(.90) + math.Log(.70)},
+			{[]int{0, 1, 1, 0, 0},
+				math.Log(.999) + math.Log(.002) + math.Log(.29) + math.Log(.10) + math.Log(.30)},
+		},
+	}}
+	for _, tt := range cases {
+		m := &Mrf{tt.cardin, tt.pot}
+		for _, r := range tt.result {
+			got := m.UnnormLogProb(r.evid)
+			if !floats.AlmostEqual(r.prob, got) {
+				t.Errorf("%v != %v, for evid %v", r.prob, got, r.evid)
 			}
 		}
 	}

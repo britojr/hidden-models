@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 
 	"github.com/britojr/kbn/conv"
@@ -60,6 +61,14 @@ func (m *Mrf) UnnormalizedProb(evid []int) float64 {
 		q *= f.GetEvidValue(evid)
 	}
 	return q
+}
+
+// UnnormLogProb returns the log of the "unnormalized probability" of evidence
+func (m *Mrf) UnnormLogProb(evid []int) (q float64) {
+	for _, f := range m.potentials {
+		q += math.Log(f.GetEvidValue(evid))
+	}
+	return
 }
 
 // SaveOnLibdaiFormat saves a Mrf in libDAI factor graph format on the given writer
