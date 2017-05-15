@@ -24,6 +24,7 @@ func TestMean(t *testing.T) {
 		}
 	}
 }
+
 func TestMedian(t *testing.T) {
 	cases := []struct {
 		xs   []float64
@@ -38,6 +39,24 @@ func TestMedian(t *testing.T) {
 		got := Median(tt.xs)
 		if !floats.AlmostEqual(tt.mean, got) {
 			t.Errorf("wrong value,  want %v, got %v", tt.mean, got)
+		}
+	}
+}
+
+func TestMode(t *testing.T) {
+	cases := []struct {
+		xs   []float64
+		want float64
+	}{
+		{[]float64{1, 2, 3}, 1},
+		{[]float64{2, 2, 2, 1, 3, 3}, 2},
+		{[]float64{5, 4, 1, 2, 3, 6}, 5},
+		{[]float64{3, 1, 7, 1, 7, 7, 3}, 7},
+	}
+	for _, tt := range cases {
+		got := Mode(tt.xs)
+		if !floats.AlmostEqual(tt.want, got) {
+			t.Errorf("mode %v != %v", tt.want, got)
 		}
 	}
 }
@@ -111,6 +130,63 @@ func TestDirichlet(t *testing.T) {
 	}
 	if count == len(alphas) {
 		t.Errorf("Sampled the same distribution:\n%v\n%v", a, b)
+	}
+}
+
+func TestSetUniform(t *testing.T) {
+	cases := []struct {
+		xs, want []float64
+	}{{
+		[]float64{10, 20, 30, 40},
+		[]float64{0.25, 0.25, 0.25, 0.25},
+	}, {
+		[]float64{2, 2, 2, 2, 2, 2, 2, 2},
+		[]float64{0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125},
+	}, {
+		[]float64{},
+		[]float64{},
+	}}
+	for _, tt := range cases {
+		Uniform(tt.xs)
+		got := tt.xs
+		if !reflect.DeepEqual(tt.want, got) {
+			t.Errorf("uniform: %v != %v", tt.want, got)
+		}
+	}
+}
+
+func TestSetRandom(t *testing.T) {
+	cases := []struct {
+		xs []float64
+	}{{
+		[]float64{10, 20, 30, 40},
+	}, {
+		[]float64{5.5},
+	}, {
+		[]float64{0, 0, 0},
+	}, {
+		[]float64{3, 4},
+	}}
+	for _, tt := range cases {
+		Random(tt.xs)
+		got := tt.xs
+		if !floats.AlmostEqual(1, floats.Sum(got)) {
+			t.Errorf("not normalized, sum %v", floats.Sum(got))
+		}
+	}
+	// test different outcomes
+	xs := []float64{1, 2, 3}
+	Random(xs)
+	values := append([]float64(nil), xs...)
+	Random(xs)
+	count := 0
+	for i := range values {
+		if floats.AlmostEqual(values[i], xs[i]) {
+			count++
+		}
+	}
+	if count == len(values) {
+		t.Errorf("Sampled the same distribution:\n%v\n%v", values, xs)
 	}
 }
 
