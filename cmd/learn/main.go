@@ -67,7 +67,7 @@ func parseFlags() {
 	flag.IntVar(&numktrees, "numk", 1, "number of ktrees samples")
 	flag.IntVar(&iterEM, "iterem", 1, "number of EM iterations")
 	flag.IntVar(&iterations, "iterations", 1, "number of iterations of the whole process")
-	flag.StringVar(&dsfile, "f", "", "dataset file")
+	flag.StringVar(&dsfile, "f", "", "dataset file (.csv)")
 	flag.UintVar(&delimiter, "delimiter", ',', "field delimiter")
 	flag.UintVar(&hdr, "hdr", 4, "1- name header, 2- cardinality header,  4- name_card header")
 	flag.IntVar(&h, "h", 0, "hidden variables")
@@ -89,7 +89,7 @@ func parseFlags() {
 		`	step flags:
 		1- structure learning,
 		2- parameter learning,
-		3- inference step`)
+		4- inference step`)
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -178,28 +178,28 @@ func inferenceStep(ct *cliquetree.CliqueTree) {
 	// inference step
 	fmt.Println("Calculating partition function...")
 	start := time.Now()
-	z, sd := estimatePartitionFunction(ct, mk, learner.Data())
+	estimatePartitionFunction(ct, mk, learner.Data())
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
-	fmt.Printf("Partition function (Log): %.8f, stdev: %.3f\n", math.Log(z), math.Log(sd))
+	// fmt.Printf("Partition function (Log): %.8f, stdev: %.3f\n", (z), (sd))
 }
 
 func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) (float64, float64) {
-	var p, phi float64
 	var zs []float64
 	for _, m := range data {
-		p = ct.ProbOfEvidence(m)
+		p := ct.ProbOfEvidence(m)
 		if p != 0 {
-			phi = mk.UnnormalizedProb(m)
-			zs = append(zs, phi/p)
+			// phi = mk.UnnormalizedProb(m)
+			// zs = append(zs, phi/p)
+			zs = append(zs, mk.UnnormLogProb(m)-math.Log(p))
 		} else {
 			panic(fmt.Sprintf("zero probability for evid: %v", m))
 		}
 	}
 	fmt.Println("Partition function (log):")
 	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
-		math.Log(floats.Min(zs)), math.Log(floats.Max(zs)), math.Log(stats.Mean(zs)),
-		math.Log(stats.Stdev(zs)), math.Log(stats.Mode(zs)), math.Log(stats.Median(zs)))
+		(floats.Min(zs)), (floats.Max(zs)), (stats.Mean(zs)),
+		(stats.Stdev(zs)), (stats.Mode(zs)), (stats.Median(zs)))
 
 	c := .22
 	a, b := int(float64(len(zs))*c), int(len(zs)+1-int(float64(len(zs))*c))
@@ -207,9 +207,23 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 	sort.Float64s(zs)
 	ws := zs[a:b]
 	fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
-		math.Log(floats.Min(ws)), math.Log(floats.Max(ws)), math.Log(stats.Mean(ws)),
-		math.Log(stats.Stdev(ws)), math.Log(stats.Mode(ws)), math.Log(stats.Median(ws)))
+		(floats.Min(ws)), (floats.Max(ws)), (stats.Mean(ws)),
+		(stats.Stdev(ws)), (stats.Mode(ws)), (stats.Median(ws)))
 	return stats.Mean(zs), stats.Stdev(zs)
+	// fmt.Println("Partition function (log):")
+	// fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
+	// 	math.Log(floats.Min(zs)), math.Log(floats.Max(zs)), math.Log(stats.Mean(zs)),
+	// 	math.Log(stats.Stdev(zs)), math.Log(stats.Mode(zs)), math.Log(stats.Median(zs)))
+	//
+	// c := .22
+	// a, b := int(float64(len(zs))*c), int(len(zs)+1-int(float64(len(zs))*c))
+	// fmt.Printf("Partition function (log) discarding %.1f%% on each side: [%v,%v]\n", c*100, a, b)
+	// sort.Float64s(zs)
+	// ws := zs[a:b]
+	// fmt.Printf("Min: %.4f, Max: %.4f Mean: %.4f, SD: %.4f Mode: %.4f Median: %.4f\n",
+	// 	math.Log(floats.Min(ws)), math.Log(floats.Max(ws)), math.Log(stats.Mean(ws)),
+	// 	math.Log(stats.Stdev(ws)), math.Log(stats.Mode(ws)), math.Log(stats.Median(ws)))
+	// return stats.Mean(zs), stats.Stdev(zs)
 }
 
 func learnStructure() *cliquetree.CliqueTree {
