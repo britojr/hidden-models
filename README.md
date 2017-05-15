@@ -3,7 +3,7 @@
 
 ___
 
-## Using
+## Installation and usage
 To use **kbn** you need to install libgsl and some go packages described bellow.
 
 * Install [libgsl](https://www.gnu.org/software/gsl/):
@@ -12,7 +12,7 @@ To use **kbn** you need to install libgsl and some go packages described bellow.
 
                 apt install gsl-bin libgsl-dev
 
-    For more details, check [gogsl](https://github.com/dtromb/gogsl) package.
+    For more details, check the [gogsl packgage](https://github.com/dtromb/gogsl) page.
 
 * Get other required packages:
 
@@ -26,8 +26,6 @@ To use **kbn** you need to install libgsl and some go packages described bellow.
                 go test github.com/britojr/kbn...
                 go install github.com/britojr/kbn...
 
-* Using the commands:
+* Commands:
 
                 learn --help
-
----
