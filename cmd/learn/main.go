@@ -84,7 +84,7 @@ func parseFlags() {
 	flag.Float64Var(&alpha, "a", 0.5, "alpha parameter for dirichlet distribution")
 	flag.StringVar(&ctfile, "c", "", "cliquetree file")
 	flag.StringVar(&mkfile, "m", "", "MRF file")
-	flag.StringVar(&marfile, "mar", "", "MRF marginals save file")
+	flag.StringVar(&marfile, "mar", "", "marginals save file")
 	flag.IntVar(&steps, "steps", StructStep|ParamStep,
 		`	step flags:
 		1- structure learning,
@@ -97,8 +97,9 @@ func parseFlags() {
 		fmt.Println("Please enter dataset file name.")
 		return
 	}
-	fmt.Printf("Args: k=%v, h=%v, initpot=%v\n", k, h, initpot)
-	fmt.Printf("eps=%v, alph=%v, numk=%v, iterEM=%v\n", epslon, alpha, numktrees, iterEM)
+	fmt.Printf("Args: dsfile=%v, ctfile=%v\n", dsfile, ctfile)
+	fmt.Printf("k=%v, h=%v, initpot=%v, indepot=%v\n", k, h, initpot, indepot)
+	fmt.Printf("eps=%v, alph=%v, iterem=%v\n", epslon, alpha, iterEM)
 }
 
 func main() {

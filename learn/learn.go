@@ -107,6 +107,11 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot, indeP
 func (l *Learner) OptimizeParameters(ct *cliquetree.CliqueTree,
 	typePot, indePot, iterations int, epslon float64) float64 {
 
+	if iterations == 0 {
+		l.InitializePotentials(ct, typePot, indePot)
+		return l.CalculateLikelihood(ct)
+	}
+	// TODO: remove unnecessary LL calculations
 	l.InitializePotentials(ct, typePot, indePot)
 	fmt.Printf("LL before EM %v\n", l.CalculateLikelihood(ct))
 	em.ExpectationMaximization(ct, l.data, epslon)
@@ -214,6 +219,8 @@ func proportionalValues(lenobs, lenhidden, typePot int, alphas []float64) []floa
 		case EmpiricRandom:
 			stats.Random(aux)
 		case EmpiricUniform:
+			stats.Uniform(aux)
+		default:
 			stats.Uniform(aux)
 		}
 		for j := 0; j < lenhidden; j++ {
