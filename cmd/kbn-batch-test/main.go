@@ -11,6 +11,6 @@ import (
 
 func main() {
 	fmt.Println("running tests...")
-	files, _ := filepath.Glob("*")
+	files, _ := filepath.Glob("*.csv")
 	fmt.Println(files)
 }

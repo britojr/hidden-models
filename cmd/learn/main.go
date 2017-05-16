@@ -230,7 +230,7 @@ func estimatePartitionFunction(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]
 func learnStructure() *cliquetree.CliqueTree {
 	fmt.Println("Learning structure...")
 	start := time.Now()
-	ct := learn.RandomCliqueTree(learner.TotVar(), k)
+	ct := cliquetree.NewRandom(learner.TotVar(), k)
 	elapsed := time.Since(start)
 	fmt.Printf("Time: %v\n", elapsed)
 
