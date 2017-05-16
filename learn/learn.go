@@ -15,7 +15,6 @@ import (
 	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/list"
 	"github.com/britojr/kbn/stats"
-	"github.com/britojr/tcc/generator"
 )
 
 const (
@@ -144,10 +143,10 @@ func (l *Learner) CalculateLikelihood(ct *cliquetree.CliqueTree) float64 {
 
 // GuessStructure tries a number of random structures and choses the best one and its log-likelihood
 func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float64) {
-	bestStruct := RandomCliqueTree(l.n+l.h, l.k)
+	bestStruct := cliquetree.NewRandom(l.n+l.h, l.k)
 	bestScore := likelihood.StructLoglikelihood(bestStruct.Cliques(), bestStruct.SepSets(), l.counter)
 	for i := 1; i < iterations; i++ {
-		currStruct := RandomCliqueTree(l.n+l.h, l.k)
+		currStruct := cliquetree.NewRandom(l.n+l.h, l.k)
 		currScore := likelihood.StructLoglikelihood(currStruct.Cliques(), currStruct.SepSets(), l.counter)
 		if currScore > bestScore {
 			bestScore = currScore
@@ -155,14 +154,6 @@ func (l *Learner) GuessStructure(iterations int) (*cliquetree.CliqueTree, float6
 		}
 	}
 	return bestStruct, bestScore
-}
-
-// RandomCliqueTree creates a new cliquetree from a randomized chartree
-func RandomCliqueTree(n, k int) *cliquetree.CliqueTree {
-	T, iphi, err := generator.RandomCharTree(n, k)
-	errchk.Check(err, "")
-	ct := cliquetree.FromCharTree(T, iphi)
-	return ct
 }
 
 // CreateEmpiricPotentials creates a list of clique tree potentials with counting

@@ -1,3 +1,4 @@
+// Package cliquetree implements cliquetree structure
 package cliquetree
 
 import (
@@ -14,6 +15,7 @@ import (
 	"github.com/britojr/kbn/floats"
 	"github.com/britojr/kbn/list"
 	"github.com/britojr/tcc/characteristic"
+	"github.com/britojr/tcc/generator"
 )
 
 // CliqueTree ..
@@ -38,7 +40,7 @@ type CliqueTree struct {
 	prev, post [][]*factor.Factor
 }
 
-// New ..
+// New creates an empty cliquetree
 func New(n int) *CliqueTree {
 	c := new(CliqueTree)
 	c.cliques = make([][]int, n)
@@ -73,6 +75,15 @@ func NewStructure(cliques, adj [][]int) (*CliqueTree, error) {
 		c.sepsets[i], c.varin[i], c.varout[i] = list.OrderedDiff(c.cliques[c.parent[i]], c.cliques[i])
 	}
 	return c, nil
+}
+
+// NewRandom creates a new random cliquetree with fized treewith
+// n: number of variables, k: treewith
+func NewRandom(n, k int) *CliqueTree {
+	T, iphi, err := generator.RandomCharTree(n, k)
+	errchk.Check(err, "")
+	c := FromCharTree(T, iphi)
+	return c
 }
 
 func (c *CliqueTree) bfsOrder(root int) []int {
