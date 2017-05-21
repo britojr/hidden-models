@@ -170,13 +170,8 @@ func TestNew(t *testing.T) {
 		if tt.k != l.k || tt.h != l.h || tt.hcard != l.hcard {
 			t.Errorf("Wrong argments")
 		}
-		if tt.alphalen != len(l.alphas) {
-			t.Errorf("wrong alpha size, want %v got %v", tt.alphalen, len(l.alphas))
-		}
-		for _, v := range l.alphas {
-			if tt.alpha != v {
-				t.Errorf("wrong value of alpha, want %v got %v", tt.alpha, l.alphas)
-			}
+		if tt.alpha != l.alpha {
+			t.Errorf("wrong value of alpha, want %v got %v", tt.alpha, l.alpha)
 		}
 		if len(l.cardin) != len(tt.cardin)+tt.h {
 			t.Errorf("wrong cardin size, want %v+%v, got %v", len(tt.cardin), tt.h, len(l.cardin))

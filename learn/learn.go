@@ -2,7 +2,6 @@ package learn
 
 import (
 	"fmt"
-	"math"
 	"os"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -35,10 +34,10 @@ type Learner struct {
 	n       int   // number of variables
 	cardin  []int // cardinality slice
 	// parameters
-	k      int       // treewidth
-	h      int       // number of hidden variables
-	hcard  int       // cardinality of the hidden variables
-	alphas []float64 // parameters for dirichlet distribution
+	k     int     // treewidth
+	h     int     // number of hidden variables
+	hcard int     // cardinality of the hidden variables
+	alpha float64 // parameters for dirichlet distribution
 }
 
 // New creates new learner object with parameters
@@ -49,10 +48,7 @@ func New(data [][]int, cardin []int, k, h, hcard int, alpha ...float64) *Learner
 	l.hcard = hcard
 	// create slice of alpha parameters
 	if len(alpha) > 0 && alpha[0] > 0 {
-		l.alphas = make([]float64, int(math.Pow(float64(hcard), float64(l.k+1))))
-		for i := range l.alphas {
-			l.alphas[i] = alpha[0]
-		}
+		l.alpha = alpha[0]
 	}
 	l.counter = bitcounter.NewBitCounter()
 	l.counter.LoadFromData(data, cardin)
@@ -92,7 +88,7 @@ func (l *Learner) InitializePotentials(ct *cliquetree.CliqueTree, typePot, indeP
 	if typePot == FullRandom {
 		ct.SetAllPotentials(CreateRandomPotentials(ct.Cliques(), l.cardin))
 	} else {
-		factors := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, typePot, indePot, l.alphas...)
+		factors := CreateEmpiricPotentials(l.counter, ct.Cliques(), l.cardin, l.n, typePot, indePot, l.alpha)
 		for i := range factors {
 			if len(ct.Varin(i)) != 0 {
 				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
