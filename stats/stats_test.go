@@ -99,36 +99,34 @@ func TestStdev(t *testing.T) {
 
 func TestDirichlet(t *testing.T) {
 	cases := []struct {
-		alphas []float64
+		alpha float64
+		l     int
 	}{
-		{[]float64{3.2, 3.2, 3.2, 3.2}},
-		{[]float64{0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1}},
-		{[]float64{0.01, 0.01}},
-		{[]float64{5}},
+		{3.2, 4},
+		{0.1, 8},
+		{0.01, 2},
+		{5, 1},
 	}
 	for _, tt := range cases {
-		values := make([]float64, len(tt.alphas))
-		Dirichlet(tt.alphas, values)
-		if len(tt.alphas) != len(values) {
-			t.Errorf("wrong size, want %v, got %v", len(tt.alphas), len(values))
-		}
-		if len(tt.alphas) != 0 && !floats.AlmostEqual(1, floats.Sum(values)) {
+		values := make([]float64, tt.l)
+		Dirichlet1(tt.alpha, values)
+		if !floats.AlmostEqual(1, floats.Sum(values)) {
 			t.Errorf("not normalized %v", values)
 		}
 	}
 
 	// test different outcomes
-	alphas := []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}
-	a, b := make([]float64, len(alphas)), make([]float64, len(alphas))
-	Dirichlet(alphas, a)
-	Dirichlet(alphas, b)
+	alpha, l := 0.7, 8
+	a, b := make([]float64, l), make([]float64, l)
+	Dirichlet1(alpha, a)
+	Dirichlet1(alpha, b)
 	count := 0
-	for i := range alphas {
+	for i := 0; i < l; i++ {
 		if floats.AlmostEqual(a[i], b[i]) {
 			count++
 		}
 	}
-	if count == len(alphas) {
+	if count == l {
 		t.Errorf("Sampled the same distribution:\n%v\n%v", a, b)
 	}
 }
