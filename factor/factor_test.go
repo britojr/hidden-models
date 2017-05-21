@@ -531,7 +531,7 @@ func TestSetDirichlet(t *testing.T) {
 		alphas: []float64{5},
 	}}
 	for _, tt := range cases {
-		got := tt.f.SetDirichlet(tt.alphas)
+		got := tt.f.SetDirichlet(tt.alphas[0])
 		if tt.size != len(got.Values()) {
 			t.Errorf("want %v, got %v", tt.size, got.Values())
 		}
@@ -543,9 +543,9 @@ func TestSetDirichlet(t *testing.T) {
 	// test different outcomes
 	f := NewFactor([]int{1, 2, 3}, []int{2, 2, 2, 2, 2})
 	alphas := []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}
-	f.SetDirichlet(alphas)
+	f.SetDirichlet(alphas[0])
 	values := append([]float64(nil), f.values...)
-	f.SetDirichlet(alphas)
+	f.SetDirichlet(alphas[0])
 	count := 0
 	for i := range values {
 		if floats.AlmostEqual(values[i], f.values[i]) {
@@ -553,7 +553,7 @@ func TestSetDirichlet(t *testing.T) {
 		}
 	}
 	if count == len(values) {
-		t.Errorf("Sampled the same distribution:\n%v\n%v", f.values, f.SetDirichlet(alphas).values)
+		t.Errorf("Sampled the same distribution:\n%v\n%v", f.values, f.SetDirichlet(alphas[0]).values)
 	}
 }
 

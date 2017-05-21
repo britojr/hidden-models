@@ -206,7 +206,7 @@ func proportionalValues(lenobs, lenhidden, typePot int, alphas []float64) []floa
 	for i := 0; i < lenobs; i++ {
 		switch typePot {
 		case EmpiricDirichlet:
-			stats.Dirichlet(alphas[:lenhidden], aux)
+			stats.Dirichlet1(alphas[0], aux)
 		case EmpiricRandom:
 			stats.Random(aux)
 		case EmpiricUniform:

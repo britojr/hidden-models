@@ -106,6 +106,7 @@ func TestDirichlet(t *testing.T) {
 		{0.1, 8},
 		{0.01, 2},
 		{5, 1},
+		{1.5, 9},
 	}
 	for _, tt := range cases {
 		values := make([]float64, tt.l)

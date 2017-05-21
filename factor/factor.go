@@ -107,8 +107,8 @@ func (f *Factor) SetRandom() *Factor {
 }
 
 // SetDirichlet sets the factor with normalized Dirichlet distribution
-func (f *Factor) SetDirichlet(alpha []float64) *Factor {
-	stats.Dirichlet(alpha, f.values)
+func (f *Factor) SetDirichlet(alpha float64) *Factor {
+	stats.Dirichlet1(alpha, f.values)
 	return f
 }
 
