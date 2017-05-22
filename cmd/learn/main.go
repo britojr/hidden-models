@@ -52,7 +52,7 @@ var (
 	alpha      float64 // alpha parameter for dirichlet distribution
 	ctfile     string  // cliquetree file
 	mkfile     string  // markov random field uai file
-	marfile    string  // mrf save marginals file
+	marfile    string  // save marginals file
 	steps      int     // flags indicating what steps to execute
 )
 
