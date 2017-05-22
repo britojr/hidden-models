@@ -2,7 +2,9 @@ package learn
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/conv"
@@ -11,6 +13,7 @@ import (
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/filehandler"
 	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/list"
 	"github.com/britojr/kbn/stats"
@@ -241,3 +244,22 @@ func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
+
+// TODO: split here
+
+// ExtractData reads a dataset and returns is data and cardinality
+func ExtractData(dsfile string, delimiter, hdr uint) (data [][]int, cardin []int) {
+	log.Printf("Loading dataset: %v\n", dsfile)
+	start := time.Now()
+	dataset := filehandler.NewDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
+	dataset.Read()
+	elapsed := time.Since(start)
+	log.Printf("Time: %v\n", elapsed)
+	return dataset.Data(), dataset.Cardinality()
+}
+
+// func InitializeLearner() {
+// 	log.Println("initializing learner...")
+// 	learner = learn.New(data, cardin, k, h, hiddencard, alpha)
+// 	log.Printf("Variables: %v+%v, k:%v, Instances: %v\n", len(cardin), h, k, len(data))
+// }

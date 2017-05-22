@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -23,6 +24,7 @@ var (
 	// struct command
 	k         int    // treewidth
 	h         int    // number of hidden variables
+	hcard     int    // cardinality of hiden variables
 	numktrees int    // number of k-trees to sample
 	ctfileout string // cliquetree save file
 
@@ -69,6 +71,7 @@ func main() {
 	structComm.StringVar(&ctfileout, "cs", "", "cliquetree save file")
 	structComm.IntVar(&k, "k", 5, "treewidth of the structure")
 	structComm.IntVar(&h, "h", 0, "number of hidden variables")
+	structComm.IntVar(&hcard, "hc", 2, "cardinality of hidden variables")
 	structComm.IntVar(&numktrees, "nk", 1, "number of ktrees samples")
 
 	// param subcommand flags
@@ -125,8 +128,8 @@ func main() {
 			os.Exit(1)
 		}
 		// Print
-		fmt.Printf("dsfile=%v, ctout=%v, k=%v, h=%v\n",
-			dsfile, ctfileout, k, h,
+		log.Printf("ds=%v, cs=%v, k=%v, h=%v, hcard=%v\n",
+			dsfile, ctfileout, k, h, hcard,
 		)
 	}
 
@@ -151,7 +154,7 @@ func main() {
 			paramComm.PrintDefaults()
 			os.Exit(1)
 		}
-		fmt.Printf("dsfile=%v, ctin=%v, ctout=%v, mode=%v, dist=%v, alpha=%v, eps=%v, iterem=%v\n",
+		log.Printf("ds=%v, cl=%v, cst=%v, mode=%v, dist=%v, alpha=%v, eps=%v, iterem=%v\n",
 			dsfile, ctfilein, ctfileout, potmode, potdist, alpha, epslon, iterem,
 		)
 	}
@@ -166,7 +169,7 @@ func main() {
 			partsumComm.PrintDefaults()
 			os.Exit(1)
 		}
-		fmt.Printf("dsfile=%v, ctin=%v, mkfile=%v, zfile=%v, discard=%v\n",
+		log.Printf("ds=%v, cl=%v, mrf=%v, zfile=%v, discard=%v\n",
 			dsfile, ctfilein, mkfile, zfile, discard,
 		)
 	}
