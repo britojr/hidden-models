@@ -12,7 +12,7 @@ import (
 type BitCounter struct {
 	cardin []int            // cardinality of each variable
 	values []*valToLine     // all assignable values for each variable
-	cache  map[string][]int // cached occurence counting slices for different varlists
+	cache  map[string][]int // cached occurrence counting slices for different varlists
 	lines  int              // number of lines in the dataset
 }
 

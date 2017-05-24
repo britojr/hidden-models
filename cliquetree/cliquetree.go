@@ -21,7 +21,7 @@ import (
 // CliqueTree ..
 type CliqueTree struct {
 	nv      int     // number of variables
-	cliques [][]int // wich variables participate on this clique
+	cliques [][]int // which variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
 	varin   [][]int // the difference between clique and parent
 	varout  [][]int // the difference between clique and parent
@@ -224,7 +224,7 @@ func (c *CliqueTree) StorePotentials() {
 	c.initialPotStored = append([]*factor.Factor(nil), c.initialPot...)
 }
 
-// RecoverPotentials recover intial potentials previously stored
+// RecoverPotentials recover initial potentials previously stored
 func (c *CliqueTree) RecoverPotentials() {
 	c.initialPot = append([]*factor.Factor(nil), c.initialPotStored...)
 }

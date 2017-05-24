@@ -1,4 +1,4 @@
-// Package conv provides convertion functions
+// Package conv provides conversion functions
 package conv
 
 import (
@@ -8,14 +8,14 @@ import (
 	"github.com/britojr/kbn/errchk"
 )
 
-// Atoi converst string to int
+// Atoi converts string to int
 func Atoi(s string) int {
 	i, err := strconv.Atoi(s)
 	errchk.Check(err, fmt.Sprintf("Can't convert %v to int", s))
 	return i
 }
 
-// Atof converst string to float64
+// Atof converts string to float64
 func Atof(s string) float64 {
 	i, err := strconv.ParseFloat(s, 64)
 	errchk.Check(err, fmt.Sprintf("Can't convert %v to float64", s))
