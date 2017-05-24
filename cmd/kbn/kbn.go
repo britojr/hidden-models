@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/britojr/kbn/learn"
 )
 
 // Define subcommand names
@@ -45,17 +47,24 @@ var (
 	discard float64 // discard factor
 )
 
-// Define subcommands
 var (
+	// Define subcommands
 	structComm, paramComm, partsumComm *flag.FlagSet
+	// Define choicemaps
+	modeChoices, distChoices map[string]int
 )
 
-func printDefaults() {
-	fmt.Printf("Usage:\n\n")
-	fmt.Printf("\tkbn <command> [arguments]\n\n")
-	fmt.Printf("The commands are:\n\n")
-	fmt.Printf("\t%v\n\t%v\n\t%v\n", structConst, paramConst, partsumConst)
-	fmt.Println()
+func init() {
+	modeChoices = map[string]int{
+		"independent": learn.ModeIndep,
+		"conditional": learn.ModeCond,
+		"full":        learn.ModeFull,
+	}
+	distChoices = map[string]int{
+		"random":    learn.DistRandom,
+		"uniform":   learn.DistUniform,
+		"dirichlet": learn.DistDirichlet,
+	}
 }
 
 func main() {
@@ -140,12 +149,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		modeChoices := map[string]bool{"independent": true, "conditional": true, "full": true}
 		if _, ok := modeChoices[potmode]; !ok {
 			paramComm.PrintDefaults()
 			os.Exit(1)
 		}
-		distChoices := map[string]bool{"random": true, "uniform": true, "dirichlet": true}
 		if _, ok := distChoices[potdist]; !ok {
 			paramComm.PrintDefaults()
 			os.Exit(1)
@@ -173,4 +180,12 @@ func main() {
 			dsfile, ctfilein, mkfile, zfile, discard,
 		)
 	}
+}
+
+func printDefaults() {
+	fmt.Printf("Usage:\n\n")
+	fmt.Printf("\tkbn <command> [arguments]\n\n")
+	fmt.Printf("The commands are:\n\n")
+	fmt.Printf("\t%v\n\t%v\n\t%v\n", structConst, paramConst, partsumConst)
+	fmt.Println()
 }

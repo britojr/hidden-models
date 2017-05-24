@@ -20,6 +20,7 @@ import (
 
 // CliqueTree ..
 type CliqueTree struct {
+	n       int     // number of variables
 	cliques [][]int // wich variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
 	varin   [][]int // the difference between clique and parent
@@ -108,6 +109,12 @@ func (c *CliqueTree) bfsOrder(root int) []int {
 		}
 	}
 	return queue
+}
+
+// N returns the number of variables
+func (c *CliqueTree) N() int {
+	// TODO: update c.n when creating a clique tree
+	return c.n
 }
 
 // Size returns the number of cliques

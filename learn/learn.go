@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -232,7 +234,7 @@ func CreateRandomPotentials(cliques [][]int, cardin []int) []*factor.Factor {
 // SaveCliqueTree saves a clique tree on the given file
 func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 	f, err := os.Create(fname)
-	errchk.Check(err, "")
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
 	defer f.Close()
 	ct.SaveOn(f)
 }
@@ -240,7 +242,7 @@ func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 // LoadCliqueTree loads a clique tree from the given file
 func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 	f, err := os.Open(fname)
-	errchk.Check(err, "")
+	errchk.Check(err, fmt.Sprintf("Can't open file %v", fname))
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
@@ -258,8 +260,29 @@ func ExtractData(dsfile string, delimiter, hdr uint) (data [][]int, cardin []int
 	return dataset.Data(), dataset.Cardinality()
 }
 
-// func InitializeLearner() {
-// 	log.Println("initializing learner...")
-// 	learner = learn.New(data, cardin, k, h, hiddencard, alpha)
-// 	log.Printf("Variables: %v+%v, k:%v, Instances: %v\n", len(cardin), h, k, len(data))
-// }
+// Printcln prints the default formats in a comma-separated line
+func Printcln(a ...interface{}) (n int, err error) {
+	return fmt.Print(strings.Replace(fmt.Sprintln(a...), " ", ",", -1))
+}
+
+// SaveCTMarginals saves marginals of observed variables of a clique tree in UAI format
+func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
+	f, err := os.Create(fname)
+	errchk.Check(err, "")
+	defer f.Close()
+	ma := ct.Marginals()
+
+	var keys []int
+	for k := range ma {
+		keys = append(keys, k)
+	}
+	fmt.Fprintf(f, "MAR\n")
+	fmt.Fprintf(f, "%d ", obs)
+	sort.Ints(keys)
+	for i := 0; i < obs; i++ {
+		fmt.Fprintf(f, "%d ", len(ma[keys[i]]))
+		for _, v := range ma[keys[i]] {
+			fmt.Fprintf(f, "%.5f ", v)
+		}
+	}
+}
