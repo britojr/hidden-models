@@ -1,9 +1,6 @@
 package floats
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
 func TestAlmostEqual(t *testing.T) {
 	cases := []struct {
@@ -75,23 +72,6 @@ func TestSum(t *testing.T) {
 		got := Sum(tt.values)
 		if tt.sum != got {
 			t.Errorf("want %v, got %v", tt.sum, got)
-		}
-	}
-}
-
-func TestNormalize(t *testing.T) {
-	cases := []struct {
-		values []float64
-		r      []float64
-	}{
-		{[]float64{5, 5}, []float64{.5, .5}},
-		{[]float64{3, 1}, []float64{.75, .25}},
-		{[]float64{1.5, 3.5, 1.0}, []float64{1.5 / 6, 3.5 / 6, 1.0 / 6}},
-	}
-	for _, tt := range cases {
-		Normalize(tt.values)
-		if !reflect.DeepEqual(tt.r, tt.values) {
-			t.Errorf("want %v, got %v", tt.r, tt.values)
 		}
 	}
 }

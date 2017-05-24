@@ -49,11 +49,3 @@ func Sum(fs []float64) (sum float64) {
 	}
 	return
 }
-
-// Normalize normalize the slice to add up to one
-func Normalize(fs []float64) {
-	sum := Sum(fs)
-	for i := range fs {
-		fs[i] /= sum
-	}
-}

@@ -9,9 +9,9 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/errchk"
+	"github.com/britojr/kbn/floats"
 	"github.com/britojr/kbn/mrf"
 	"github.com/britojr/kbn/stats"
-	"github.com/gonum/floats"
 )
 
 // PartsumCommand learns an approximation of the partition sum of a MRF

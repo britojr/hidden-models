@@ -13,7 +13,6 @@ import (
 
 // Mean calculates the Mean of a float64 slice
 func Mean(xs []float64) float64 {
-	// return stats.Mean(xs, 1, len(xs))
 	return floats.Sum(xs) / float64(len(xs))
 }
 
@@ -47,32 +46,14 @@ func Mode(xs []float64) (v float64) {
 // Variance calculates the variance of a float64 slice
 func Variance(xs []float64) (v float64) {
 	return stat.Variance(xs, nil)
-	// return stats.Variance(xs, 1, len(xs))
-	// m := Mean(xs)
-	// for _, x := range xs {
-	// 	v += (m - x) * (m - x)
-	// }
-	// v /= float64(len(xs))
-	// return
 }
 
 // Stdev calculates the standard deviation of a float64 slice
 func Stdev(xs []float64) float64 {
-	// TODO: check this statistics, why they don't match the tests?
-	// return stats.Sd(xs, 1, len(xs))
 	return math.Sqrt(Variance(xs))
 }
 
-// Dirichlet sets values as a Dirichlet distribution
-// func Dirichlet(alpha, values []float64) {
-// 	rand.Seed(time.Now().UTC().UnixNano())
-// 	rng.EnvSetup()
-// 	r := rng.RngAlloc(rng.DefaultRngType())
-// 	rng.Set(r, rand.Int())
-// 	randist.Dirichlet(r, len(alpha), alpha, values)
-// }
-
-// Dirichlet1 sample values as a Dirichlet distribution using one alpha parameter
+// Dirichlet1 sample values as a Dirichlet distribution using single alpha parameter
 func Dirichlet1(alpha float64, values []float64) {
 	if alpha == 0 {
 		panic("alpha != 0 needed for dirichlet dirtribution")
@@ -81,7 +62,7 @@ func Dirichlet1(alpha float64, values []float64) {
 	for i := range values {
 		values[i] = distuv.Gamma{Alpha: alpha, Beta: 1, Source: rndsrc}.Rand()
 	}
-	floats.Normalize(values)
+	Normalize(values)
 }
 
 // Uniform sets values uniformly
