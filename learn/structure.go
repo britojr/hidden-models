@@ -1,6 +1,7 @@
 package learn
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -11,7 +12,9 @@ import (
 // StructureCommand learns a cliquetree structure corresponding to the given dataset
 // with the specified treewidth and additional latent variables
 // the learned structure is saved in the given file
-func StructureCommand(dsfile string, delim, hdr uint, ctfile string, k, h, nk int) {
+func StructureCommand(
+	dsfile string, delim, hdr uint, ctfile string, k, h, nk int,
+) {
 	data, dscardin := ExtractData(dsfile, delim, hdr)
 	n := len(dscardin)
 
@@ -25,5 +28,5 @@ func StructureCommand(dsfile string, delim, hdr uint, ctfile string, k, h, nk in
 	if len(ctfile) > 0 {
 		SaveCliqueTree(ct, ctfile)
 	}
-	Printcln(dsfile, ctfile, n, k, h, sll, elapsed)
+	fmt.Println(Sprintc(dsfile, ctfile, n, k, h, sll, elapsed))
 }

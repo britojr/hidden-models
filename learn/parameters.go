@@ -1,6 +1,7 @@
 package learn
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -54,7 +55,9 @@ func ParamCommand(
 	if len(marfile) > 0 {
 		SaveCTMarginals(ct, n, marfile)
 	}
-	Printcln(dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem)
+	fmt.Println(Sprintc(
+		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
+	))
 }
 
 func learnParameters(
