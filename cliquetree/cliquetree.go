@@ -20,7 +20,7 @@ import (
 
 // CliqueTree ..
 type CliqueTree struct {
-	n       int     // number of variables
+	nv      int     // number of variables
 	cliques [][]int // wich variables participate on this clique
 	sepsets [][]int // sepsets for each node (intersection with the parent clique)
 	varin   [][]int // the difference between clique and parent
@@ -84,6 +84,7 @@ func NewRandom(n, k int) *CliqueTree {
 	T, iphi, err := generator.RandomCharTree(n, k)
 	errchk.Check(err, "")
 	c := FromCharTree(T, iphi)
+	c.nv = n
 	return c
 }
 
@@ -113,8 +114,17 @@ func (c *CliqueTree) bfsOrder(root int) []int {
 
 // N returns the number of variables
 func (c *CliqueTree) N() int {
-	// TODO: update c.n when creating a clique tree
-	return c.n
+	if c.nv <= 0 {
+		for i := range c.cliques {
+			for _, v := range c.cliques[i] {
+				if v > c.nv {
+					c.nv = v
+				}
+			}
+		}
+		c.nv++
+	}
+	return c.nv
 }
 
 // Size returns the number of cliques
@@ -259,7 +269,8 @@ func (c *CliqueTree) RecoverCalibration() {
 	c.calibratedPot = append([]*factor.Factor(nil), c.calibratedPotStored...)
 }
 
-// ProbOfEvidence ..
+// ProbOfEvidence calculates the probability of evidence with a single upward pass
+// there is no need to calibrate the cliquetree
 func (c *CliqueTree) ProbOfEvidence(evid []int) float64 {
 	root := 0
 	send := make([]*factor.Factor, c.Size())
