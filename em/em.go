@@ -10,8 +10,9 @@ import (
 	"github.com/britojr/kbn/likelihood"
 )
 
-// ExpectationMaximization ..
-func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64) {
+// ExpectationMaximization runs EM algorithm for a cliquetree tree and returns
+// the loglikelihood after convergence
+func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64) float64 {
 	diff := epslon * 10
 	var llnew, llant float64
 	llant = likelihood.Loglikelihood(ct, data)
@@ -19,19 +20,14 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 	for ; diff >= epslon; i++ {
 		fmt.Printf(".")
 		newpot := expectationStep(ct, data)
-		for j := range newpot {
-			if ct.Parents()[j] >= 0 {
-				newpot[j] = newpot[j].Division(newpot[j].SumOut(ct.Varin(j)))
-			} else {
-				newpot[j].Normalize()
-			}
-		}
+		maximizationStep(ct, newpot)
 		ct.SetAllPotentials(newpot)
 		llnew = likelihood.Loglikelihood(ct, data)
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
-	fmt.Printf("\nIterations: %v\n", i)
+	fmt.Printf("\nEM Iterations: %v\n", i)
+	return llnew
 }
 
 // expectationStep calculates the expected count of a list of observations and a cliquetree
@@ -57,4 +53,14 @@ func expectationStep(ct *cliquetree.CliqueTree, data [][]int) []*factor.Factor {
 	}
 
 	return count
+}
+
+func maximizationStep(ct *cliquetree.CliqueTree, newpot []*factor.Factor) {
+	for j := range newpot {
+		if ct.Parents()[j] >= 0 {
+			newpot[j] = newpot[j].Division(newpot[j].SumOut(ct.Varin(j)))
+		} else {
+			newpot[j].Normalize()
+		}
+	}
 }
