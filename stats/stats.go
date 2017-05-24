@@ -74,6 +74,9 @@ func Stdev(xs []float64) float64 {
 
 // Dirichlet1 sample values as a Dirichlet distribution using one alpha parameter
 func Dirichlet1(alpha float64, values []float64) {
+	if alpha == 0 {
+		panic("alpha != 0 needed for dirichlet dirtribution")
+	}
 	rndsrc := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 	for i := range values {
 		values[i] = distuv.Gamma{Alpha: alpha, Beta: 1, Source: rndsrc}.Rand()
