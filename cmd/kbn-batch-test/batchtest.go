@@ -1,22 +1,39 @@
 /*
 run experiments in batch
-
 */
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/learn"
 )
 
-// Define parameters
-// defaults
+const (
+	structStep int = 1 << iota
+	paramStep
+	partsumStep
+)
+
+type structArg struct {
+	k    int
+	hf   float64
+	iter int
+}
+type paramArg struct {
+	alpha            float64
+	potdist, potmode int
+	iter             int
+}
+
+// Define parameters defaults
 var (
 	delim  = uint(',')
 	hdr    = uint(4)
@@ -25,79 +42,47 @@ var (
 	iterem = 0
 	epslon = 0.01
 
-	// struct
-	structArgs = []struct {
-		k    int
-		hf   float64
-		iter int
-	}{
-		{3, 0.0, 1},
-		{3, 0.2, 1},
-		// {3, 0.0, 3},
-		// {3, 0.1, 3},
-		// {3, 0.3, 3},
-		// {5, 0.0, 3},
-		// {5, 0.1, 3},
-		// {5, 0.3, 3},
-		// {7, 0.0, 3},
-		// {7, 0.1, 3},
-		// {7, 0.3, 3},
-	}
-
-	// param
-	paramArgs = []struct {
-		alpha            float64
-		potdist, potmode int
-		iter             int
-	}{
-		{1, learn.DistRandom, learn.ModeFull, 2},
-		{1, learn.DistUniform, learn.ModeFull, 1},
-	}
-
-	// partsum
-	discards = []float64{0, 0.1, 0.2}
-)
-
-var (
-	structfn                     = "struct.out"
-	paramfn                      = "param.out"
-	partsumfn                    = "partsum.out"
+	structArgs = []structArg{}
+	paramArgs  = []paramArg{}
+	discards   = []float64{}
+	//
+	argfile                      string
+	step                         int
+	structfn, paramfn, partsumfn string
 	structfp, paramfp, partsumfp *os.File
 )
 
 func main() {
 	// log.SetFlags(0)
 	// log.SetOutput(ioutil.Discard)
-	var err error
+	parseFlags()
+	readParameters(argfile)
+
 	fmt.Println("reading files:")
 	csvfs, _ := filepath.Glob("*.csv")
 	fmt.Println(csvfs)
 
+	if step&structStep > 0 {
+		batchStruct(csvfs)
+	}
+	if step&paramStep > 0 {
+		batchParam(csvfs)
+	}
+	if step&partsumStep > 0 {
+		batchPartsum(csvfs)
+	}
+}
+
+func batchStruct(csvfs []string) {
 	fmt.Println("running struct...")
+	var err error
+	t := time.Now().Format(time.RFC3339)
+	structfn = fmt.Sprintf("structure_%v.txt", t)
 	structfp, err = os.Create(structfn)
 	errchk.Check(err, fmt.Sprintf("%v", structfn))
 	fmt.Fprintf(structfp, "dsfile,ctfile,n,k,h,sll,elapsed\n")
 	defer structfp.Close()
-	batchStruct(csvfs)
 
-	fmt.Println("running param...")
-	paramfp, err = os.Create(paramfn)
-	errchk.Check(err, fmt.Sprintf("%v", paramfn))
-	fmt.Fprintf(paramfp,
-		"dsfile,ctin,ctout,ll,elapsed,alpha,epslon,potdist,potmode,iterem\n",
-	)
-	defer paramfp.Close()
-	batchParam(csvfs)
-
-	fmt.Println("running partsum...")
-	partsumfp, err = os.Create(partsumfn)
-	errchk.Check(err, fmt.Sprintf("%v", partsumfn))
-	fmt.Fprintf(partsumfp, "dsfile,ctfile,zfile,zm,discard,elapsed\n")
-	defer partsumfp.Close()
-	batchPartsum(csvfs)
-}
-
-func batchStruct(csvfs []string) {
 	for _, csvf := range csvfs {
 		generateStructs(csvf)
 	}
@@ -116,6 +101,17 @@ func generateStructs(csvf string) {
 }
 
 func batchParam(csvfs []string) {
+	fmt.Println("running param...")
+	var err error
+	t := time.Now().Format(time.RFC3339)
+	paramfn = fmt.Sprintf("parameters_%v.txt", t)
+	paramfp, err = os.Create(paramfn)
+	errchk.Check(err, fmt.Sprintf("%v", paramfn))
+	fmt.Fprintf(paramfp,
+		"dsfile,ctin,ctout,ll,elapsed,alpha,epslon,potdist,potmode,iterem\n",
+	)
+	defer paramfp.Close()
+
 	for _, csvf := range csvfs {
 		name := strings.TrimSuffix(csvf, path.Ext(csvf))
 		name = strings.TrimSuffix(name, path.Ext(name))
@@ -127,7 +123,7 @@ func batchParam(csvfs []string) {
 func generateParams(csvf string, ctfis []string) {
 	for _, ctfi := range ctfis {
 		for _, it := range paramArgs {
-			for i := 1; i < it.iter; i++ {
+			for i := 1; i <= it.iter; i++ {
 				ctfo, marf := paramSaveNames(ctfi, it.alpha, it.potdist, it.potmode, i)
 				paramCommand(
 					csvf, delim, hdr,
@@ -140,6 +136,15 @@ func generateParams(csvf string, ctfis []string) {
 }
 
 func batchPartsum(csvfs []string) {
+	fmt.Println("running partsum...")
+	var err error
+	t := time.Now().Format(time.RFC3339)
+	partsumfn = fmt.Sprintf("partsum_%v.txt", t)
+	partsumfp, err = os.Create(partsumfn)
+	errchk.Check(err, fmt.Sprintf("%v", partsumfn))
+	fmt.Fprintf(partsumfp, "dsfile,ctfile,zfile,zm,discard,elapsed\n")
+	defer partsumfp.Close()
+
 	for _, csvf := range csvfs {
 		name := strings.TrimSuffix(csvf, path.Ext(csvf))
 		name = strings.TrimSuffix(name, path.Ext(name))
@@ -187,7 +192,10 @@ func partsumSaveName(mkfile string, dis float64) string {
 func structureCommand(
 	dsfile string, delim, hdr uint, ctfile string, k, h, nk int,
 ) {
-	n, sll, elapsed := learn.StructureCommandValues(
+	var n int
+	var sll float64
+	var elapsed time.Duration
+	n, sll, elapsed = learn.StructureCommandValues(
 		dsfile, delim, hdr, ctfile, k, h, nk,
 	)
 	fmt.Fprintln(structfp,
@@ -199,7 +207,9 @@ func paramCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) {
-	ll, elapsed := learn.ParamCommandValues(
+	var ll float64
+	var elapsed time.Duration
+	ll, elapsed = learn.ParamCommandValues(
 		dsfile, delim, hdr, ctin, ctout, marfile, hc,
 		alpha, epslon, iterem, potdist, potmode,
 	)
@@ -212,10 +222,57 @@ func partsumCommand(
 	dsfile string, delim, hdr uint,
 	ctfile, mkfile, zfile string, discard float64,
 ) {
-	zm, elapsed := learn.PartsumCommandValues(
+	var zm []float64
+	var elapsed time.Duration
+	zm, elapsed = learn.PartsumCommandValues(
 		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
 	)
 	fmt.Fprintln(partsumfp,
 		learn.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
 	)
+}
+
+func parseFlags() {
+	flag.StringVar(&argfile, "a", "", "parameters file")
+	flag.IntVar(&step, "s", 7, "1- structure, 2- parameters,  4- partition sum")
+
+	// Parse and validate arguments
+	flag.Parse()
+	if len(argfile) == 0 {
+		fmt.Println("Please enter dataset file name.")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+}
+
+func readParameters(argfile string) {
+	r, err := os.Open(argfile)
+	errchk.Check(err, fmt.Sprintf("Can't open file %v", argfile))
+	defer r.Close()
+	var (
+		nst, npr, nps             int
+		k, iter, potdist, potmode int
+		hf, alpha, dis            float64
+	)
+	fmt.Fscanf(r, "%d ", &nst)
+	for i := 0; i < nst; i++ {
+		// k int, hf float64, iter int
+		fmt.Fscanf(r, "%d %f %d", &k, &hf, &iter)
+		structArgs = append(structArgs, structArg{k, hf, iter})
+	}
+	fmt.Fscanf(r, "%d", &npr)
+	for i := 0; i < npr; i++ {
+		// alpha float64, potdist, potmode int, iter int
+		fmt.Fscanf(r, "%f %d %d %d", &alpha, &potdist, &potmode, &iter)
+		paramArgs = append(paramArgs, paramArg{alpha, potdist, potmode, iter})
+	}
+	fmt.Fscanf(r, "%d", &nps)
+	for i := 0; i < nps; i++ {
+		// dis float64
+		fmt.Fscanf(r, "%f", &dis)
+		discards = append(discards, dis)
+	}
+	fmt.Println(structArgs)
+	fmt.Println(paramArgs)
+	fmt.Println(discards)
 }
