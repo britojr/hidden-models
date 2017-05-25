@@ -580,6 +580,7 @@ func LoadFrom(r io.Reader) *CliqueTree {
 
 	c, err := NewStructure(cliques, adj)
 	errchk.Check(err, "")
+	c.nv = len(cardin)
 	err = c.SetAllPotentials(potentials)
 	errchk.Check(err, "")
 

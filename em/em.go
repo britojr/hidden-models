@@ -3,6 +3,7 @@ package em
 
 import (
 	"fmt"
+	"log"
 	"math"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -26,7 +27,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
-	fmt.Printf("\nEM Iterations: %v\n", i)
+	log.Printf("\nEM Iterations: %v\n", i)
 	return llnew
 }
 

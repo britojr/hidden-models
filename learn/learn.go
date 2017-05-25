@@ -45,6 +45,7 @@ func ExtractData(dsfile string, delimiter, hdr uint) (data [][]int, cardin []int
 	dataset := filehandler.NewDataSet(dsfile, rune(delimiter), filehandler.HeaderFlags(hdr))
 	dataset.Read()
 	elapsed := time.Since(start)
+	log.Printf("Variables: %v, Instances: %v\n", len(dataset.Cardinality()), len(dataset.Data()))
 	log.Printf("Time: %v\n", elapsed)
 	return dataset.Data(), dataset.Cardinality()
 }

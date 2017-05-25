@@ -61,7 +61,7 @@ func parsumStats(zs []float64, d float64) []float64 {
 	if d < 0 || d >= 0.5 {
 		panic(fmt.Sprintf("invalid discard factor: %v", d))
 	}
-	a, b := int(float64(len(zs))*d), int(len(zs)+1-int(float64(len(zs))*d))
+	a, b := int(float64(len(zs))*d), int(len(zs)-int(float64(len(zs))*d)-1)
 	sort.Float64s(zs)
 	ws := zs[a:b]
 
