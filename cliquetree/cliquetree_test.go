@@ -778,6 +778,17 @@ func TestSaveOn(t *testing.T) {
 			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .20, .22, .40, .18) +
 			"\n",
 	}, {
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		result: "2\n" +
+			"0 1 \n" +
+			"1 2 \n" +
+			"\n" +
+			"1 \n" +
+			"0 \n" +
+			"\n" +
+			"0 0 0 \n",
+	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
 		cardin:  []int{2, 2, 2, 2, 2},
@@ -819,7 +830,9 @@ func TestSaveOn(t *testing.T) {
 		for i, v := range tt.values {
 			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
 		}
-		err = c.SetAllPotentials(potentials)
+		if len(tt.values) > 0 {
+			err = c.SetAllPotentials(potentials)
+		}
 		if err != nil {
 			t.Errorf(err.Error())
 		}
@@ -867,6 +880,19 @@ func TestLoadFrom(t *testing.T) {
 			fmt.Sprintf("%.8f %.8f %.8f %.8f \n", .20, .22, .40, .18) +
 			"\n",
 	}, {
+		cliques: [][]int{{0, 1}, {1, 2}},
+		adj:     [][]int{{1}, {0}},
+		cardin:  []int{0, 0, 0},
+		values:  [][]float64{{}, {}},
+		saved: "2\n" +
+			"0 1 \n" +
+			"1 2 \n" +
+			"\n" +
+			"1 \n" +
+			"0 \n" +
+			"\n" +
+			"0 0 0 \n",
+	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
 		cardin:  []int{2, 2, 2, 2, 2},
@@ -906,6 +932,9 @@ func TestLoadFrom(t *testing.T) {
 		}
 		if c.Size() != len(tt.cliques) {
 			t.Errorf("wrong number of cliques, want %v, got %v", len(tt.cliques), c.Size())
+		}
+		if c.N() != len(tt.cardin) {
+			t.Errorf("wrong cardinality, want %v, got %v", len(tt.cardin), c.N())
 		}
 		for i := 0; i < c.Size(); i++ {
 			if !reflect.DeepEqual(c.Clique(i), tt.cliques[i]) {

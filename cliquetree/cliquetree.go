@@ -528,6 +528,14 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w)
+	// if the structure have no parameters, save with zero cardinality
+	if len(c.initialPot) == 0 || c.InitialPotential(0) == nil {
+		for i := 0; i < c.N(); i++ {
+			fmt.Fprintf(w, "%d ", 0)
+		}
+		fmt.Fprintln(w)
+		return
+	}
 	// cardinality of all variables
 	cardin := c.InitialPotential(0).Cardinality()
 	for _, v := range cardin {
