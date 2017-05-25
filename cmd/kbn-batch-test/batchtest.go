@@ -59,9 +59,9 @@ var (
 )
 
 var (
-	structfn                     = "struct.txt"
-	paramfn                      = "param.txt"
-	partsumfn                    = "partsum.txt"
+	structfn                     = "struct.out"
+	paramfn                      = "param.out"
+	partsumfn                    = "partsum.out"
 	structfp, paramfp, partsumfp *os.File
 )
 
