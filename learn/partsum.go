@@ -20,6 +20,18 @@ func PartsumCommand(
 	dsfile string, delim, hdr uint,
 	ctfile, mkfile, zfile string, discard float64,
 ) {
+	zm, elapsed := PartsumCommandValues(
+		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
+	)
+	fmt.Println(Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed))
+}
+
+// PartsumCommandValues learns an approximation of the partition sum of a MRF
+// using inference on a cliquetree
+func PartsumCommandValues(
+	dsfile string, delim, hdr uint,
+	ctfile, mkfile, zfile string, discard float64,
+) ([]float64, time.Duration) {
 	data, _ := ExtractData(dsfile, delim, hdr)
 	ct := LoadCliqueTree(ctfile)
 	mk := LoadMRF(mkfile)
@@ -32,7 +44,7 @@ func PartsumCommand(
 	if len(zfile) > 0 {
 		SavePartsum(zm, zfile)
 	}
-	fmt.Println(Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed))
+	return zm, elapsed
 }
 
 // SavePartsum saves the partsum estimates

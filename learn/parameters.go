@@ -34,6 +34,21 @@ func ParamCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) {
+	ll, elapsed := ParamCommandValues(
+		dsfile, delim, hdr, ctin, ctout, marfile, hc,
+		alpha, epslon, iterem, potdist, potmode,
+	)
+	fmt.Println(Sprintc(
+		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
+	))
+}
+
+// ParamCommandValues learns the parameters of a cliquetree structure based on the dataset
+// the learned structure is saved in the output file
+func ParamCommandValues(
+	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
+	alpha, epslon float64, iterem, potdist, potmode int,
+) (float64, time.Duration) {
 	data, dscardin := ExtractData(dsfile, delim, hdr)
 	n := len(dscardin)
 	counter := bitcounter.NewBitCounter()
@@ -55,9 +70,7 @@ func ParamCommand(
 	if len(marfile) > 0 {
 		SaveCTMarginals(ct, n, marfile)
 	}
-	fmt.Println(Sprintc(
-		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
-	))
+	return ll, elapsed
 }
 
 func learnParameters(
