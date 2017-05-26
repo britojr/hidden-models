@@ -157,7 +157,7 @@ func generatePartsums(csvf string, ctfis []string) {
 	for _, ctfi := range ctfis {
 		for _, dis := range discards {
 			mkfile := mrfFileName(csvf)
-			zfile := partsumSaveName(mkfile, dis)
+			zfile := partsumSaveName(ctfi, dis)
 			partsumCommand(
 				csvf, delim, hdr, ctfi, mkfile, zfile, dis,
 			)
@@ -184,9 +184,9 @@ func paramSaveNames(ctfi string, alpha float64, potdist, potmode, i int) (string
 	return fmt.Sprintf("%v.ctp", name), fmt.Sprintf("%v.mar", name)
 }
 
-func partsumSaveName(mkfile string, dis float64) string {
+func partsumSaveName(ctfi string, dis float64) string {
 	// return ".z"
-	return fmt.Sprintf("%v_(%v).sum", mkfile, dis)
+	return fmt.Sprintf("%v_(%v).sum", ctfi, dis)
 }
 
 func structureCommand(
