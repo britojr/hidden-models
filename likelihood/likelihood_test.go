@@ -4,28 +4,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/floats"
 )
 
 type FakeCounter struct {
-	cardin    []int
 	numtuples int
 	counts    map[string][]int
 }
 
-func (f FakeCounter) Count(assig *assignment.Assignment) (count int, ok bool) {
-	panic("not implemented")
-}
 func (f FakeCounter) CountAssignments(varlist []int) []int {
 	return f.counts[fmt.Sprint(varlist)]
 }
-func (f FakeCounter) Cardinality() []int {
-	return f.cardin
-}
-func (f FakeCounter) NumTuples() int {
+func (f FakeCounter) NLines() int {
 	return f.numtuples
 }
 
@@ -56,7 +48,6 @@ func TestStructloglikelihood(t *testing.T) {
 			cliques: [][]int{{0, 1}, {1, 2}},
 			sepsets: [][]int{{}, {1}},
 			counter: FakeCounter{
-				cardin:    []int{2, 2, 2},
 				numtuples: 100,
 				counts: map[string][]int{
 					fmt.Sprint([]int{0, 1}): {25, 10, 35, 30},
