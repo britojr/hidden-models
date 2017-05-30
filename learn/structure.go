@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
-	"github.com/britojr/kbn/counting/bitcounter"
+	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/likelihood"
 )
 
@@ -27,14 +27,12 @@ func StructureCommand(
 func StructureCommandValues(
 	dsfile string, delim, hdr uint, ctfile string, k, h, nk int,
 ) (int, float64, time.Duration) {
-	data, dscardin := ExtractData(dsfile, delim, hdr)
-	n := len(dscardin)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	n := ds.NCols()
 
 	start := time.Now()
 	ct := cliquetree.NewRandom(n+h, k)
-	counter := bitcounter.NewBitCounter()
-	counter.LoadFromData(data, dscardin)
-	sll := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), counter)
+	sll := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), ds)
 	elapsed := time.Since(start)
 
 	if len(ctfile) > 0 {

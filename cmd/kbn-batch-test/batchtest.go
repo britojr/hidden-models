@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/learn"
 )
@@ -89,8 +90,8 @@ func batchStruct(csvfs []string) {
 }
 
 func generateStructs(csvf string) {
-	_, dscardin := learn.ExtractData(csvf, delim, hdr)
-	n := len(dscardin)
+	ds := dataset.NewFromFile(csvf, rune(delim), dataset.HdrFlags(hdr))
+	n := ds.NCols()
 	for _, it := range structArgs {
 		h := int(it.hf * float64(n))
 		for i := 1; i <= it.iter; i++ {
@@ -142,7 +143,9 @@ func batchPartsum(csvfs []string) {
 	partsumfn = fmt.Sprintf("partsum_%v.txt", t)
 	partsumfp, err = os.Create(partsumfn)
 	errchk.Check(err, fmt.Sprintf("%v", partsumfn))
-	fmt.Fprintf(partsumfp, "dsfile,ctfile,zfile,zm,discard,elapsed\n")
+	fmt.Fprintf(partsumfp,
+		"dsfile,ctfile,zfile,sd, mean, median, mode, min, max,discard,elapsed\n",
+	)
 	defer partsumfp.Close()
 
 	for _, csvf := range csvfs {

@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/conv"
@@ -15,7 +17,7 @@ import (
 
 // HdrFlags type is used to store the flags indicating the kind header lines the file has
 // each kind of header line must appear in the fixed order of the constants declared bellow
-type HdrFlags uint8
+type HdrFlags uint
 
 const (
 	// HdrName indicates that there is a line with names of variables
@@ -57,9 +59,15 @@ func New(r io.Reader, delimiter rune, headerlns HdrFlags) *Dataset {
 
 // NewFromFile creates new from a given file
 func NewFromFile(fileName string, delimiter rune, headerlns HdrFlags) *Dataset {
+	log.Printf("Loading dataset: %v\n", fileName)
+	start := time.Now()
 	f := utl.OpenFile(fileName)
 	defer f.Close()
 	d := New(f, delimiter, headerlns)
+	elapsed := time.Since(start)
+	log.Printf("Variables: %v, Instances: %v, Time: %v\n",
+		d.NCols(), d.NLines(), elapsed,
+	)
 	return d
 }
 

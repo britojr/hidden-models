@@ -6,8 +6,7 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/conv"
-	"github.com/britojr/kbn/counting"
-	"github.com/britojr/kbn/counting/bitcounter"
+	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/list"
@@ -49,17 +48,15 @@ func ParamCommandValues(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) (float64, time.Duration) {
-	data, dscardin := ExtractData(dsfile, delim, hdr)
-	n := len(dscardin)
-	counter := bitcounter.NewBitCounter()
-	counter.LoadFromData(data, dscardin)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	n := ds.NCols()
 
 	ct := LoadCliqueTree(ctin)
-	cardin := extendCardin(dscardin, ct.N(), hc)
+	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
 
 	start := time.Now()
 	ll := learnParameters(
-		ct, counter, data, cardin, n,
+		ct, ds, cardin, n,
 		alpha, epslon, potdist, potmode, iterem,
 	)
 	elapsed := time.Since(start)
@@ -74,22 +71,22 @@ func ParamCommandValues(
 }
 
 func learnParameters(
-	ct *cliquetree.CliqueTree, counter counting.Counter, data [][]int, cardin []int, n int,
+	ct *cliquetree.CliqueTree, ds *dataset.Dataset, cardin []int, n int,
 	alpha, epslon float64, potdist, potmode, iter int,
 ) (ll float64) {
-	initializePotentials(ct, counter, cardin, n, potdist, potmode, alpha)
-	ll = em.ExpectationMaximization(ct, data, epslon)
+	initializePotentials(ct, ds, cardin, n, potdist, potmode, alpha)
+	ll = em.ExpectationMaximization(ct, ds.Data(), epslon)
 	return
 }
 
 func initializePotentials(
-	ct *cliquetree.CliqueTree, counter counting.Counter, cardin []int, n int,
+	ct *cliquetree.CliqueTree, ds *dataset.Dataset, cardin []int, n int,
 	potdist, potmode int, alpha float64,
 ) {
 	if potmode == ModeFull {
 		ct.SetAllPotentials(createRandomPotentials(ct.Cliques(), cardin, potdist, alpha))
 	} else {
-		factors := createEmpiricPotentials(counter, ct.Cliques(), cardin, n, potdist, potmode, alpha)
+		factors := createEmpiricPotentials(ds, ct.Cliques(), cardin, n, potdist, potmode, alpha)
 		for i := range factors {
 			if len(ct.Varin(i)) != 0 {
 				factors[i] = factors[i].Division(factors[i].SumOut(ct.Varin(i)))
@@ -100,14 +97,14 @@ func initializePotentials(
 }
 
 func createEmpiricPotentials(
-	counter counting.Counter, cliques [][]int, cardin []int,
+	ds *dataset.Dataset, cliques [][]int, cardin []int,
 	numobs, potdist, potmode int, alpha float64,
 ) []*factor.Factor {
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
 		observed, hidden := separate(numobs, len(cardin), cliques[i])
 		if len(observed) > 0 {
-			values := conv.Sitof(counter.CountAssignments(observed))
+			values := conv.Sitof(ds.CountAssignments(observed))
 			// factors[i] = P(observed)
 			factors[i] = factor.NewFactorValues(observed, cardin, values).Normalize()
 			if len(hidden) > 0 {

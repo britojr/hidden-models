@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/floats"
 	"github.com/britojr/kbn/mrf"
@@ -32,12 +33,12 @@ func PartsumCommandValues(
 	dsfile string, delim, hdr uint,
 	ctfile, mkfile, zfile string, discard float64,
 ) ([]float64, time.Duration) {
-	data, _ := ExtractData(dsfile, delim, hdr)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ct := LoadCliqueTree(ctfile)
 	mk := LoadMRF(mkfile)
 
 	start := time.Now()
-	zs := estimatePartsum(ct, mk, data)
+	zs := estimatePartsum(ct, mk, ds.Data())
 	elapsed := time.Since(start)
 
 	zm := parsumStats(zs, discard)
