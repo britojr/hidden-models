@@ -2,53 +2,33 @@ package learn
 
 import (
 	"fmt"
-	"os"
 	"sort"
-	"strings"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/mrf"
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/kbn/utl"
 )
 
-// SaveCliqueTree saves a clique tree on the given file
-func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
-	f, err := os.Create(fname)
-	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
+func saveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
+	f := utl.CreateFile(fname)
 	defer f.Close()
 	ct.SaveOn(f)
 }
 
-// LoadCliqueTree loads a clique tree from the given file
-func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
-	f, err := os.Open(fname)
-	errchk.Check(err, fmt.Sprintf("Can't open file %v", fname))
+func loadCliqueTree(fname string) *cliquetree.CliqueTree {
+	f := utl.OpenFile(fname)
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
 
-// LoadMRF loads a MRF from the given file
-func LoadMRF(fname string) *mrf.Mrf {
-	f, err := os.Open(fname)
-	errchk.Check(err, fmt.Sprintf("Can't open file %v", fname))
+func loadMRF(fname string) *mrf.Mrf {
+	f := utl.OpenFile(fname)
 	defer f.Close()
 	return mrf.LoadFromUAI(f)
 }
 
-// Sprintc returns the default formats in a comma-separated string
-func Sprintc(a ...interface{}) string {
-	s := fmt.Sprintln(a...)
-	s = strings.Trim(s, "\n")
-	s = strings.Replace(s, " ", ",", -1)
-	s = strings.Replace(s, "[", "", -1)
-	s = strings.Replace(s, "]", "", -1)
-	return s
-}
-
-// SaveCTMarginals saves marginals of observed variables of a clique tree in UAI format
-func SaveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
-	f, err := os.Create(fname)
-	errchk.Check(err, "")
+func saveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
+	f := utl.CreateFile(fname)
 	defer f.Close()
 	ma := ct.Marginals()
 

@@ -14,6 +14,7 @@ import (
 
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
+	"github.com/britojr/kbn/utl"
 	"github.com/britojr/kbn/utl/errchk"
 )
 
@@ -202,7 +203,7 @@ func structureCommand(
 		dsfile, delim, hdr, ctfile, k, h, nk,
 	)
 	fmt.Fprintln(structfp,
-		learn.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed),
+		utl.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed),
 	)
 }
 
@@ -216,7 +217,7 @@ func paramCommand(
 		dsfile, delim, hdr, ctin, ctout, marfile, hc,
 		alpha, epslon, iterem, potdist, potmode,
 	)
-	fmt.Fprintln(paramfp, learn.Sprintc(
+	fmt.Fprintln(paramfp, utl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
 	))
 }
@@ -231,7 +232,7 @@ func partsumCommand(
 		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
 	)
 	fmt.Fprintln(partsumfp,
-		learn.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
+		utl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
 	)
 }
 

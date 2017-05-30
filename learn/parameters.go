@@ -1,7 +1,7 @@
 package learn
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -9,6 +9,7 @@ import (
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/list"
+	"github.com/britojr/kbn/utl"
 	"github.com/britojr/kbn/utl/conv"
 	"github.com/britojr/kbn/utl/stats"
 )
@@ -37,7 +38,7 @@ func ParamCommand(
 		dsfile, delim, hdr, ctin, ctout, marfile, hc,
 		alpha, epslon, iterem, potdist, potmode,
 	)
-	fmt.Println(Sprintc(
+	log.Println(utl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
 	))
 }
@@ -51,7 +52,7 @@ func ParamCommandValues(
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	n := ds.NCols()
 
-	ct := LoadCliqueTree(ctin)
+	ct := loadCliqueTree(ctin)
 	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
 
 	start := time.Now()
@@ -62,10 +63,10 @@ func ParamCommandValues(
 	elapsed := time.Since(start)
 
 	if len(ctout) > 0 {
-		SaveCliqueTree(ct, ctout)
+		saveCliqueTree(ct, ctout)
 	}
 	if len(marfile) > 0 {
-		SaveCTMarginals(ct, n, marfile)
+		saveCTMarginals(ct, n, marfile)
 	}
 	return ll, elapsed
 }

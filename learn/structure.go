@@ -1,12 +1,13 @@
 package learn
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/likelihood"
+	"github.com/britojr/kbn/utl"
 )
 
 // StructureCommand learns a cliquetree structure corresponding to the given dataset
@@ -18,7 +19,7 @@ func StructureCommand(
 	n, sll, elapsed := StructureCommandValues(
 		dsfile, delim, hdr, ctfile, k, h, nk,
 	)
-	fmt.Println(Sprintc(dsfile, ctfile, n, k, h, sll, elapsed))
+	log.Println(utl.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed))
 }
 
 // StructureCommandValues learns a cliquetree structure corresponding to the given dataset
@@ -36,7 +37,7 @@ func StructureCommandValues(
 	elapsed := time.Since(start)
 
 	if len(ctfile) > 0 {
-		SaveCliqueTree(ct, ctfile)
+		saveCliqueTree(ct, ctfile)
 	}
 	return n, sll, elapsed
 }

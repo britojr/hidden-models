@@ -2,6 +2,7 @@ package learn
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"sort"
@@ -10,6 +11,7 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/mrf"
+	"github.com/britojr/kbn/utl"
 	"github.com/britojr/kbn/utl/errchk"
 	"github.com/britojr/kbn/utl/floats"
 	"github.com/britojr/kbn/utl/stats"
@@ -24,7 +26,7 @@ func PartsumCommand(
 	zm, elapsed := PartsumCommandValues(
 		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
 	)
-	fmt.Println(Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed))
+	log.Println(utl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed))
 }
 
 // PartsumCommandValues learns an approximation of the partition sum of a MRF
@@ -34,8 +36,8 @@ func PartsumCommandValues(
 	ctfile, mkfile, zfile string, discard float64,
 ) ([]float64, time.Duration) {
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
-	ct := LoadCliqueTree(ctfile)
-	mk := LoadMRF(mkfile)
+	ct := loadCliqueTree(ctfile)
+	mk := loadMRF(mkfile)
 
 	start := time.Now()
 	zs := estimatePartsum(ct, mk, ds.Data())
@@ -53,7 +55,7 @@ func SavePartsum(zs []float64, fname string) {
 	f, err := os.Create(fname)
 	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
 	defer f.Close()
-	fmt.Fprint(f, Sprintc(zs))
+	fmt.Fprint(f, utl.Sprintc(zs))
 }
 
 func estimatePartsum(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) []float64 {

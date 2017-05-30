@@ -68,6 +68,102 @@ func init() {
 }
 
 func main() {
+	parseFlags()
+
+	// Verify that a subcommand has been provided
+	// os.Arg[0] : main command, os.Arg[1] : subcommand
+	if len(os.Args) < 2 {
+		printDefaults()
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case structConst:
+		structComm.Parse(os.Args[2:])
+		runStructComm()
+	case paramConst:
+		paramComm.Parse(os.Args[2:])
+		runParamComm()
+	case partsumConst:
+		partsumComm.Parse(os.Args[2:])
+		runPartsumComm()
+	default:
+		printDefaults()
+		os.Exit(1)
+	}
+}
+
+func runStructComm() {
+	// Required Flags
+	if dsfile == "" {
+		fmt.Printf("\n error: missing dataset file\n\n")
+		structComm.PrintDefaults()
+		os.Exit(1)
+	}
+
+	log.Printf("d=%v, cs=%v, h=%v, k=%v\n",
+		dsfile, ctfileout, h, k,
+	)
+	learn.StructureCommand(dsfile, delim, hdr, ctfileout, k, h, nk)
+}
+
+func runParamComm() {
+	// Required Flags
+	if dsfile == "" || ctfilein == "" {
+		fmt.Printf("\n error: missing dataset or structure file\n\n")
+		paramComm.PrintDefaults()
+		os.Exit(1)
+	}
+	var dist, mode int
+	var ok bool
+	if mode, ok = modeChoices[potmode]; !ok {
+		fmt.Printf("\n error: invalid mode option\n\n")
+		paramComm.PrintDefaults()
+		os.Exit(1)
+	}
+	if dist, ok = distChoices[potdist]; !ok {
+		fmt.Printf("\n error: invalid dist option\n\n")
+		paramComm.PrintDefaults()
+		os.Exit(1)
+	}
+	if potdist == "dirichlet" && alpha == 0 {
+		fmt.Printf("\n error: missing alpha parameter\n\n")
+		paramComm.PrintDefaults()
+		os.Exit(1)
+	}
+
+	log.Printf(
+		"a=%v, cl=%v, cs=%v, d=%v, dist=%v, e=%v, hc=%v, iterem=%v, mar=%v, mode=%v\n",
+		alpha, ctfilein, ctfileout, dsfile, potdist, epslon, hcard, iterem, marfile, potmode,
+	)
+	learn.ParamCommand(
+		dsfile, delim, hdr, ctfilein, ctfileout, marfile,
+		hcard, alpha, epslon, iterem, dist, mode,
+	)
+}
+
+func runPartsumComm() {
+	// Required Flags
+	if dsfile == "" || ctfilein == "" || mkfile == "" {
+		fmt.Printf("\n error: missing dataset/structure/MRF files\n\n")
+		partsumComm.PrintDefaults()
+		os.Exit(1)
+	}
+	if discard < 0 || discard >= .5 {
+		fmt.Printf("\n error: invalid dircard factor\n\n")
+		partsumComm.PrintDefaults()
+		os.Exit(1)
+	}
+
+	log.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v, \n",
+		ctfilein, dsfile, discard, mkfile, zfile,
+	)
+	learn.PartsumCommand(
+		dsfile, delim, hdr, ctfilein, mkfile, zfile, discard,
+	)
+}
+
+func parseFlags() {
 	// Subcommands
 	structComm = flag.NewFlagSet(structConst, flag.ExitOnError)
 	paramComm = flag.NewFlagSet(paramConst, flag.ExitOnError)
@@ -104,102 +200,6 @@ func main() {
 	partsumComm.StringVar(&mkfile, "m", "", "mrf load file (required)")
 	partsumComm.StringVar(&zfile, "z", "", "file to save the partition sum")
 	partsumComm.Float64Var(&discard, "dis", 0, "discard factor should be in [0,0.5)")
-
-	// Verify that a subcommand has been provided
-	// os.Arg[0] : main command
-	// os.Arg[1] : subcommand
-	if len(os.Args) < 2 {
-		printDefaults()
-		os.Exit(1)
-	}
-
-	// Switch on the subcommand
-	// Parse the flags for appropriate FlagSet
-	// FlagSet.Parse() requires a set of arguments to parse as input
-	// os.Args[2:] will be all arguments starting after the subcommand at os.Args[1]
-	switch os.Args[1] {
-	case structConst:
-		structComm.Parse(os.Args[2:])
-	case paramConst:
-		paramComm.Parse(os.Args[2:])
-	case partsumConst:
-		partsumComm.Parse(os.Args[2:])
-	default:
-		printDefaults()
-		os.Exit(1)
-	}
-
-	// Check which subcommand was Parsed using the FlagSet.Parsed() function. Handle each case accordingly.
-	// FlagSet.Parse() will evaluate to false if no flags were parsed (i.e. the user did not provide any flags)
-	if structComm.Parsed() {
-		// Required Flags
-		if dsfile == "" {
-			fmt.Printf("\n error: missing dataset file\n\n")
-			structComm.PrintDefaults()
-			os.Exit(1)
-		}
-		// Print
-		log.Printf("d=%v, cs=%v, h=%v, k=%v\n",
-			dsfile, ctfileout, h, k,
-		)
-		learn.StructureCommand(dsfile, delim, hdr, ctfileout, k, h, nk)
-	}
-
-	if paramComm.Parsed() {
-		// Required Flags
-		if dsfile == "" || ctfilein == "" {
-			fmt.Printf("\n error: missing dataset or structure file\n\n")
-			paramComm.PrintDefaults()
-			os.Exit(1)
-		}
-		var dist, mode int
-		var ok bool
-		if mode, ok = modeChoices[potmode]; !ok {
-			fmt.Printf("\n error: invalid mode option\n\n")
-			paramComm.PrintDefaults()
-			os.Exit(1)
-		}
-		if dist, ok = distChoices[potdist]; !ok {
-			fmt.Printf("\n error: invalid dist option\n\n")
-			paramComm.PrintDefaults()
-			os.Exit(1)
-		}
-		if potdist == "dirichlet" && alpha == 0 {
-			fmt.Printf("\n error: missing alpha parameter\n\n")
-			paramComm.PrintDefaults()
-			os.Exit(1)
-		}
-		// Print
-		log.Printf(
-			"a=%v, cl=%v, cs=%v, d=%v, dist=%v, e=%v, hc=%v, iterem=%v, mar=%v, mode=%v\n",
-			alpha, ctfilein, ctfileout, dsfile, potdist, epslon, hcard, iterem, marfile, potmode,
-		)
-		learn.ParamCommand(
-			dsfile, delim, hdr, ctfilein, ctfileout, marfile,
-			hcard, alpha, epslon, iterem, dist, mode,
-		)
-	}
-
-	if partsumComm.Parsed() {
-		// Required Flags
-		if dsfile == "" || ctfilein == "" || mkfile == "" {
-			fmt.Printf("\n error: missing dataset/structure/MRF files\n\n")
-			partsumComm.PrintDefaults()
-			os.Exit(1)
-		}
-		if discard < 0 || discard >= .5 {
-			fmt.Printf("\n error: invalid dircard factor\n\n")
-			partsumComm.PrintDefaults()
-			os.Exit(1)
-		}
-		// Print
-		log.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v, \n",
-			ctfilein, dsfile, discard, mkfile, zfile,
-		)
-		learn.PartsumCommand(
-			dsfile, delim, hdr, ctfilein, mkfile, zfile, discard,
-		)
-	}
 }
 
 func printDefaults() {
