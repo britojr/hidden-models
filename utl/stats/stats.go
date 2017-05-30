@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/britojr/kbn/floats"
+	"github.com/britojr/kbn/utl/floats"
 	"github.com/gonum/stat"
 	"github.com/gonum/stat/distuv"
 )

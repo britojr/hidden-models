@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/conv"
 	"github.com/britojr/kbn/list"
 	"github.com/britojr/kbn/utl"
+	"github.com/britojr/kbn/utl/conv"
 	"github.com/willf/bitset"
 )
 

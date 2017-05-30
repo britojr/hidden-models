@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/britojr/kbn/errchk"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 // OpenFile returns a pointer to an open file

@@ -5,7 +5,7 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/floats"
+	"github.com/britojr/kbn/utl/floats"
 )
 
 func initiCliqueTree(cliques, adj [][]int, cardin []int, values [][]float64) (*cliquetree.CliqueTree, error) {

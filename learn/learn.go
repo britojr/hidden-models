@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/britojr/kbn/cliquetree"
-	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/mrf"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 // SaveCliqueTree saves a clique tree on the given file

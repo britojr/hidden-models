@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/britojr/kbn/floats"
+	"github.com/britojr/kbn/utl/floats"
 )
 
 func TestMean(t *testing.T) {

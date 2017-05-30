@@ -10,7 +10,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/floats"
+	"github.com/britojr/kbn/utl/floats"
 	"github.com/britojr/tcc/characteristic"
 )
 

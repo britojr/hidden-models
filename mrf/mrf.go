@@ -7,8 +7,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/britojr/kbn/conv"
 	"github.com/britojr/kbn/factor"
+	"github.com/britojr/kbn/utl/conv"
 )
 
 // Mrf markov random field

@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/dataset"
-	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/learn"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 const (

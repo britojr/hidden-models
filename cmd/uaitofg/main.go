@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/mrf"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 var (

@@ -9,11 +9,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/britojr/kbn/conv"
-	"github.com/britojr/kbn/errchk"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/floats"
 	"github.com/britojr/kbn/list"
+	"github.com/britojr/kbn/utl/conv"
+	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/kbn/utl/floats"
 	"github.com/britojr/tcc/characteristic"
 	"github.com/britojr/tcc/generator"
 )

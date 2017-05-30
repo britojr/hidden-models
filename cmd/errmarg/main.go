@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/britojr/kbn/conv"
-	"github.com/britojr/kbn/errchk"
+	"github.com/britojr/kbn/utl/conv"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 var (

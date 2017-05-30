@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
-	"github.com/britojr/kbn/conv"
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/stats"
+	"github.com/britojr/kbn/utl/conv"
+	"github.com/britojr/kbn/utl/stats"
 )
 
 // define possible modes of potential initialilazion
