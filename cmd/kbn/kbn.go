@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
+	"github.com/britojr/kbn/utl"
 )
 
 // Define subcommand names
@@ -104,7 +106,12 @@ func runStructComm() {
 	log.Printf("d=%v, cs=%v, h=%v, k=%v\n",
 		dsfile, ctfileout, h, k,
 	)
-	learn.StructureCommand(dsfile, delim, hdr, ctfileout, k, h, nk)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	n := ds.NCols()
+	sll, elapsed := learn.SampleStructure(ds, k, h, ctfileout)
+	log.Println(utl.Sprintc(
+		dsfile, ctfileout, n, k, h, sll, elapsed,
+	))
 }
 
 func runParamComm() {

@@ -196,12 +196,9 @@ func partsumSaveName(ctfi string, dis float64) string {
 func structureCommand(
 	dsfile string, delim, hdr uint, ctfile string, k, h, nk int,
 ) {
-	var n int
-	var sll float64
-	var elapsed time.Duration
-	n, sll, elapsed = learn.StructureCommandValues(
-		dsfile, delim, hdr, ctfile, k, h, nk,
-	)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	n := ds.NCols()
+	sll, elapsed := learn.SampleStructure(ds, k, h, ctfile)
 	fmt.Fprintln(structfp,
 		utl.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed),
 	)
