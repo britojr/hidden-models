@@ -2,7 +2,7 @@ package learn
 
 import (
 	"fmt"
-	"sort"
+	"io"
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/mrf"
@@ -31,18 +31,16 @@ func saveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
 	f := utl.CreateFile(fname)
 	defer f.Close()
 	ma := ct.Marginals()
+	writeMarginals(f, ma[:obs])
+}
 
-	var keys []int
-	for k := range ma {
-		keys = append(keys, k)
-	}
-	fmt.Fprintf(f, "MAR\n")
-	fmt.Fprintf(f, "%d ", obs)
-	sort.Ints(keys)
-	for i := 0; i < obs; i++ {
-		fmt.Fprintf(f, "%d ", len(ma[keys[i]]))
-		for _, v := range ma[keys[i]] {
-			fmt.Fprintf(f, "%.5f ", v)
+func writeMarginals(w io.Writer, ma [][]float64) {
+	fmt.Fprintf(w, "MAR\n")
+	fmt.Fprintf(w, "%d ", len(ma))
+	for i := range ma {
+		fmt.Fprintf(w, "%d ", len(ma[i]))
+		for _, v := range ma[i] {
+			fmt.Fprintf(w, "%.5f ", v)
 		}
 	}
 }
