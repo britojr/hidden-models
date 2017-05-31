@@ -28,18 +28,11 @@ func PartitionSum(
 	zs := estimatePartsum(ct, mk, ds.Data())
 	elapsed := time.Since(start)
 
-	zm := parsumStats(zs, discard)
+	zm := partsumStats(zs, discard)
 	if len(zfile) > 0 {
 		savePartsum(zm, zfile)
 	}
 	return zm, elapsed
-}
-
-func savePartsum(zs []float64, fname string) {
-	f, err := os.Create(fname)
-	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
-	defer f.Close()
-	fmt.Fprint(f, utl.Sprintc(zs))
 }
 
 func estimatePartsum(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) []float64 {
@@ -54,9 +47,9 @@ func estimatePartsum(ct *cliquetree.CliqueTree, mk *mrf.Mrf, data [][]int) []flo
 	return zs
 }
 
-// parsumStats receives a slice of approximations of z
+// partsumStats receives a slice of approximations of z
 // and returns SD, Mean, Median, Mode, Min, Max
-func parsumStats(zs []float64, d float64) []float64 {
+func partsumStats(zs []float64, d float64) []float64 {
 	if d < 0 || d >= 0.5 {
 		panic(fmt.Sprintf("invalid discard factor: %v", d))
 	}
@@ -69,4 +62,17 @@ func parsumStats(zs []float64, d float64) []float64 {
 		stats.Mode(ws), floats.Min(ws), floats.Max(ws),
 	}
 	return zm
+}
+
+func loadMRF(fname string) *mrf.Mrf {
+	f := utl.OpenFile(fname)
+	defer f.Close()
+	return mrf.LoadFromUAI(f)
+}
+
+func savePartsum(zs []float64, fname string) {
+	f, err := os.Create(fname)
+	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
+	defer f.Close()
+	fmt.Fprint(f, utl.Sprintc(zs))
 }
