@@ -26,6 +26,11 @@ const (
 	DistDirichlet
 )
 
+// Counter describes an object that can count occurrences of assignments in a dataset
+type Counter interface {
+	CountAssignments([]int) []int
+}
+
 // Parameters learns the parameters of a cliquetree structure based on a dataset
 // the learned structure is saved in the optional output file
 func Parameters(
@@ -77,7 +82,7 @@ func initializePotentials(
 }
 
 func createEmpiricPotentials(
-	ds *dataset.Dataset, cliques [][]int, cardin []int,
+	ds Counter, cliques [][]int, cardin []int,
 	numobs, potdist, potmode int, alpha float64,
 ) []*factor.Factor {
 	factors := make([]*factor.Factor, len(cliques))
