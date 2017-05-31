@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/britojr/kbn/dataset"
@@ -103,13 +102,13 @@ func runStructComm() {
 		os.Exit(1)
 	}
 
-	log.Printf("d=%v, cs=%v, h=%v, k=%v\n",
+	fmt.Printf("d=%v, cs=%v, h=%v, k=%v\n",
 		dsfile, ctfileout, h, k,
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	n := ds.NCols()
 	sll, elapsed := learn.SampleStructure(ds, k, h, ctfileout)
-	log.Println(utl.Sprintc(
+	fmt.Println(utl.Sprintc(
 		dsfile, ctfileout, n, k, h, sll, elapsed,
 	))
 }
@@ -139,14 +138,17 @@ func runParamComm() {
 		os.Exit(1)
 	}
 
-	log.Printf(
+	fmt.Printf(
 		"a=%v, cl=%v, cs=%v, d=%v, dist=%v, e=%v, hc=%v, iterem=%v, mar=%v, mode=%v\n",
 		alpha, ctfilein, ctfileout, dsfile, potdist, epslon, hcard, iterem, marfile, potmode,
 	)
-	learn.ParamCommand(
-		dsfile, delim, hdr, ctfilein, ctfileout, marfile,
-		hcard, alpha, epslon, iterem, dist, mode,
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	ll, elapsed := learn.Parameters(
+		ds, ctfilein, ctfileout, marfile, hcard, alpha, epslon, iterem, dist, mode,
 	)
+	fmt.Println(utl.Sprintc(
+		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
+	))
 }
 
 func runPartsumComm() {
@@ -162,12 +164,12 @@ func runPartsumComm() {
 		os.Exit(1)
 	}
 
-	log.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v, \n",
+	fmt.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v, \n",
 		ctfilein, dsfile, discard, mkfile, zfile,
 	)
-	learn.PartsumCommand(
-		dsfile, delim, hdr, ctfilein, mkfile, zfile, discard,
-	)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	zm, elapsed := learn.PartitionSum(ds, ctfilein, mkfile, zfile, discard)
+	fmt.Println(utl.Sprintc(dsfile, ctfilein, zfile, zm, discard, elapsed))
 }
 
 func parseFlags() {

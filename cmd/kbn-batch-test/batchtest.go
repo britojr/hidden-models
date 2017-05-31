@@ -208,11 +208,9 @@ func paramCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) {
-	var ll float64
-	var elapsed time.Duration
-	ll, elapsed = learn.ParamCommandValues(
-		dsfile, delim, hdr, ctin, ctout, marfile, hc,
-		alpha, epslon, iterem, potdist, potmode,
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	ll, elapsed := learn.Parameters(
+		ds, ctin, ctout, marfile, hc, alpha, epslon, iterem, potdist, potmode,
 	)
 	fmt.Fprintln(paramfp, utl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
@@ -223,11 +221,8 @@ func partsumCommand(
 	dsfile string, delim, hdr uint,
 	ctfile, mkfile, zfile string, discard float64,
 ) {
-	var zm []float64
-	var elapsed time.Duration
-	zm, elapsed = learn.PartsumCommandValues(
-		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
-	)
+	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	zm, elapsed := learn.PartitionSum(ds, ctfile, mkfile, zfile, discard)
 	fmt.Fprintln(partsumfp,
 		utl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
 	)

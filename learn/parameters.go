@@ -1,7 +1,6 @@
 package learn
 
 import (
-	"log"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -9,7 +8,6 @@ import (
 	"github.com/britojr/kbn/em"
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/utl"
 	"github.com/britojr/kbn/utl/conv"
 	"github.com/britojr/kbn/utl/stats"
 )
@@ -28,37 +26,18 @@ const (
 	DistDirichlet
 )
 
-// ParamCommand learns the parameters of a cliquetree structure based on the dataset
-// the learned structure is saved in the output file
-func ParamCommand(
-	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
-	alpha, epslon float64, iterem, potdist, potmode int,
-) {
-	ll, elapsed := ParamCommandValues(
-		dsfile, delim, hdr, ctin, ctout, marfile, hc,
-		alpha, epslon, iterem, potdist, potmode,
-	)
-	log.Println(utl.Sprintc(
-		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
-	))
-}
-
-// ParamCommandValues learns the parameters of a cliquetree structure based on the dataset
-// the learned structure is saved in the output file
-func ParamCommandValues(
-	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
+// Parameters learns the parameters of a cliquetree structure based on a dataset
+// the learned structure is saved in the optional output file
+func Parameters(
+	ds *dataset.Dataset, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) (float64, time.Duration) {
-	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
-	n := ds.NCols()
-
 	ct := loadCliqueTree(ctin)
 	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
 
 	start := time.Now()
 	ll := learnParameters(
-		ct, ds, cardin, n,
-		alpha, epslon, potdist, potmode, iterem,
+		ct, ds, cardin, ds.NCols(), alpha, epslon, potdist, potmode, iterem,
 	)
 	elapsed := time.Since(start)
 
@@ -66,7 +45,7 @@ func ParamCommandValues(
 		saveCliqueTree(ct, ctout)
 	}
 	if len(marfile) > 0 {
-		saveCTMarginals(ct, n, marfile)
+		saveCTMarginals(ct, ds.NCols(), marfile)
 	}
 	return ll, elapsed
 }

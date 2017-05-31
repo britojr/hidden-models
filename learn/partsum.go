@@ -2,7 +2,6 @@ package learn
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"sort"
@@ -17,25 +16,11 @@ import (
 	"github.com/britojr/kbn/utl/stats"
 )
 
-// PartsumCommand learns an approximation of the partition sum of a MRF
+// PartitionSum calculates an approximation of the partition sum of a MRF
 // using inference on a cliquetree
-func PartsumCommand(
-	dsfile string, delim, hdr uint,
-	ctfile, mkfile, zfile string, discard float64,
-) {
-	zm, elapsed := PartsumCommandValues(
-		dsfile, delim, hdr, ctfile, mkfile, zfile, discard,
-	)
-	log.Println(utl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed))
-}
-
-// PartsumCommandValues learns an approximation of the partition sum of a MRF
-// using inference on a cliquetree
-func PartsumCommandValues(
-	dsfile string, delim, hdr uint,
-	ctfile, mkfile, zfile string, discard float64,
+func PartitionSum(
+	ds *dataset.Dataset, ctfile, mkfile, zfile string, discard float64,
 ) ([]float64, time.Duration) {
-	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ct := loadCliqueTree(ctfile)
 	mk := loadMRF(mkfile)
 
@@ -45,13 +30,12 @@ func PartsumCommandValues(
 
 	zm := parsumStats(zs, discard)
 	if len(zfile) > 0 {
-		SavePartsum(zm, zfile)
+		savePartsum(zm, zfile)
 	}
 	return zm, elapsed
 }
 
-// SavePartsum saves the partsum estimates
-func SavePartsum(zs []float64, fname string) {
+func savePartsum(zs []float64, fname string) {
 	f, err := os.Create(fname)
 	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
 	defer f.Close()
