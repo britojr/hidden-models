@@ -464,13 +464,13 @@ func FromCharTree(T *characteristic.Tree, iphi []int) *CliqueTree {
 	return c
 }
 
-// Marginals return a map with all marginals
-func (c CliqueTree) Marginals() map[int][]float64 {
+// Marginals return a slice with all marginals
+func (c CliqueTree) Marginals() [][]float64 {
 	c.UpDownCalibration()
-	m := make(map[int][]float64)
+	m := make([][]float64, c.N())
 	for i := 0; i < c.Size(); i++ {
 		for j, v := range c.Calibrated(i).Variables() {
-			if _, ok := m[v]; !ok {
+			if m[v] == nil {
 				f := c.Calibrated(i).SumOut(c.Calibrated(i).Variables()[:j])
 				f = f.SumOut(c.Calibrated(i).Variables()[j+1:])
 				m[v] = f.Values()

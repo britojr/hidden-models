@@ -633,6 +633,61 @@ func TestConditionalProb(t *testing.T) {
 	}
 }
 
+func TestMarginals(t *testing.T) {
+	cases := []struct {
+		cliques, adj [][]int
+		cardin       []int
+		values       [][]float64
+		result       [][]float64
+	}{{
+		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
+		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
+		cardin:  []int{2, 2, 2, 2, 2},
+		values: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.999, .06, .71, .05, .001, .94, .29, .95},
+			{.95, .10, .05, .90},
+			{.99, .30, .01, .70},
+		},
+		result: [][]float64{
+			{.999, .001},
+			{.998, .002},
+			{.9975, .0025},
+			{.9479, .0521},
+			{.9883, .0117},
+		},
+	}}
+	for _, tt := range cases {
+		c, err := NewStructure(tt.cliques, tt.adj)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		potentials := make([]*factor.Factor, len(tt.values))
+		for i, v := range tt.values {
+			potentials[i] = factor.NewFactorValues(tt.cliques[i], tt.cardin, v)
+		}
+		err = c.SetAllPotentials(potentials)
+		if err != nil {
+			t.Errorf(err.Error())
+		}
+		got := c.Marginals()
+		if len(tt.result) != len(got) {
+			t.Errorf("wrong number of variables %v != %v", len(tt.result), len(got))
+		}
+		for i := range tt.result {
+			if len(tt.result[i]) != len(got[i]) {
+				t.Errorf("wrong number of values %v != %v", len(tt.result[i]), len(got[i]))
+			}
+			for j := range tt.result[i] {
+				if !floats.AlmostEqual(tt.result[i][j], got[i][j], 1e-4) {
+					t.Errorf("wrong marginals for var %v: %v != %v", i, tt.result[i][j], got[i][j])
+				}
+			}
+		}
+	}
+}
+
 func TestSaveOnLibdaiFormat(t *testing.T) {
 	cases := []struct {
 		cliques, adj [][]int
