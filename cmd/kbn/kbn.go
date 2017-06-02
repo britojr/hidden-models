@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/britojr/kbn/dataset"
@@ -20,9 +22,10 @@ const (
 // Define Flag variables
 var (
 	// common
-	dsfile string // dataset file name
-	delim  uint   // dataset file delimiter
-	hdr    uint   // dataset file header type
+	dsfile  string // dataset file name
+	delim   uint   // dataset file delimiter
+	hdr     uint   // dataset file header type
+	verbose bool   // verbose mode
 
 	// struct command
 	k         int    // treewidth
@@ -101,6 +104,10 @@ func runStructComm() {
 		structComm.PrintDefaults()
 		os.Exit(1)
 	}
+	if !verbose {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
 
 	fmt.Printf("d=%v, cs=%v, h=%v, k=%v\n",
 		dsfile, ctfileout, h, k,
@@ -119,6 +126,10 @@ func runParamComm() {
 		fmt.Printf("\n error: missing dataset or structure file\n\n")
 		paramComm.PrintDefaults()
 		os.Exit(1)
+	}
+	if !verbose {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
 	}
 	var dist, mode int
 	var ok bool
@@ -158,6 +169,10 @@ func runPartsumComm() {
 		partsumComm.PrintDefaults()
 		os.Exit(1)
 	}
+	if !verbose {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
 	if discard < 0 || discard >= .5 {
 		fmt.Printf("\n error: invalid dircard factor\n\n")
 		partsumComm.PrintDefaults()
@@ -186,6 +201,7 @@ func parseFlags() {
 	structComm.IntVar(&k, "k", 3, "treewidth of the structure")
 	structComm.IntVar(&h, "h", 0, "number of hidden variables")
 	structComm.IntVar(&nk, "nk", 1, "number of ktrees samples")
+	structComm.BoolVar(&verbose, "v", false, "prints detailed steps")
 
 	// param subcommand flags
 	paramComm.UintVar(&delim, "delim", ',', "field delimiter")
@@ -200,6 +216,7 @@ func parseFlags() {
 	paramComm.StringVar(&potdist, "dist", "uniform", "distribution {random|uniform|dirichlet} (required)")
 	paramComm.IntVar(&hcard, "hc", 2, "cardinality of hidden variables")
 	paramComm.StringVar(&potmode, "mode", "independent", "mode {independent|conditional|full} (required)")
+	paramComm.BoolVar(&verbose, "v", false, "prints detailed steps")
 
 	// partsum subcommand flags
 	partsumComm.UintVar(&delim, "delim", ',', "field delimiter")
@@ -209,6 +226,7 @@ func parseFlags() {
 	partsumComm.StringVar(&mkfile, "m", "", "mrf load file (required)")
 	partsumComm.StringVar(&zfile, "z", "", "file to save the partition sum")
 	partsumComm.Float64Var(&discard, "dis", 0, "discard factor should be in [0,0.5)")
+	partsumComm.BoolVar(&verbose, "v", false, "prints detailed steps")
 }
 
 func printDefaults() {
