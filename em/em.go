@@ -2,7 +2,6 @@
 package em
 
 import (
-	"fmt"
 	"log"
 	"math"
 
@@ -19,7 +18,6 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 	llant = likelihood.Loglikelihood(ct, data)
 	i := 0
 	for ; diff >= epslon; i++ {
-		fmt.Printf(".")
 		newpot := expectationStep(ct, data)
 		maximizationStep(ct, newpot)
 		ct.SetAllPotentials(newpot)
