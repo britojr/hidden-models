@@ -25,7 +25,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
-	log.Printf("\nEM Iterations: %v\n", i)
+	log.Printf("EM Iterations: %v\n", i)
 	return llnew
 }
 
