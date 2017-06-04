@@ -17,6 +17,8 @@ const (
 	structConst  = "struct"
 	paramConst   = "param"
 	partsumConst = "partsum"
+	marginConst  = "marginals"
+	margerrConst = "margerr"
 )
 
 // Define Flag variables
@@ -49,31 +51,22 @@ var (
 	mkfile  string  // markov random field uai file
 	zfile   string  // file to save the log partsum
 	discard float64 // discard factor
-)
 
-var (
+	// margerr command
+	exactmar string
+
 	// Define subcommands
-	structComm, paramComm, partsumComm *flag.FlagSet
+	structComm, paramComm, partsumComm, marginComm, margerrComm *flag.FlagSet
 	// Define choicemaps
 	modeChoices, distChoices map[string]int
 )
 
 func init() {
-	modeChoices = map[string]int{
-		"independent": learn.ModeIndep,
-		"conditional": learn.ModeCond,
-		"full":        learn.ModeFull,
-	}
-	distChoices = map[string]int{
-		"random":    learn.DistRandom,
-		"uniform":   learn.DistUniform,
-		"dirichlet": learn.DistDirichlet,
-	}
+	initSubcommands()
+	initChoiceMaps()
 }
 
 func main() {
-	parseFlags()
-
 	// Verify that a subcommand has been provided
 	// os.Arg[0] : main command, os.Arg[1] : subcommand
 	if len(os.Args) < 2 {
@@ -91,6 +84,12 @@ func main() {
 	case partsumConst:
 		partsumComm.Parse(os.Args[2:])
 		runPartsumComm()
+	case marginConst:
+		marginComm.Parse(os.Args[2:])
+		runMarginComm()
+	case margerrConst:
+		margerrComm.Parse(os.Args[2:])
+		runMargerrComm()
 	default:
 		printDefaults()
 		os.Exit(1)
@@ -179,7 +178,7 @@ func runPartsumComm() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v, \n",
+	fmt.Printf("cl=%v, d=%v, dis=%v, m=%v, zf=%v\n",
 		ctfilein, dsfile, discard, mkfile, zfile,
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
@@ -187,11 +186,47 @@ func runPartsumComm() {
 	fmt.Println(utl.Sprintc(dsfile, ctfilein, zfile, zm, discard, elapsed))
 }
 
-func parseFlags() {
+func runMarginComm() {
+	// Required Flags
+	if ctfilein == "" || marfile == "" {
+		fmt.Printf("\n error: missing cliquetree or marginals files\n\n")
+		marginComm.PrintDefaults()
+		os.Exit(1)
+	}
+	if !verbose {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
+
+	fmt.Printf("c=%v, m=%v\n", ctfilein, marfile)
+	learn.SaveMarginas(ctfilein, marfile)
+	fmt.Println(utl.Sprintc(ctfilein, marfile))
+}
+
+func runMargerrComm() {
+	// Required Flags
+	if exactmar == "" || marfile == "" {
+		fmt.Printf("\n error: inform two marginal files to compare\n\n")
+		marginComm.PrintDefaults()
+		os.Exit(1)
+	}
+	if !verbose {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
+
+	fmt.Printf("e=%v, a=%v\n", exactmar, marfile)
+	mse := learn.MarginalsMSE(exactmar, marfile)
+	fmt.Println(utl.Sprintc(exactmar, marfile, mse))
+}
+
+func initSubcommands() {
 	// Subcommands
 	structComm = flag.NewFlagSet(structConst, flag.ExitOnError)
 	paramComm = flag.NewFlagSet(paramConst, flag.ExitOnError)
 	partsumComm = flag.NewFlagSet(partsumConst, flag.ExitOnError)
+	marginComm = flag.NewFlagSet(marginConst, flag.ExitOnError)
+	margerrComm = flag.NewFlagSet(margerrConst, flag.ExitOnError)
 
 	// struct subcommand flags
 	structComm.UintVar(&delim, "delim", ',', "field delimiter")
@@ -227,12 +262,36 @@ func parseFlags() {
 	partsumComm.StringVar(&zfile, "z", "", "file to save the partition sum")
 	partsumComm.Float64Var(&discard, "dis", 0, "discard factor should be in [0,0.5)")
 	partsumComm.BoolVar(&verbose, "v", false, "prints detailed steps")
+
+	// margin subcommand flags
+	marginComm.StringVar(&ctfilein, "c", "", "cliquetree load file (required)")
+	marginComm.StringVar(&marfile, "m", "", "cliquetree marginals save file (required)")
+
+	// margerr subcommand flags
+	margerrComm.StringVar(&exactmar, "e", "", "exact marginals file (required)")
+	margerrComm.StringVar(&marfile, "a", "", "approximation marginals file (required)")
 }
 
 func printDefaults() {
 	fmt.Printf("Usage:\n\n")
 	fmt.Printf("\tkbn <command> [arguments]\n\n")
 	fmt.Printf("The commands are:\n\n")
-	fmt.Printf("\t%v\n\t%v\n\t%v\n", structConst, paramConst, partsumConst)
+	fmt.Printf("\t%v\n\t%v\n\t%v\n\t%v\n\t%v\n",
+		structConst, paramConst, partsumConst, marginConst, margerrConst,
+	)
 	fmt.Println()
+}
+
+func initChoiceMaps() {
+	// initialize choice maps
+	modeChoices = map[string]int{
+		"independent": learn.ModeIndep,
+		"conditional": learn.ModeCond,
+		"full":        learn.ModeFull,
+	}
+	distChoices = map[string]int{
+		"random":    learn.DistRandom,
+		"uniform":   learn.DistUniform,
+		"dirichlet": learn.DistDirichlet,
+	}
 }
