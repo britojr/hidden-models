@@ -92,3 +92,11 @@ func Normalize(fs []float64) {
 		fs[i] = v / sum
 	}
 }
+
+// MSE calculates mean squared error
+func MSE(xs, ys []float64) (mse float64) {
+	for i, v := range xs {
+		mse += (v - ys[i]) * (v - ys[i])
+	}
+	return mse / float64(len(xs))
+}

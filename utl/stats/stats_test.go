@@ -212,3 +212,24 @@ func TestNormalize(t *testing.T) {
 		}
 	}
 }
+
+func TestMSE(t *testing.T) {
+	cases := []struct {
+		xs, ys []float64
+		mse    float64
+	}{{
+		[]float64{0.15, 0.25, 0.35, 0.25},
+		[]float64{0.15, 0.25, 0.35, 0.25},
+		0,
+	}, {
+		[]float64{0.15, 0.25, 0.35, 0.25},
+		[]float64{0.10, 0.35, 0.34, 0.26},
+		0.003175,
+	}}
+	for _, tt := range cases {
+		got := MSE(tt.xs, tt.ys)
+		if !floats.AlmostEqual(tt.mse, got) {
+			t.Errorf("want %v, got %v", tt.mse, got)
+		}
+	}
+}
