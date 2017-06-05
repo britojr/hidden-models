@@ -2,6 +2,8 @@ package learn
 
 import (
 	"bytes"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -31,6 +33,28 @@ func TestWriteMarginals(t *testing.T) {
 					break
 				}
 			}
+		}
+	}
+}
+
+func TestReadMarginals(t *testing.T) {
+	cases := []struct {
+		values  [][]float64
+		content string
+	}{{
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+			{.8, .20001},
+			{.5, .5},
+		},
+		`MAR
+4 2 0.90000 0.10000 3 0.10000 0.70000 0.20000 2 0.80000 0.20001 2 0.50000 0.50000`,
+	}}
+	for _, tt := range cases {
+		got := readMarginals(strings.NewReader(tt.content))
+		if !reflect.DeepEqual(tt.values, got) {
+			t.Errorf("Error on reading marginas\n%v\n%v\n", tt.values, got)
 		}
 	}
 }
