@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/britojr/kbn/utl/floats"
 )
 
 func TestWriteMarginals(t *testing.T) {
@@ -55,6 +57,43 @@ func TestReadMarginals(t *testing.T) {
 		got := readMarginals(strings.NewReader(tt.content))
 		if !reflect.DeepEqual(tt.values, got) {
 			t.Errorf("Error on reading marginas\n%v\n%v\n", tt.values, got)
+		}
+	}
+}
+
+func TestMarginalsMSE(t *testing.T) {
+	cases := []struct {
+		e, a [][]float64
+		d    float64
+	}{{
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+			{.8, .20001},
+			{.5, .5},
+		},
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+			{.8, .20001},
+			{.5, .5},
+		},
+		0,
+	}, {
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+		},
+		[][]float64{
+			{.8, .2},
+			{.2, .7, .1},
+		},
+		0.008333333,
+	}}
+	for _, tt := range cases {
+		got := marginalsMSE(tt.e, tt.a)
+		if !floats.AlmostEqual(tt.d, got, 1e-5) {
+			t.Errorf("want %v, got %v", tt.d, got)
 		}
 	}
 }

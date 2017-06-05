@@ -31,12 +31,6 @@ func SampleStructure(ds *dataset.Dataset, k, h int, ctfile string) (float64, tim
 	return sll, elapsed
 }
 
-// SaveMarginas load a cliquetree to calculate and save its marginals
-func SaveMarginas(ctfile, marfile string) {
-	ct := loadCliqueTree(ctfile)
-	saveCTMarginals(ct, -1, marfile)
-}
-
 // CompareMarginals compares two marginals and return a difference
 func CompareMarginals(exact, approx string, compmode int) (dif float64) {
 	e, a := loadMarginals(exact), loadMarginals(approx)
@@ -47,6 +41,12 @@ func CompareMarginals(exact, approx string, compmode int) (dif float64) {
 		dif = marginalsCrossEntropy(e, a)
 	}
 	return
+}
+
+// SaveMarginas load a cliquetree to calculate and save its marginals
+func SaveMarginas(ctfile, marfile string) {
+	ct := loadCliqueTree(ctfile)
+	saveCTMarginals(ct, -1, marfile)
 }
 
 func loadCliqueTree(fname string) *cliquetree.CliqueTree {
