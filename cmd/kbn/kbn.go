@@ -53,12 +53,13 @@ var (
 	discard float64 // discard factor
 
 	// margerr command
-	exactmar string
+	exactmar string // correct maginals file
+	compmode string // type of function used to compare two marginals
 
 	// Define subcommands
 	structComm, paramComm, partsumComm, marginComm, margerrComm *flag.FlagSet
 	// Define choicemaps
-	modeChoices, distChoices map[string]int
+	modeChoices, distChoices, compChoices map[string]int
 )
 
 func init() {
@@ -207,17 +208,24 @@ func runMargerrComm() {
 	// Required Flags
 	if exactmar == "" || marfile == "" {
 		fmt.Printf("\n error: inform two marginal files to compare\n\n")
-		marginComm.PrintDefaults()
+		margerrComm.PrintDefaults()
 		os.Exit(1)
 	}
 	if !verbose {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
+	var comp int
+	var ok bool
+	if comp, ok = compChoices[compmode]; !ok {
+		fmt.Printf("\n error: invalid compare option\n\n")
+		margerrComm.PrintDefaults()
+		os.Exit(1)
+	}
 
-	fmt.Printf("e=%v, a=%v\n", exactmar, marfile)
-	mse := learn.MarginalsMSE(exactmar, marfile)
-	fmt.Println(utl.Sprintc(exactmar, marfile, mse))
+	fmt.Printf("e=%v, a=%v, c=%v\n", exactmar, marfile, comp)
+	dif := learn.CompareMarginals(exactmar, marfile, comp)
+	fmt.Println(utl.Sprintc(exactmar, marfile, dif))
 }
 
 func initSubcommands() {
@@ -270,6 +278,7 @@ func initSubcommands() {
 	// margerr subcommand flags
 	margerrComm.StringVar(&exactmar, "e", "", "exact marginals file (required)")
 	margerrComm.StringVar(&marfile, "a", "", "approximation marginals file (required)")
+	margerrComm.StringVar(&compmode, "c", "mse", "compare funtion {mse|entropy}")
 }
 
 func printDefaults() {
@@ -293,5 +302,9 @@ func initChoiceMaps() {
 		"random":    learn.DistRandom,
 		"uniform":   learn.DistUniform,
 		"dirichlet": learn.DistDirichlet,
+	}
+	compChoices = map[string]int{
+		"mse":     learn.CompMSE,
+		"entropy": learn.CompCrossEntropy,
 	}
 }
