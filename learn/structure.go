@@ -33,7 +33,7 @@ func SaveMarginas(ctfile, marfile string) {
 
 // MarginalsMSE compares two marginals and return the Mean Squared Error
 func MarginalsMSE(exact, approx string) (mse float64) {
-	e, a := loadMarginals(exact), loadMarginals(approx)
+	e, a := LoadMarginals(exact), LoadMarginals(approx)
 
 	for i := range e {
 		mse += stats.MSE(e[i], a[i])
@@ -75,7 +75,8 @@ func writeMarginals(w io.Writer, ma [][]float64) {
 	}
 }
 
-func loadMarginals(fname string) [][]float64 {
+// LoadMarginals read a MAR file and returns a slice of floats
+func LoadMarginals(fname string) [][]float64 {
 	f := utl.OpenFile(fname)
 	defer f.Close()
 	return readMarginals(f)
