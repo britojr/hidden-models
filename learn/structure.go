@@ -82,7 +82,8 @@ func loadMarginals(fname string) [][]float64 {
 }
 
 func readMarginals(r io.Reader) (ma [][]float64) {
-	fmt.Fscanln(r)
+	var mar string
+	fmt.Fscanln(r, &mar)
 	var n int
 	fmt.Fscanf(r, "%d", &n)
 	ma = make([][]float64, n)
