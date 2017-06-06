@@ -235,7 +235,7 @@ func parseFlags() {
 	// Parse and validate arguments
 	flag.Parse()
 	if len(argfile) == 0 {
-		fmt.Println("Please enter dataset file name.")
+		fmt.Println("Missing parameters file name")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}

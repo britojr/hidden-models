@@ -207,7 +207,7 @@ func runMargerrComm() {
 	// Required Flags
 	if exactmar == "" || marfile == "" {
 		fmt.Printf("\n error: inform two marginal files to compare\n\n")
-		marginComm.PrintDefaults()
+		margerrComm.PrintDefaults()
 		os.Exit(1)
 	}
 	if !verbose {
