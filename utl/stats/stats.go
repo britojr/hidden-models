@@ -100,3 +100,11 @@ func MSE(xs, ys []float64) (mse float64) {
 	}
 	return mse / float64(len(xs))
 }
+
+// CrossEntropy calculates cross entropy of two distributions
+func CrossEntropy(xs, ys []float64) (c float64) {
+	for i, v := range xs {
+		c -= v * math.Log(ys[i])
+	}
+	return
+}
