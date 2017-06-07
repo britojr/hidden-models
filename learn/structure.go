@@ -33,7 +33,7 @@ func SampleStructure(ds *dataset.Dataset, k, h int, ctfile string) (float64, tim
 
 // CompareMarginals compares two marginals and return a difference
 func CompareMarginals(exact, approx string, compmode int) (dif float64) {
-	e, a := loadMarginals(exact), loadMarginals(approx)
+	e, a := LoadMarginals(exact), LoadMarginals(approx)
 	switch compmode {
 	case CompMSE:
 		dif = marginalsMSE(e, a)
@@ -47,6 +47,13 @@ func CompareMarginals(exact, approx string, compmode int) (dif float64) {
 func SaveMarginas(ctfile, marfile string) {
 	ct := loadCliqueTree(ctfile)
 	saveCTMarginals(ct, -1, marfile)
+}
+
+// LoadMarginals read a MAR file and returns a slice of floats
+func LoadMarginals(fname string) [][]float64 {
+	f := utl.OpenFile(fname)
+	defer f.Close()
+	return readMarginals(f)
 }
 
 func loadCliqueTree(fname string) *cliquetree.CliqueTree {
@@ -70,12 +77,6 @@ func saveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
 	} else {
 		writeMarginals(f, ma)
 	}
-}
-
-func loadMarginals(fname string) [][]float64 {
-	f := utl.OpenFile(fname)
-	defer f.Close()
-	return readMarginals(f)
 }
 
 func writeMarginals(w io.Writer, ma [][]float64) {
