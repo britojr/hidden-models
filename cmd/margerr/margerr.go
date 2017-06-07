@@ -20,6 +20,8 @@ const (
 	metrInverse
 	metrL1
 	metrL2
+	metrMaxAbsError
+	metrHellinger
 )
 
 var (
@@ -44,11 +46,13 @@ func parseFlags() {
 	}
 
 	metrChoices = map[string]int{
-		"mse":     metrMSE,
-		"entropy": metrCrossEntropy,
-		"inverse": metrInverse,
-		"l1":      metrL1,
-		"l2":      metrL2,
+		"mse":       metrMSE,
+		"entropy":   metrCrossEntropy,
+		"inverse":   metrInverse,
+		"l1":        metrL1,
+		"l2":        metrL2,
+		"abserror":  metrMaxAbsError,
+		"hellinger": metrHellinger,
 	}
 }
 
@@ -58,7 +62,7 @@ func main() {
 
 	mp := utl.CreateFile(fmt.Sprintf("marginals_%v.txt", time.Now().Format(time.RFC3339)))
 	defer mp.Close()
-	cfuncs := []string{"mse", "entropy", "inverse", "l1", "l2"}
+	cfuncs := []string{"mse", "entropy", "inverse", "l1", "l2", "abserror", "hellinger"}
 	fmt.Fprintln(mp, utl.Sprintc("marfile", cfuncs))
 
 	for _, marf := range marfs {
@@ -82,9 +86,13 @@ func compare(exact, approx string, compfunc int) (d float64) {
 	case metrInverse:
 		d = margCrossEntropy(a, e)
 	case metrL1:
-		d = margDistance(a, e, 1)
+		d = margDistance(e, a, 1)
 	case metrL2:
-		d = margDistance(a, e, 2)
+		d = margDistance(e, a, 2)
+	case metrMaxAbsError:
+		d = margMaxAbsErr(e, a)
+	case metrHellinger:
+		d = margHellDist(e, a)
 	}
 	return
 }
@@ -108,6 +116,37 @@ func margDistance(e, a [][]float64, l float64) (c float64) {
 		c += floats.Distance(e[i], a[i], l)
 	}
 	return c / float64(len(e))
+}
+
+func margMaxAbsErr(e, a [][]float64) (c float64) {
+	for i := range e {
+		c += maxAbsErr(e[i], a[i])
+	}
+	return c / float64(len(e))
+}
+
+func maxAbsErr(xs, ys []float64) (e float64) {
+	for i := range xs {
+		x := math.Abs(xs[i] - ys[i])
+		if e < x {
+			e = x
+		}
+	}
+	return
+}
+
+func margHellDist(e, a [][]float64) (c float64) {
+	for i := range e {
+		c += hellDist(e[i], a[i])
+	}
+	return c / float64(len(e))
+}
+
+func hellDist(xs, ys []float64) (e float64) {
+	for i := range xs {
+		e += math.Pow(math.Sqrt(xs[i])-math.Sqrt(ys[i]), 2)
+	}
+	return e / math.Sqrt2
 }
 
 func margVariance(a, b [][]float64) float64 {
