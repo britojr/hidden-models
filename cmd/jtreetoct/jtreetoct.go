@@ -5,10 +5,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strings"
 
 	"github.com/britojr/kbn/cliquetree"
+	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/utl"
 	"github.com/britojr/kbn/utl/conv"
 	"github.com/britojr/kbn/utl/errchk"
@@ -17,11 +19,12 @@ import (
 const (
 	cliqueConst = "VarElim result"
 	edgesConst  = "Spanning tree"
+	valsConst   = "QaValues"
 )
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Printf("\nUsage: %v <lidaifile.out> <filename.ct0>\n\n", os.Args[0])
+		fmt.Printf("\nUsage: %v <lidaifile.out> <filename.ct0> [vals.out]\n\n", os.Args[0])
 		os.Exit(1)
 	}
 	r := utl.OpenFile(os.Args[1])
@@ -29,7 +32,42 @@ func main() {
 	defer r.Close()
 	defer w.Close()
 	c := parseToCT(r)
+	if len(os.Args) > 3 {
+		v := utl.OpenFile(os.Args[3])
+		defer v.Close()
+		parseValues(v, c)
+	}
 	c.SaveOn(w)
+}
+
+func parseValues(r io.Reader, c *cliquetree.CliqueTree) {
+	cardin := make([]int, c.N())
+	for i := range cardin {
+		cardin[i] = 2
+	}
+	pot := make([]*factor.Factor, len(c.Cliques()))
+	num := int(math.Pow(2, 21))
+	var aux rune
+	for i := 0; i < len(c.Cliques()); i++ {
+		fmt.Fscanf(r, "%c", &aux)
+		fmt.Printf("(%c)\n", aux)
+		pot[i] = factor.NewFactor(c.Clique(i), cardin)
+		if len(pot[i].Values()) < num {
+			fmt.Println(len(pot[i].Values()))
+			panic("invalid size")
+		}
+		for j := range pot[i].Values() {
+			// fmt.Fscanf(r, "%f", &pot[i].Values()[j])
+			_, err := fmt.Fscanf(r, "%f", &pot[i].Values()[j])
+			errchk.Check(err, "")
+			if j < 2 || j >= num-2 {
+				fmt.Println(pot[i].Values()[j])
+			}
+		}
+		fmt.Fscanf(r, "%c", &aux)
+		fmt.Printf("(%c)\n", aux)
+	}
+	c.SetAllPotentials(pot)
 }
 
 func parseToCT(r io.Reader) *cliquetree.CliqueTree {
