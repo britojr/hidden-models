@@ -502,7 +502,7 @@ func (c *CliqueTree) SaveOnLibdaiFormat(f io.Writer) {
 		fmt.Fprintf(f, "%d\n", len(c.InitialPotential(i).Values()))
 		// factor values
 		for j, v := range c.InitialPotential(i).Values() {
-			fmt.Fprintf(f, "%d     %.4f\n", j, v)
+			fmt.Fprintf(f, "%d     %e\n", j, v)
 		}
 		fmt.Fprintln(f)
 	}
@@ -544,8 +544,8 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 	fmt.Fprintln(w)
 	// factor values
 	for i := 0; i < c.Size(); i++ {
-		for _, v := range c.InitialPotential(i).Values() {
-			fmt.Fprintf(w, "%.8f ", v)
+		for j := range c.InitialPotential(i).Values() {
+			fmt.Fprintf(w, "%e ", c.InitialPotential(i).Values()[j])
 		}
 		fmt.Fprintln(w)
 	}
@@ -554,28 +554,43 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 
 // LoadFrom loads a clique tree from the given reader
 func LoadFrom(r io.Reader) *CliqueTree {
-	scanner := bufio.NewScanner(r)
-	scanner.Scan()
-	size := conv.Atoi(scanner.Text())
+	reader := bufio.NewReader(r)
+	line, err := reader.ReadString('\n')
+	errchk.Check(err, "")
+	size := conv.Atoi(strings.TrimSpace(line))
 	cliques := make([][]int, size)
 	for i := 0; i < size; i++ {
-		scanner.Scan()
-		cliques[i] = append(cliques[i], conv.Satoi(strings.Fields(scanner.Text()))...)
+		line, err = reader.ReadString('\n')
+		errchk.Check(err, "")
+		cliques[i] = append(cliques[i], conv.Satoi(strings.Fields(line))...)
 	}
-	scanner.Scan()
+	_, err = reader.ReadString('\n')
+	errchk.Check(err, "")
 	adj := make([][]int, size)
 	for i := 0; i < size; i++ {
-		scanner.Scan()
-		adj[i] = append(adj[i], conv.Satoi(strings.Fields(scanner.Text()))...)
+		line, err = reader.ReadString('\n')
+		errchk.Check(err, "")
+		adj[i] = append(adj[i], conv.Satoi(strings.Fields(line))...)
 	}
-	scanner.Scan()
-	scanner.Scan()
-	cardin := conv.Satoi(strings.Fields(scanner.Text()))
+	_, err = reader.ReadString('\n')
+	errchk.Check(err, "")
+	line, err = reader.ReadString('\n')
+	errchk.Check(err, "")
+	cardin := conv.Satoi(strings.Fields(line))
 	potentials := make([]*factor.Factor, size)
-	for i := range potentials {
-		scanner.Scan()
-		values := conv.Satof(strings.Fields(scanner.Text()))
-		potentials[i] = factor.NewFactorValues(cliques[i], cardin, values)
+	if cardin[0] != 0 {
+		for i := range potentials {
+			potentials[i] = factor.NewFactor(cliques[i], cardin)
+			for j := range potentials[i].Values() {
+				line, err = reader.ReadString(' ')
+				errchk.Check(err, "")
+				potentials[i].Values()[j] = conv.Atof(strings.TrimSpace(line))
+			}
+		}
+	} else {
+		for i := range potentials {
+			potentials[i] = factor.NewFactor(cliques[i], cardin)
+		}
 	}
 
 	c, err := NewStructure(cliques, adj)
