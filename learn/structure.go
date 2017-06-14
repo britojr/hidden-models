@@ -85,7 +85,7 @@ func writeMarginals(w io.Writer, ma [][]float64) {
 	for i := range ma {
 		fmt.Fprintf(w, "%d ", len(ma[i]))
 		for _, v := range ma[i] {
-			fmt.Fprintf(w, "%.5f ", v)
+			fmt.Fprintf(w, "%e ", v)
 		}
 	}
 }

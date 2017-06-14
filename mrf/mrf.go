@@ -93,7 +93,7 @@ func (m *Mrf) SaveOnLibdaiFormat(w io.Writer) {
 		fmt.Fprintf(w, "%d\n", len(p.Values()))
 		// factor values
 		for j, v := range p.Values() {
-			fmt.Fprintf(w, "%d     %.4f\n", j, v)
+			fmt.Fprintf(w, "%d     %e\n", j, v)
 		}
 		fmt.Fprintln(w)
 	}

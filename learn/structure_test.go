@@ -2,6 +2,7 @@ package learn
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -20,8 +21,13 @@ func TestWriteMarginals(t *testing.T) {
 			{.8, .200013},
 			{.5, .5},
 		},
-		`MAR
-4 2 0.90000 0.10000 3 0.10000 0.70000 0.20000 2 0.80000 0.20001 2 0.50000 0.50000`,
+		// `MAR
+		// 4 2 0.90000 0.10000 3 0.10000 0.70000 0.20000 2 0.80000 0.20001 2 0.50000 0.50000`,
+		"MAR\n4" +
+			fmt.Sprintf(" 2 %e %e", .9, .1) +
+			fmt.Sprintf(" 3 %e %e %e", .1, .7, .2) +
+			fmt.Sprintf(" 2 %e %e", .8, .200013) +
+			fmt.Sprintf(" 2 %e %e ", .5, .5),
 	}}
 	for _, tt := range cases {
 		var b bytes.Buffer
