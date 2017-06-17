@@ -57,7 +57,6 @@ func parseValues(r io.Reader, c *cliquetree.CliqueTree) {
 			panic("invalid size")
 		}
 		for j := range pot[i].Values() {
-			// fmt.Fscanf(r, "%f", &pot[i].Values()[j])
 			_, err := fmt.Fscanf(r, "%f", &pot[i].Values()[j])
 			errchk.Check(err, "")
 			if j < 2 || j >= num-2 {
@@ -66,6 +65,11 @@ func parseValues(r io.Reader, c *cliquetree.CliqueTree) {
 		}
 		fmt.Fscanf(r, "%c", &aux)
 		fmt.Printf("(%c)\n", aux)
+	}
+	for i := range pot {
+		if len(c.Varin(i)) != 0 {
+			pot[i] = pot[i].Division(pot[i].SumOut(c.Varin(i)))
+		}
 	}
 	c.SetAllPotentials(pot)
 }
