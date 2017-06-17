@@ -7,21 +7,22 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/likelihood"
+	"github.com/gonum/floats"
 )
 
 // ExpectationMaximization runs EM algorithm for a cliquetree tree and returns
 // the loglikelihood after convergence
 func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64) float64 {
-	diff := epslon * 10
 	var llnew, llant float64
-	llant = likelihood.Loglikelihood(ct, data)
+	newpot, llant := expectationStep(ct, data)
+	maximizationStep(ct, newpot)
+	ct.SetAllPotentials(newpot)
+	diff := epslon * 10
 	i := 0
 	for ; diff >= epslon; i++ {
-		newpot := expectationStep(ct, data)
+		newpot, llnew = expectationStep(ct, data)
 		maximizationStep(ct, newpot)
 		ct.SetAllPotentials(newpot)
-		llnew = likelihood.Loglikelihood(ct, data)
 		diff = math.Abs((llnew - llant) / llant)
 		llant = llnew
 	}
@@ -30,7 +31,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 }
 
 // expectationStep calculates the expected count of a list of observations and a cliquetree
-func expectationStep(ct *cliquetree.CliqueTree, data [][]int) []*factor.Factor {
+func expectationStep(ct *cliquetree.CliqueTree, data [][]int) ([]*factor.Factor, float64) {
 	// initialize counter
 	count := make([]*factor.Factor, ct.Size())
 	for i := range count {
@@ -39,9 +40,12 @@ func expectationStep(ct *cliquetree.CliqueTree, data [][]int) []*factor.Factor {
 
 	// calculate probability of every instance
 	ct.StorePotentials()
+	var ll float64
 	for _, m := range data {
 		ct.ReduceByEvidence(m)
 		ct.UpDownCalibration()
+		// accumulate the log-probability to return loglikelihood
+		ll += lprob(ct.Calibrated(0).Values())
 		for i := range count {
 			ct.Calibrated(i).Normalize()
 			for j, v := range ct.Calibrated(i).Values() {
@@ -50,8 +54,7 @@ func expectationStep(ct *cliquetree.CliqueTree, data [][]int) []*factor.Factor {
 		}
 		ct.RecoverPotentials()
 	}
-
-	return count
+	return count, ll
 }
 
 func maximizationStep(ct *cliquetree.CliqueTree, newpot []*factor.Factor) {
@@ -62,4 +65,12 @@ func maximizationStep(ct *cliquetree.CliqueTree, newpot []*factor.Factor) {
 			newpot[j].Normalize()
 		}
 	}
+}
+
+func lprob(values []float64) float64 {
+	p := floats.Sum(values)
+	if p == 0 {
+		panic("invalid log(0)")
+	}
+	return math.Log(p)
 }

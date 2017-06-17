@@ -83,7 +83,7 @@ func TestExpectationStep(t *testing.T) {
 			t.Errorf(err.Error())
 		}
 		for _, r := range tt.result {
-			got := expectationStep(c, r.data)
+			got, _ := expectationStep(c, r.data)
 			if len(got) != len(r.values) {
 				t.Errorf("wrong number of factors, want %v, got %v", len(got), len(r.values))
 			}
@@ -106,6 +106,7 @@ func TestExpectationMaximization(t *testing.T) {
 		values       [][]float64
 		data         [][]int
 		result       [][]float64
+		ll           float64
 	}{{
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		adj:     [][]int{{2}, {2}, {0, 1, 3, 4}, {2}, {2}},
@@ -130,13 +131,17 @@ func TestExpectationMaximization(t *testing.T) {
 			{0, .75, 0, .25},
 			{0, 0, 0, 1},
 		},
+		ll: -4.498681156950466,
 	}}
 	for _, tt := range cases {
 		c, err := initiCliqueTree(tt.cliques, tt.adj, tt.cardin, tt.values)
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-		ExpectationMaximization(c, tt.data, 1e-8)
+		ll := ExpectationMaximization(c, tt.data, 1e-8)
+		if tt.ll != ll {
+			t.Errorf("wrong ll %v != %v", tt.ll, ll)
+		}
 		c.UpDownCalibration()
 		for i := range tt.result {
 			for j := range tt.result[i] {
