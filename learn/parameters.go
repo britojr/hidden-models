@@ -60,7 +60,12 @@ func learnParameters(
 	alpha, epslon float64, potdist, potmode, iter int,
 ) (ll float64) {
 	initializePotentials(ct, ds, cardin, n, potdist, potmode, alpha)
-	ll = em.ExpectationMaximization(ct, ds.Data(), epslon)
+	// no need to run EM if there is no latent variables
+	if ct.N() > ds.NCols() || potmode == ModeFull {
+		ll = em.ExpectationMaximization(ct, ds.Data(), epslon)
+		// } else {
+		// 	ll = likelihood.Loglikelihood(ct, ds.Data())
+	}
 	return
 }
 
