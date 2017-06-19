@@ -278,7 +278,7 @@ func initSubcommands() {
 	// margerr subcommand flags
 	margerrComm.StringVar(&exactmar, "e", "", "exact marginals file (required)")
 	margerrComm.StringVar(&marfile, "a", "", "approximation marginals file (required)")
-	margerrComm.StringVar(&compmode, "c", "mse", "compare funtion {mse|entropy}")
+	margerrComm.StringVar(&compmode, "c", "abs", "compare funtion {mse|entropy|l1|l2|abs|hel}")
 }
 
 func printDefaults() {
@@ -306,5 +306,9 @@ func initChoiceMaps() {
 	compChoices = map[string]int{
 		"mse":     learn.CompMSE,
 		"entropy": learn.CompCrossEntropy,
+		"l1":      learn.CompL1,
+		"l2":      learn.CompL2,
+		"abs":     learn.CompMaxAbsError,
+		"hel":     learn.CompHellinger,
 	}
 }

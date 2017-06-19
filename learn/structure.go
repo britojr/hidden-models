@@ -16,6 +16,10 @@ import (
 const (
 	CompMSE = iota
 	CompCrossEntropy
+	CompL1
+	CompL2
+	CompMaxAbsError
+	CompHellinger
 )
 
 // SampleStructure samples a cliquetree structure with limited treewidth
@@ -32,13 +36,23 @@ func SampleStructure(ds *dataset.Dataset, k, h int, ctfile string) (float64, tim
 }
 
 // CompareMarginals compares two marginals and return a difference
-func CompareMarginals(exact, approx string, compmode int) (dif float64) {
+func CompareMarginals(exact, approx string, compfunc int) (d float64) {
 	e, a := LoadMarginals(exact), LoadMarginals(approx)
-	switch compmode {
+	switch compfunc {
 	case CompMSE:
-		dif = marginalsMSE(e, a)
+		d = stats.MatMSE(e, a)
 	case CompCrossEntropy:
-		dif = marginalsCrossEntropy(e, a)
+		d = stats.MatCrossEntropy(e, a)
+	case CompL1:
+		d = stats.MatDistance(e, a, 1)
+	case CompL2:
+		d = stats.MatDistance(e, a, 2)
+	case CompMaxAbsError:
+		d = stats.MatMaxAbsErr(e, a)
+	case CompHellinger:
+		d = stats.MatHellDist(e, a)
+	default:
+		d = stats.MatMaxAbsErr(e, a)
 	}
 	return
 }
@@ -85,7 +99,7 @@ func writeMarginals(w io.Writer, ma [][]float64) {
 	for i := range ma {
 		fmt.Fprintf(w, "%d ", len(ma[i]))
 		for _, v := range ma[i] {
-			fmt.Fprintf(w, "%e ", v)
+			fmt.Fprintf(w, "%v ", v)
 		}
 	}
 }
@@ -103,19 +117,5 @@ func readMarginals(r io.Reader) (ma [][]float64) {
 			fmt.Fscanf(r, "%f", &ma[i][j])
 		}
 	}
-	return
-}
-
-// marginalsMSE compares two marginals and return the Mean Squared Error
-func marginalsMSE(exact, approx [][]float64) (mse float64) {
-	for i := range exact {
-		mse += stats.MSE(exact[i], approx[i])
-	}
-	return mse / float64(len(exact))
-}
-
-// marginalsCrossEntropy compares two marginals and return the cross entropy
-func marginalsCrossEntropy(exact, approx [][]float64) (c float64) {
-	// TODO: implement cross entropy
 	return
 }
