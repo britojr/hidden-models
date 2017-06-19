@@ -106,7 +106,7 @@ func TestCreateEmpiricPotentials(t *testing.T) {
 				prop := q.Values()[0] / f.Values()[i]
 				for j := 1; j < stridobs; j++ {
 					prop2 := q.Values()[j] / f.Values()[i+j]
-					if !floats.AlmostEqual(prop, prop2) {
+					if !floats.AlmostEqual(prop, prop2, 1e-9) {
 						t.Errorf("wrong proportion %v, %v", prop, prop2)
 					}
 				}
