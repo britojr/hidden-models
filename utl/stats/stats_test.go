@@ -296,3 +296,40 @@ func TestHellDist(t *testing.T) {
 		}
 	}
 }
+
+func TestMatMSE(t *testing.T) {
+	cases := []struct {
+		e, a [][]float64
+		d    float64
+	}{{
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+			{.8, .20001},
+			{.5, .5},
+		},
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+			{.8, .20001},
+			{.5, .5},
+		},
+		0,
+	}, {
+		[][]float64{
+			{.9, .1},
+			{.1, .7, .2},
+		},
+		[][]float64{
+			{.8, .2},
+			{.2, .7, .1},
+		},
+		0.008333333,
+	}}
+	for _, tt := range cases {
+		got := MatMSE(tt.e, tt.a)
+		if !floats.AlmostEqual(tt.d, got, 1e-5) {
+			t.Errorf("want %v, got %v", tt.d, got)
+		}
+	}
+}
