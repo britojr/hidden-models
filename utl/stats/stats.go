@@ -93,6 +93,8 @@ func Normalize(fs []float64) {
 	}
 }
 
+// Distance functions
+
 // MSE calculates mean squared error
 func MSE(xs, ys []float64) (mse float64) {
 	for i, v := range xs {
@@ -104,9 +106,29 @@ func MSE(xs, ys []float64) (mse float64) {
 // CrossEntropy calculates cross entropy of two distributions
 func CrossEntropy(xs, ys []float64) (c float64) {
 	for i, v := range xs {
-		if ys[i] != 0 {
+		// if ys[i] != 0 {
+		if v != 0 {
 			c -= v * math.Log(ys[i])
 		}
 	}
 	return
+}
+
+// MaxAbsErr returns the maximum absolute error
+func MaxAbsErr(xs, ys []float64) (e float64) {
+	for i := range xs {
+		x := math.Abs(xs[i] - ys[i])
+		if e < x {
+			e = x
+		}
+	}
+	return
+}
+
+// HellDist calculates Hellinger distance
+func HellDist(xs, ys []float64) (e float64) {
+	for i := range xs {
+		e += math.Pow(math.Sqrt(xs[i])-math.Sqrt(ys[i]), 2)
+	}
+	return e / math.Sqrt2
 }
