@@ -49,3 +49,9 @@ func Sum(fs []float64) (sum float64) {
 	}
 	return
 }
+
+// Round float to a number of decimal places
+func Round(f float64, places int) float64 {
+	shift := math.Pow(10, float64(places))
+	return math.Floor(f*shift+.5) / shift
+}

@@ -75,3 +75,21 @@ func TestSum(t *testing.T) {
 		}
 	}
 }
+
+func TestRound(t *testing.T) {
+	cases := []struct {
+		num    float64
+		places int
+		result float64
+	}{
+		{1.2345, 2, 1.23},
+		{0.231502, 3, 0.232},
+		{-0.231, 3, -0.231},
+	}
+	for _, tt := range cases {
+		got := Round(tt.num, tt.places)
+		if tt.result != got {
+			t.Errorf("%v != %v", tt.result, got)
+		}
+	}
+}
