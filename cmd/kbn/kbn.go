@@ -38,7 +38,7 @@ var (
 	// param command
 	ctfilein string  // cliquetree load file
 	epslon   float64 // minimum precision for EM convergence
-	iterem   int     // number of EM random restarts
+	skipEM   bool    // if should skip EM
 	potdist  string  // initial potential distribution
 	potmode  string  // mode to complete the initial potential distribution
 	hcard    int     // cardinality of hiden variables
@@ -150,15 +150,15 @@ func runParamComm() {
 	}
 
 	fmt.Printf(
-		"a=%v, cl=%v, cs=%v, d=%v, dist=%v, e=%v, hc=%v, iterem=%v, mar=%v, mode=%v\n",
-		alpha, ctfilein, ctfileout, dsfile, potdist, epslon, hcard, iterem, marfile, potmode,
+		"a=%v, cl=%v, cs=%v, d=%v, dist=%v, e=%v, hc=%v, mar=%v, mode=%v, skipem=%v\n",
+		alpha, ctfilein, ctfileout, dsfile, potdist, epslon, hcard, marfile, potmode, skipEM,
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ll, elapsed := learn.Parameters(
-		ds, ctfilein, ctfileout, marfile, hcard, alpha, epslon, iterem, dist, mode,
+		ds, ctfilein, ctfileout, marfile, hcard, alpha, epslon, dist, mode, skipEM,
 	)
 	fmt.Println(utl.Sprintc(
-		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
+		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, skipEM,
 	))
 }
 
@@ -253,7 +253,7 @@ func initSubcommands() {
 	paramComm.StringVar(&ctfilein, "cl", "", "cliquetree load file (required)")
 	paramComm.StringVar(&ctfileout, "cs", "", "cliquetree save file")
 	paramComm.StringVar(&marfile, "mar", "", "cliquetree marginals save file")
-	paramComm.IntVar(&iterem, "iterem", 1, "number of EM iterations")
+	paramComm.BoolVar(&skipEM, "skipem", false, "if should skip EM")
 	paramComm.Float64Var(&epslon, "e", 1e-2, "minimum precision for EM convergence")
 	paramComm.Float64Var(&alpha, "a", 1, "alpha parameter, required for --dist=dirichlet")
 	paramComm.StringVar(&potdist, "dist", "uniform", "distribution {random|uniform|dirichlet} (required)")
