@@ -3,25 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/stats"
-	"github.com/gonum/floats"
-)
-
-const (
-	metrMSE = iota
-	metrCrossEntropy
-	metrInverse
-	metrL1
-	metrL2
-	metrMaxAbsError
-	metrHellinger
 )
 
 var (
@@ -46,13 +33,12 @@ func parseFlags() {
 	}
 
 	metrChoices = map[string]int{
-		"mse":       metrMSE,
-		"entropy":   metrCrossEntropy,
-		"inverse":   metrInverse,
-		"l1":        metrL1,
-		"l2":        metrL2,
-		"abserror":  metrMaxAbsError,
-		"hellinger": metrHellinger,
+		"mse":     learn.CompMSE,
+		"entropy": learn.CompCrossEntropy,
+		"l1":      learn.CompL1,
+		"l2":      learn.CompL2,
+		"abs":     learn.CompMaxAbsError,
+		"hel":     learn.CompHellinger,
 	}
 }
 
@@ -62,110 +48,16 @@ func main() {
 
 	mp := utl.CreateFile(fmt.Sprintf("marginals_%v.txt", time.Now().Format(time.RFC3339)))
 	defer mp.Close()
-	cfuncs := []string{"mse", "entropy", "inverse", "l1", "l2", "abserror", "hellinger"}
+	cfuncs := []string{"mse", "entropy", "l1", "l2", "abs", "hel"}
 	fmt.Fprintln(mp, utl.Sprintc("marfile", cfuncs))
 
 	for _, marf := range marfs {
 		if marf != exact {
 			d := []float64(nil)
 			for _, v := range cfuncs {
-				d = append(d, compare(exact, marf, metrChoices[v]))
+				d = append(d, learn.CompareMarginals(exact, marf, metrChoices[v]))
 			}
 			fmt.Fprintln(mp, utl.Sprintc(marf, d))
 		}
 	}
-}
-
-func compare(exact, approx string, compfunc int) (d float64) {
-	e, a := learn.LoadMarginals(exact), learn.LoadMarginals(approx)
-	switch compfunc {
-	case metrMSE:
-		d = margMSE(e, a)
-	case metrCrossEntropy:
-		d = margCrossEntropy(e, a)
-	case metrInverse:
-		d = margCrossEntropy(a, e)
-	case metrL1:
-		d = margDistance(e, a, 1)
-	case metrL2:
-		d = margDistance(e, a, 2)
-	case metrMaxAbsError:
-		d = margMaxAbsErr(e, a)
-	case metrHellinger:
-		d = margHellDist(e, a)
-	}
-	return
-}
-
-func margMSE(e, a [][]float64) (mse float64) {
-	for i := range e {
-		mse += stats.MSE(e[i], a[i])
-	}
-	return mse / float64(len(e))
-}
-
-func margCrossEntropy(e, a [][]float64) (c float64) {
-	for i := range e {
-		c += crossEntropy(e[i], a[i])
-	}
-	return c / float64(len(e))
-}
-
-func margDistance(e, a [][]float64, l float64) (c float64) {
-	for i := range e {
-		c += floats.Distance(e[i], a[i], l)
-	}
-	return c / float64(len(e))
-}
-
-func margMaxAbsErr(e, a [][]float64) (c float64) {
-	for i := range e {
-		c += maxAbsErr(e[i], a[i])
-	}
-	return c / float64(len(e))
-}
-
-func maxAbsErr(xs, ys []float64) (e float64) {
-	for i := range xs {
-		x := math.Abs(xs[i] - ys[i])
-		if e < x {
-			e = x
-		}
-	}
-	return
-}
-
-func margHellDist(e, a [][]float64) (c float64) {
-	for i := range e {
-		c += hellDist(e[i], a[i])
-	}
-	return c / float64(len(e))
-}
-
-func hellDist(xs, ys []float64) (e float64) {
-	for i := range xs {
-		e += math.Pow(math.Sqrt(xs[i])-math.Sqrt(ys[i]), 2)
-	}
-	return e / math.Sqrt2
-}
-
-func margVariance(a, b [][]float64) float64 {
-	c, d := 0, float64(0)
-	for i := range a {
-		for j, v := range a[i] {
-			d += (v - b[i][j]) * (v - b[i][j])
-			c++
-		}
-	}
-	return d / float64(c)
-}
-
-func crossEntropy(xs, ys []float64) (c float64) {
-	for i, v := range xs {
-		// c -= v * math.Log(ys[i])
-		if ys[i] != 0 {
-			c -= v * math.Log(ys[i])
-		}
-	}
-	return
 }
