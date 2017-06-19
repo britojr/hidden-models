@@ -208,9 +208,10 @@ func paramCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, iterem, potdist, potmode int,
 ) {
+	skipEM := false
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ll, elapsed := learn.Parameters(
-		ds, ctin, ctout, marfile, hc, alpha, epslon, iterem, potdist, potmode,
+		ds, ctin, ctout, marfile, hc, alpha, epslon, potdist, potmode, skipEM,
 	)
 	fmt.Fprintln(paramfp, utl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
