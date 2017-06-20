@@ -1,2 +1,3 @@
 cmd/kbn-batch/kbn-batch
 cmd/kbn/kbn
+cmd/margerr/margerr
