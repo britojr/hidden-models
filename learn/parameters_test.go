@@ -55,7 +55,17 @@ func TestCreateEmpiricPotentials(t *testing.T) {
 		result:  [][]float64{{.20, .30, .20, .30}, {.25, .25, .25, .25}},
 	}}
 
-	// test conditional uniform
+	testConditionalUniform(t, cases)
+	testRandomIndependent(t, cases)
+}
+
+func testConditionalUniform(t *testing.T, cases []struct {
+	cliques [][]int
+	cardin  []int
+	numobs  int
+	counter FakeCounter
+	result  [][]float64
+}) {
 	for _, tt := range cases {
 		faclist := createEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, DistUniform, ModeCond, 0)
 		if len(faclist) != len(tt.result) {
@@ -76,8 +86,15 @@ func TestCreateEmpiricPotentials(t *testing.T) {
 			}
 		}
 	}
+}
 
-	// test random independent
+func testRandomIndependent(t *testing.T, cases []struct {
+	cliques [][]int
+	cardin  []int
+	numobs  int
+	counter FakeCounter
+	result  [][]float64
+}) {
 	for _, tt := range cases {
 		faclist := createEmpiricPotentials(tt.counter, tt.cliques, tt.cardin, tt.numobs, DistRandom, ModeIndep, 0)
 		if len(faclist) != len(tt.result) {
