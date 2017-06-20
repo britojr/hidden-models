@@ -32,9 +32,9 @@ func TestLoadFromUAI(t *testing.T) {
 			"2 0 1 \n" +
 			"2 1 2 \n" +
 			"4\n" +
-			fmt.Sprintf("%e\n%e\n%e\n%e\n\n", .25, .35, .35, .05) +
+			fmt.Sprintf("%v\n%v\n%v\n%v\n\n", .25, .35, .35, .05) +
 			"4\n" +
-			fmt.Sprintf("%e\n%e\n%e\n%e\n\n", .20, .22, .40, .18),
+			fmt.Sprintf("%v\n%v\n%v\n%v\n\n", .20, .22, .40, .18),
 	}, {
 		cardin:  []int{2, 2, 2},
 		cliques: [][]int{{0, 1}, {1, 2}},
@@ -49,9 +49,9 @@ func TestLoadFromUAI(t *testing.T) {
 			"2 0 1 \n" +
 			"2 1 2 \n" +
 			"\n4" +
-			fmt.Sprintf("\n%e %e %e %e \n", .25, .35, .35, .05) +
+			fmt.Sprintf("\n%v %v %v %v \n", .25, .35, .35, .05) +
 			"\n4" +
-			fmt.Sprintf("\n%e %e %e %e \n", .20, .22, .40, .18),
+			fmt.Sprintf("\n%v %v %v %v \n", .20, .22, .40, .18),
 	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
 		cardin:  []int{2, 2, 2, 2, 2},
@@ -72,16 +72,16 @@ func TestLoadFromUAI(t *testing.T) {
 			"2 2 3 \n" +
 			"2 2 4 \n" +
 			"\n2" +
-			fmt.Sprintf("\n%e %e \n", .999, .001) +
+			fmt.Sprintf("\n%v %v \n", .999, .001) +
 			"\n2" +
-			fmt.Sprintf("\n%e %e \n", .998, .002) +
+			fmt.Sprintf("\n%v %v \n", .998, .002) +
 			"\n8" +
-			fmt.Sprintf("\n%e %e %e %e %e %e %e %e \n",
+			fmt.Sprintf("\n%v %v %v %v %v %v %v %v \n",
 				.999, .06, .71, .05, .001, .94, .29, .95) +
 			"\n4" +
-			fmt.Sprintf("\n%e %e %e %e \n", .95, .10, .05, .90) +
+			fmt.Sprintf("\n%v %v %v %v \n", .95, .10, .05, .90) +
 			"\n4" +
-			fmt.Sprintf("\n%e %e %e %e \n", .99, .30, .01, .70),
+			fmt.Sprintf("\n%v %v %v %v \n", .99, .30, .01, .70),
 	}}
 	for _, tt := range cases {
 		m := LoadFromUAI(strings.NewReader(tt.saved))
@@ -230,19 +230,19 @@ func TestSaveOnLibdaiFormat(t *testing.T) {
 			"0 1 \n" +
 			"2 2 \n" +
 			"4\n" +
-			fmt.Sprintf("%d     %e\n", 0, .25) +
-			fmt.Sprintf("%d     %e\n", 1, .35) +
-			fmt.Sprintf("%d     %e\n", 2, .35) +
-			fmt.Sprintf("%d     %e\n", 3, .05) +
+			fmt.Sprintf("%d     %v\n", 0, .25) +
+			fmt.Sprintf("%d     %v\n", 1, .35) +
+			fmt.Sprintf("%d     %v\n", 2, .35) +
+			fmt.Sprintf("%d     %v\n", 3, .05) +
 			"\n" +
 			"2\n" +
 			"1 2 \n" +
 			"2 2 \n" +
 			"4\n" +
-			fmt.Sprintf("%d     %e\n", 0, .20) +
-			fmt.Sprintf("%d     %e\n", 1, .22) +
-			fmt.Sprintf("%d     %e\n", 2, .40) +
-			fmt.Sprintf("%d     %e\n", 3, .18) +
+			fmt.Sprintf("%d     %v\n", 0, .20) +
+			fmt.Sprintf("%d     %v\n", 1, .22) +
+			fmt.Sprintf("%d     %v\n", 2, .40) +
+			fmt.Sprintf("%d     %v\n", 3, .18) +
 			"\n",
 	}, {
 		cliques: [][]int{{0}, {1}, {0, 1, 2}, {2, 3}, {2, 4}},
@@ -259,46 +259,46 @@ func TestSaveOnLibdaiFormat(t *testing.T) {
 			"0 \n" +
 			"2 \n" +
 			"2\n" +
-			fmt.Sprintf("%d     %e\n", 0, .999) +
-			fmt.Sprintf("%d     %e\n", 1, .001) +
+			fmt.Sprintf("%d     %v\n", 0, .999) +
+			fmt.Sprintf("%d     %v\n", 1, .001) +
 			"\n" +
 			"1\n" +
 			"1 \n" +
 			"2 \n" +
 			"2\n" +
-			fmt.Sprintf("%d     %e\n", 0, .998) +
-			fmt.Sprintf("%d     %e\n", 1, .002) +
+			fmt.Sprintf("%d     %v\n", 0, .998) +
+			fmt.Sprintf("%d     %v\n", 1, .002) +
 			"\n" +
 			"3\n" +
 			"0 1 2 \n" +
 			"2 2 2 \n" +
 			"8\n" +
-			fmt.Sprintf("%d     %e\n", 0, .999) +
-			fmt.Sprintf("%d     %e\n", 1, .06) +
-			fmt.Sprintf("%d     %e\n", 2, .71) +
-			fmt.Sprintf("%d     %e\n", 3, .05) +
-			fmt.Sprintf("%d     %e\n", 4, .001) +
-			fmt.Sprintf("%d     %e\n", 5, .94) +
-			fmt.Sprintf("%d     %e\n", 6, .29) +
-			fmt.Sprintf("%d     %e\n", 7, .95) +
+			fmt.Sprintf("%d     %v\n", 0, .999) +
+			fmt.Sprintf("%d     %v\n", 1, .06) +
+			fmt.Sprintf("%d     %v\n", 2, .71) +
+			fmt.Sprintf("%d     %v\n", 3, .05) +
+			fmt.Sprintf("%d     %v\n", 4, .001) +
+			fmt.Sprintf("%d     %v\n", 5, .94) +
+			fmt.Sprintf("%d     %v\n", 6, .29) +
+			fmt.Sprintf("%d     %v\n", 7, .95) +
 			"\n" +
 			"2\n" +
 			"2 3 \n" +
 			"2 2 \n" +
 			"4\n" +
-			fmt.Sprintf("%d     %e\n", 0, .95) +
-			fmt.Sprintf("%d     %e\n", 1, .10) +
-			fmt.Sprintf("%d     %e\n", 2, .05) +
-			fmt.Sprintf("%d     %e\n", 3, .90) +
+			fmt.Sprintf("%d     %v\n", 0, .95) +
+			fmt.Sprintf("%d     %v\n", 1, .10) +
+			fmt.Sprintf("%d     %v\n", 2, .05) +
+			fmt.Sprintf("%d     %v\n", 3, .90) +
 			"\n" +
 			"2\n" +
 			"2 4 \n" +
 			"2 2 \n" +
 			"4\n" +
-			fmt.Sprintf("%d     %e\n", 0, .99) +
-			fmt.Sprintf("%d     %e\n", 1, .30) +
-			fmt.Sprintf("%d     %e\n", 2, .01) +
-			fmt.Sprintf("%d     %e\n", 3, .70) +
+			fmt.Sprintf("%d     %v\n", 0, .99) +
+			fmt.Sprintf("%d     %v\n", 1, .30) +
+			fmt.Sprintf("%d     %v\n", 2, .01) +
+			fmt.Sprintf("%d     %v\n", 3, .70) +
 			"\n",
 	}}
 	for _, tt := range cases {
