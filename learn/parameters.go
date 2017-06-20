@@ -38,7 +38,7 @@ func Parameters(
 	ds *dataset.Dataset, ctin, ctout, marfile string, hc int,
 	alpha, epslon float64, potdist, potmode int, skipEM bool,
 ) (float64, time.Duration) {
-	ct := loadCliqueTree(ctin)
+	ct := LoadCliqueTree(ctin)
 	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
 
 	start := time.Now()
@@ -48,7 +48,7 @@ func Parameters(
 	elapsed := time.Since(start)
 
 	if len(ctout) > 0 {
-		saveCliqueTree(ct, ctout)
+		SaveCliqueTree(ct, ctout)
 	}
 	if len(marfile) > 0 {
 		saveCTMarginals(ct, ds.NCols(), marfile)

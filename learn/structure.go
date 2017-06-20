@@ -30,7 +30,7 @@ func SampleStructure(ds *dataset.Dataset, k, h int, ctfile string) (float64, tim
 	sll := likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), ds)
 	elapsed := time.Since(start)
 	if len(ctfile) > 0 {
-		saveCliqueTree(ct, ctfile)
+		SaveCliqueTree(ct, ctfile)
 	}
 	return sll, elapsed
 }
@@ -59,7 +59,7 @@ func CompareMarginals(exact, approx string, compfunc int) (d float64) {
 
 // SaveMarginas load a cliquetree to calculate and save its marginals
 func SaveMarginas(ctfile, marfile string) {
-	ct := loadCliqueTree(ctfile)
+	ct := LoadCliqueTree(ctfile)
 	saveCTMarginals(ct, -1, marfile)
 }
 
@@ -70,13 +70,15 @@ func LoadMarginals(fname string) [][]float64 {
 	return readMarginals(f)
 }
 
-func loadCliqueTree(fname string) *cliquetree.CliqueTree {
+// LoadCliqueTree from a file name
+func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
 	f := utl.OpenFile(fname)
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
 
-func saveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
+// SaveCliqueTree on a file
+func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
 	f := utl.CreateFile(fname)
 	defer f.Close()
 	ct.SaveOn(f)

@@ -21,7 +21,7 @@ import (
 func PartitionSum(
 	ds *dataset.Dataset, ctfile, mkfile, zfile string, discard float64,
 ) ([]float64, time.Duration) {
-	ct := loadCliqueTree(ctfile)
+	ct := LoadCliqueTree(ctfile)
 	mk := loadMRF(mkfile)
 
 	start := time.Now()
