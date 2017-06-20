@@ -502,7 +502,7 @@ func (c *CliqueTree) SaveOnLibdaiFormat(f io.Writer) {
 		fmt.Fprintf(f, "%d\n", len(c.InitialPotential(i).Values()))
 		// factor values
 		for j, v := range c.InitialPotential(i).Values() {
-			fmt.Fprintf(f, "%d     %e\n", j, v)
+			fmt.Fprintf(f, "%d     %v\n", j, v)
 		}
 		fmt.Fprintln(f)
 	}
@@ -545,7 +545,7 @@ func (c *CliqueTree) SaveOn(w io.Writer) {
 	// factor values
 	for i := 0; i < c.Size(); i++ {
 		for j := range c.InitialPotential(i).Values() {
-			fmt.Fprintf(w, "%e ", c.InitialPotential(i).Values()[j])
+			fmt.Fprintf(w, "%v ", c.InitialPotential(i).Values()[j])
 		}
 		fmt.Fprintln(w)
 	}
