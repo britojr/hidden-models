@@ -1,6 +1,7 @@
 package learn
 
 import (
+	"log"
 	"time"
 
 	"github.com/britojr/kbn/cliquetree"
@@ -39,6 +40,7 @@ func Parameters(
 	alpha, epslon float64, potdist, potmode int, skipEM bool,
 ) (float64, time.Duration) {
 	ct := LoadCliqueTree(ctin)
+	log.Printf("Successfully read cliquetree\n")
 	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
 
 	start := time.Now()
@@ -46,12 +48,15 @@ func Parameters(
 		ct, ds, cardin, ds.NCols(), alpha, epslon, potdist, potmode, skipEM,
 	)
 	elapsed := time.Since(start)
+	log.Printf("Learned parameters in %v\n", elapsed)
 
 	if len(ctout) > 0 {
 		SaveCliqueTree(ct, ctout)
+		log.Printf("Saved cliquetree in %v\n", ctout)
 	}
 	if len(marfile) > 0 {
 		saveCTMarginals(ct, ds.NCols(), marfile)
+		log.Printf("Saved marginals in %v\n", marfile)
 	}
 	return ll, elapsed
 }
