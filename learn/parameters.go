@@ -73,7 +73,8 @@ func learnParameters(
 	if ct.N() > ds.NCols() || potmode == ModeFull {
 		ll = em.ExpectationMaximization(ct, ds.Data(), epslon)
 	} else {
-		ll = likelihood.Loglikelihood(ct, ds.Data())
+		// if there are no latent variables, calculate LL just using counting
+		ll = likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), ds)
 	}
 	return
 }
