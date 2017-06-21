@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
@@ -18,6 +19,8 @@ func main() {
 
 	c := learn.LoadCliqueTree(os.Args[1])
 	ds := dataset.NewFromFile(os.Args[2], rune(','), dataset.HdrNameCard)
+	start := time.Now()
 	ll := likelihood.StructLoglikelihood(c.Cliques(), c.SepSets(), ds)
-	fmt.Println(ll)
+	elapsed := time.Since(start)
+	fmt.Printf("LL: %v, time: %v\n", ll, elapsed)
 }
