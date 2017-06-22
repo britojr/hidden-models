@@ -12,7 +12,7 @@ import (
 	"github.com/britojr/kbn/utl/stats"
 )
 
-// A DistanceFunc specifies a distance function.
+// DistanceFunc specifies a distance function
 type DistanceFunc string
 
 // defines the available distance functions
@@ -37,7 +37,7 @@ var distances = map[string]DistanceFunc{
 // String returns the distance functons names
 func (d DistanceFunc) String() string { return string(d) }
 
-// ValidDistanceFunc ..
+// ValidDistanceFunc returns a distance function option from a string
 func ValidDistanceFunc(a string) (d DistanceFunc, err error) {
 	var ok bool
 	d, ok = distances[a]

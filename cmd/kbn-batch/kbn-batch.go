@@ -31,7 +31,7 @@ type structArg struct {
 }
 type paramArg struct {
 	alpha            float64
-	potdist, potmode int
+	potdist, potmode string
 	iter             int
 }
 
@@ -181,7 +181,7 @@ func structSaveName(csvf string, k, h, i int) string {
 	return fmt.Sprintf("%v_(%v_%v_%v).ct0", name, k, h, i)
 }
 
-func paramSaveNames(ctfi string, alpha float64, potdist, potmode, i int) (string, string) {
+func paramSaveNames(ctfi string, alpha float64, potdist, potmode string, i int) (string, string) {
 	// return ".ctp", ".ctp.mar"
 	name := strings.TrimSuffix(ctfi, path.Ext(ctfi))
 	name = fmt.Sprintf("%v_(%v_%v_%v_%v)", name, alpha, potdist, potmode, i)
@@ -206,12 +206,14 @@ func structureCommand(
 
 func paramCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
-	alpha, epslon float64, iterem, potdist, potmode int,
+	alpha, epslon float64, iterem int, potdist, potmode string,
 ) {
 	skipEM := false
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
+	mode, _ := learn.ValidDependenceMode(potmode)
+	dist, _ := learn.ValidDistribution(potdist)
 	ll, elapsed := learn.Parameters(
-		ds, ctin, ctout, marfile, hc, alpha, epslon, potdist, potmode, skipEM,
+		ds, ctin, ctout, marfile, hc, alpha, epslon, dist, mode, skipEM,
 	)
 	fmt.Fprintln(paramfp, utl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
@@ -247,9 +249,10 @@ func readParameters(argfile string) {
 	errchk.Check(err, fmt.Sprintf("Can't open file %v", argfile))
 	defer r.Close()
 	var (
-		nst, npr, nps             int
-		k, iter, potdist, potmode int
-		hf, alpha, dis            float64
+		nst, npr, nps    int
+		k, iter          int
+		potdist, potmode string
+		hf, alpha, dis   float64
 	)
 	fmt.Fscanf(r, "%d ", &nst)
 	for i := 0; i < nst; i++ {

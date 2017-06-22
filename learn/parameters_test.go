@@ -159,7 +159,8 @@ func TestCreateRandomPortentials(t *testing.T) {
 func TestConditionalValues(t *testing.T) {
 	cases := []struct {
 		varlist, hidden, cardin []int
-		lenobs, lenhidden, dist int
+		lenobs, lenhidden       int
+		dist                    Distribution
 		alpha                   float64
 	}{
 		{[]int{0, 1}, []int{0, 1}, []int{2, 2}, 1, 4, DistUniform, 0},

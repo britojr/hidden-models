@@ -1,6 +1,7 @@
 package learn
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -14,19 +15,63 @@ import (
 	"github.com/britojr/kbn/utl/stats"
 )
 
+// DependenceMode specifies the dependence mode to use on factor initialilazion
+type DependenceMode string
+
 // define possible modes of potential initialilazion
 const (
-	ModeIndep = iota // empiric times distribution independently: p(x,y) = p(x)*p(y)
-	ModeCond         // empiric times distribution conditionaly: p(x,y) = p(x)*p(y|x)
-	ModeFull         // distribution only
+	ModeIndep DependenceMode = "indep" // empiric times distribution independently: p(x,y) = p(x)*p(y)
+	ModeCond                 = "cond"  // empiric times distribution conditionaly: p(x,y) = p(x)*p(y|x)
+	ModeFull                 = "full"  // distribution only
 )
 
-// define distributions used in potential initialilazion
+var depmodes = map[string]DependenceMode{
+	string(ModeIndep): ModeIndep,
+	string(ModeCond):  ModeCond,
+	string(ModeFull):  ModeFull,
+}
+
+// String returns the distance functons names
+func (d DependenceMode) String() string { return string(d) }
+
+// ValidDependenceMode returns a dependence mode option from a string
+func ValidDependenceMode(a string) (d DependenceMode, err error) {
+	var ok bool
+	d, ok = depmodes[a]
+	if !ok {
+		err = fmt.Errorf("invalid dependence mode string: %v", a)
+	}
+	return
+}
+
+// Distribution specifies the type of distribution to use on factor initialilazion
+type Distribution string
+
+// define available distributions used in potential initialilazion
 const (
-	DistRandom = iota
-	DistUniform
-	DistDirichlet
+	DistRandom    Distribution = "rand"
+	DistUniform                = "unif"
+	DistDirichlet              = "dirichlet"
 )
+
+var distributions = map[string]Distribution{
+	string(DistRandom):    DistRandom,
+	string(DistUniform):   DistUniform,
+	string(DistDirichlet): DistDirichlet,
+}
+
+// String returns the distance functons names
+func (d Distribution) String() string { return string(d) }
+
+// ValidDistribution returns a distribution option from a string
+func ValidDistribution(a string) (d Distribution, err error) {
+	var ok bool
+	d, ok = distributions[a]
+	if !ok {
+		err = fmt.Errorf("invalid distribution string: %v", a)
+	}
+	return
+}
 
 // Counter describes an object that can count occurrences of assignments in a dataset
 type Counter interface {
@@ -37,7 +82,7 @@ type Counter interface {
 // the learned structure is saved in the optional output file
 func Parameters(
 	ds *dataset.Dataset, ctin, ctout, marfile string, hc int,
-	alpha, epslon float64, potdist, potmode int, skipEM bool,
+	alpha, epslon float64, potdist Distribution, potmode DependenceMode, skipEM bool,
 ) (float64, time.Duration) {
 	ct := LoadCliqueTree(ctin)
 	log.Printf("Successfully read cliquetree\n")
@@ -63,7 +108,7 @@ func Parameters(
 
 func learnParameters(
 	ct *cliquetree.CliqueTree, ds *dataset.Dataset, cardin []int, n int,
-	alpha, epslon float64, potdist, potmode int, skipEM bool,
+	alpha, epslon float64, potdist Distribution, potmode DependenceMode, skipEM bool,
 ) (ll float64) {
 	initializePotentials(ct, ds, cardin, n, potdist, potmode, alpha)
 	if skipEM {
@@ -81,7 +126,7 @@ func learnParameters(
 
 func initializePotentials(
 	ct *cliquetree.CliqueTree, ds *dataset.Dataset, cardin []int, n int,
-	potdist, potmode int, alpha float64,
+	potdist Distribution, potmode DependenceMode, alpha float64,
 ) {
 	if potmode == ModeFull {
 		ct.SetAllPotentials(createRandomPotentials(ct.Cliques(), cardin, potdist, alpha))
@@ -98,7 +143,7 @@ func initializePotentials(
 
 func createEmpiricPotentials(
 	ds Counter, cliques [][]int, cardin []int,
-	numobs, potdist, potmode int, alpha float64,
+	numobs int, potdist Distribution, potmode DependenceMode, alpha float64,
 ) []*factor.Factor {
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
@@ -131,7 +176,7 @@ func createEmpiricPotentials(
 	return factors
 }
 
-func conditionalValues(lenobs, lenhidden, potdist int, alpha float64) []float64 {
+func conditionalValues(lenobs, lenhidden int, potdist Distribution, alpha float64) []float64 {
 	values := make([]float64, lenobs*lenhidden)
 	aux := make([]float64, lenhidden)
 	for i := 0; i < lenobs; i++ {
@@ -144,7 +189,7 @@ func conditionalValues(lenobs, lenhidden, potdist int, alpha float64) []float64 
 }
 
 func createRandomPotentials(
-	cliques [][]int, cardin []int, dist int, alpha float64,
+	cliques [][]int, cardin []int, dist Distribution, alpha float64,
 ) []*factor.Factor {
 	factors := make([]*factor.Factor, len(cliques))
 	for i := range factors {
@@ -154,7 +199,7 @@ func createRandomPotentials(
 	return factors
 }
 
-func initRandomPotential(values []float64, dist int, alpha float64) {
+func initRandomPotential(values []float64, dist Distribution, alpha float64) {
 	switch dist {
 	case DistRandom:
 		stats.Random(values)

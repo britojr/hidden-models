@@ -58,13 +58,10 @@ var (
 
 	// Define subcommands
 	structComm, paramComm, partsumComm, marginComm, margerrComm *flag.FlagSet
-	// Define choicemaps
-	modeChoices, distChoices map[string]int
 )
 
 func init() {
 	initSubcommands()
-	initChoiceMaps()
 }
 
 func main() {
@@ -131,14 +128,14 @@ func runParamComm() {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
-	var dist, mode int
-	var ok bool
-	if mode, ok = modeChoices[potmode]; !ok {
+	mode, err := learn.ValidDependenceMode(potmode)
+	if err != nil {
 		fmt.Printf("\n error: invalid mode option\n\n")
 		paramComm.PrintDefaults()
 		os.Exit(1)
 	}
-	if dist, ok = distChoices[potdist]; !ok {
+	dist, err := learn.ValidDistribution(potdist)
+	if err != nil {
 		fmt.Printf("\n error: invalid dist option\n\n")
 		paramComm.PrintDefaults()
 		os.Exit(1)
@@ -288,18 +285,4 @@ func printDefaults() {
 		structConst, paramConst, partsumConst, marginConst, margerrConst,
 	)
 	fmt.Println()
-}
-
-func initChoiceMaps() {
-	// initialize choice maps
-	modeChoices = map[string]int{
-		"independent": learn.ModeIndep,
-		"conditional": learn.ModeCond,
-		"full":        learn.ModeFull,
-	}
-	distChoices = map[string]int{
-		"random":    learn.DistRandom,
-		"uniform":   learn.DistUniform,
-		"dirichlet": learn.DistDirichlet,
-	}
 }
