@@ -12,15 +12,40 @@ import (
 	"github.com/britojr/kbn/utl/stats"
 )
 
-// define the difference to compare the marginals
+// A DistanceFunc specifies a distance function.
+type DistanceFunc string
+
+// defines the available distance functions
 const (
-	CompMSE = iota
-	CompCrossEntropy
-	CompL1
-	CompL2
-	CompMaxAbsError
-	CompHellinger
+	MSE          DistanceFunc = "mse"
+	CrossEntropy              = "entropy"
+	L1Distance                = "l1"
+	L2Distance                = "l2"
+	MaxAbsError               = "abs"
+	Hellinger                 = "hel"
 )
+
+var distances = map[string]DistanceFunc{
+	"mse":     MSE,
+	"entropy": CrossEntropy,
+	"l1":      L1Distance,
+	"l2":      L2Distance,
+	"abs":     MaxAbsError,
+	"hel":     Hellinger,
+}
+
+// String returns the distance functons names
+func (d DistanceFunc) String() string { return string(d) }
+
+// ValidDistanceFunc ..
+func ValidDistanceFunc(a string) (d DistanceFunc, err error) {
+	var ok bool
+	d, ok = distances[a]
+	if !ok {
+		err = fmt.Errorf("invalid distance function string: %v", a)
+	}
+	return
+}
 
 // SampleStructure samples a cliquetree structure with limited treewidth
 // with number of variables corresponding to the given dataset plus latent variables
@@ -36,23 +61,23 @@ func SampleStructure(ds *dataset.Dataset, k, h int, ctfile string) (float64, tim
 }
 
 // CompareMarginals compares two marginals and return a difference
-func CompareMarginals(exact, approx string, compfunc int) (d float64) {
+func CompareMarginals(exact, approx string, dsfunc DistanceFunc) (d float64) {
 	e, a := LoadMarginals(exact), LoadMarginals(approx)
-	switch compfunc {
-	case CompMSE:
+	switch dsfunc {
+	case MSE:
 		d = stats.MatMSE(e, a)
-	case CompCrossEntropy:
+	case CrossEntropy:
 		d = stats.MatCrossEntropy(e, a)
-	case CompL1:
+	case L1Distance:
 		d = stats.MatDistance(e, a, 1)
-	case CompL2:
+	case L2Distance:
 		d = stats.MatDistance(e, a, 2)
-	case CompMaxAbsError:
+	case MaxAbsError:
 		d = stats.MatMaxAbsErr(e, a)
-	case CompHellinger:
+	case Hellinger:
 		d = stats.MatHellDist(e, a)
 	default:
-		d = stats.MatMaxAbsErr(e, a)
+		panic(fmt.Sprintf("invalid distance function: %v", dsfunc))
 	}
 	return
 }

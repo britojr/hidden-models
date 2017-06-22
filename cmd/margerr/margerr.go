@@ -9,6 +9,7 @@ import (
 
 	"github.com/britojr/kbn/learn"
 	"github.com/britojr/kbn/utl"
+	"github.com/britojr/kbn/utl/errchk"
 )
 
 var (
@@ -22,7 +23,6 @@ func init() {
 
 func parseFlags() {
 	flag.StringVar(&exact, "e", "", "exact marginals file (required)")
-	// flag.StringVar(&compfunc, "c", "mse", "compare function{mse|entropy}")
 
 	// Parse and validate arguments
 	flag.Parse()
@@ -30,15 +30,6 @@ func parseFlags() {
 		fmt.Println("Missing exact marginals file")
 		flag.PrintDefaults()
 		os.Exit(1)
-	}
-
-	metrChoices = map[string]int{
-		"mse":     learn.CompMSE,
-		"entropy": learn.CompCrossEntropy,
-		"l1":      learn.CompL1,
-		"l2":      learn.CompL2,
-		"abs":     learn.CompMaxAbsError,
-		"hel":     learn.CompHellinger,
 	}
 }
 
@@ -55,7 +46,9 @@ func main() {
 		if marf != exact {
 			d := []float64(nil)
 			for _, v := range cfuncs {
-				d = append(d, learn.CompareMarginals(exact, marf, metrChoices[v]))
+				distanfunc, err := learn.ValidDistanceFunc(v)
+				errchk.Check(err, "")
+				d = append(d, learn.CompareMarginals(exact, marf, distanfunc))
 			}
 			fmt.Fprintln(mp, utl.Sprintc(marf, d))
 		}

@@ -59,7 +59,7 @@ var (
 	// Define subcommands
 	structComm, paramComm, partsumComm, marginComm, margerrComm *flag.FlagSet
 	// Define choicemaps
-	modeChoices, distChoices, compChoices map[string]int
+	modeChoices, distChoices map[string]int
 )
 
 func init() {
@@ -215,10 +215,9 @@ func runMargerrComm() {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
-	var comp int
-	var ok bool
-	if comp, ok = compChoices[compmode]; !ok {
-		fmt.Printf("\n error: invalid compare option\n\n")
+	comp, err := learn.ValidDistanceFunc(compmode)
+	if err != nil {
+		fmt.Printf("\n error: invalid compare function option\n\n")
 		margerrComm.PrintDefaults()
 		os.Exit(1)
 	}
@@ -302,13 +301,5 @@ func initChoiceMaps() {
 		"random":    learn.DistRandom,
 		"uniform":   learn.DistUniform,
 		"dirichlet": learn.DistDirichlet,
-	}
-	compChoices = map[string]int{
-		"mse":     learn.CompMSE,
-		"entropy": learn.CompCrossEntropy,
-		"l1":      learn.CompL1,
-		"l2":      learn.CompL2,
-		"abs":     learn.CompMaxAbsError,
-		"hel":     learn.CompHellinger,
 	}
 }
