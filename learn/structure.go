@@ -8,8 +8,8 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/likelihood"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/stats"
+	"github.com/britojr/utl/ioutl"
+	"github.com/britojr/utl/stats"
 )
 
 // DistanceFunc specifies a distance function
@@ -90,27 +90,27 @@ func SaveMarginas(ctfile, marfile string) {
 
 // LoadMarginals read a MAR file and returns a slice of floats
 func LoadMarginals(fname string) [][]float64 {
-	f := utl.OpenFile(fname)
+	f := ioutl.OpenFile(fname)
 	defer f.Close()
 	return readMarginals(f)
 }
 
 // LoadCliqueTree from a file name
 func LoadCliqueTree(fname string) *cliquetree.CliqueTree {
-	f := utl.OpenFile(fname)
+	f := ioutl.OpenFile(fname)
 	defer f.Close()
 	return cliquetree.LoadFrom(f)
 }
 
 // SaveCliqueTree on a file
 func SaveCliqueTree(ct *cliquetree.CliqueTree, fname string) {
-	f := utl.CreateFile(fname)
+	f := ioutl.CreateFile(fname)
 	defer f.Close()
 	ct.SaveOn(f)
 }
 
 func saveCTMarginals(ct *cliquetree.CliqueTree, obs int, fname string) {
-	f := utl.CreateFile(fname)
+	f := ioutl.CreateFile(fname)
 	defer f.Close()
 	ma := ct.Marginals()
 	if obs > 0 {

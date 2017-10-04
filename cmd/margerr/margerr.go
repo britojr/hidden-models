@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/britojr/kbn/learn"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/utl/errchk"
+	"github.com/britojr/utl/ioutl"
 )
 
 var (
@@ -37,10 +37,10 @@ func main() {
 	marfs, _ := filepath.Glob("*.mar")
 	fmt.Println(marfs)
 
-	mp := utl.CreateFile(fmt.Sprintf("marginals_%v.txt", time.Now().Format(time.RFC3339)))
+	mp := ioutl.CreateFile(fmt.Sprintf("marginals_%v.txt", time.Now().Format(time.RFC3339)))
 	defer mp.Close()
 	cfuncs := []string{"mse", "entropy", "l1", "l2", "abs", "hel"}
-	fmt.Fprintln(mp, utl.Sprintc("marfile", cfuncs))
+	fmt.Fprintln(mp, ioutl.Sprintc("marfile", cfuncs))
 
 	for _, marf := range marfs {
 		if marf != exact {
@@ -50,7 +50,7 @@ func main() {
 				errchk.Check(err, "")
 				d = append(d, learn.CompareMarginals(exact, marf, distanfunc))
 			}
-			fmt.Fprintln(mp, utl.Sprintc(marf, d))
+			fmt.Fprintln(mp, ioutl.Sprintc(marf, d))
 		}
 	}
 }

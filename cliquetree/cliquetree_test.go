@@ -10,8 +10,8 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utl/floats"
 	"github.com/britojr/tcc/characteristic"
+	"github.com/britojr/utl/floats"
 )
 
 type factorStruct struct {

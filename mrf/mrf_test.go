@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utl/floats"
+	"github.com/britojr/utl/floats"
 )
 
 func TestLoadFromUAI(t *testing.T) {

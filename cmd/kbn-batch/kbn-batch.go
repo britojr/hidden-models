@@ -14,8 +14,8 @@ import (
 
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/utl/errchk"
+	"github.com/britojr/utl/ioutl"
 )
 
 const (
@@ -200,7 +200,7 @@ func structureCommand(
 	n := ds.NCols()
 	sll, elapsed := learn.SampleStructure(ds, k, h, ctfile)
 	fmt.Fprintln(structfp,
-		utl.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed),
+		ioutl.Sprintc(dsfile, ctfile, n, k, h, sll, elapsed),
 	)
 }
 
@@ -215,7 +215,7 @@ func paramCommand(
 	ll, elapsed := learn.Parameters(
 		ds, ctin, ctout, marfile, hc, alpha, epslon, dist, mode, skipEM,
 	)
-	fmt.Fprintln(paramfp, utl.Sprintc(
+	fmt.Fprintln(paramfp, ioutl.Sprintc(
 		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
 	))
 }
@@ -227,7 +227,7 @@ func partsumCommand(
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	zm, elapsed := learn.PartitionSum(ds, ctfile, mkfile, zfile, discard)
 	fmt.Fprintln(partsumfp,
-		utl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
+		ioutl.Sprintc(dsfile, ctfile, zfile, zm, discard, elapsed),
 	)
 }
 

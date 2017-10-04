@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/britojr/kbn/mrf"
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/utl/errchk"
 )
 
 var (

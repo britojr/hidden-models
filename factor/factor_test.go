@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/britojr/kbn/assignment"
-	"github.com/britojr/kbn/utl/floats"
+	"github.com/britojr/utl/floats"
 )
 
 type testStruct struct {

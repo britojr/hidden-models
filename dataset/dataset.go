@@ -10,8 +10,8 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/conv"
+	"github.com/britojr/utl/conv"
+	"github.com/britojr/utl/ioutl"
 	"github.com/willf/bitset"
 )
 
@@ -61,7 +61,7 @@ func New(r io.Reader, delimiter rune, headerlns HdrFlags) *Dataset {
 func NewFromFile(fileName string, delimiter rune, headerlns HdrFlags) *Dataset {
 	log.Printf("Loading dataset: %v\n", fileName)
 	start := time.Now()
-	f := utl.OpenFile(fileName)
+	f := ioutl.OpenFile(fileName)
 	defer f.Close()
 	d := New(f, delimiter, headerlns)
 	elapsed := time.Since(start)

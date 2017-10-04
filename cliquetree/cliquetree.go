@@ -11,11 +11,11 @@ import (
 
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/utl/conv"
-	"github.com/britojr/kbn/utl/errchk"
-	"github.com/britojr/kbn/utl/floats"
 	"github.com/britojr/tcc/characteristic"
 	"github.com/britojr/tcc/generator"
+	"github.com/britojr/utl/conv"
+	"github.com/britojr/utl/errchk"
+	"github.com/britojr/utl/floats"
 )
 
 // CliqueTree ..

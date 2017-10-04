@@ -9,7 +9,7 @@ import (
 
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
-	"github.com/britojr/kbn/utl"
+	"github.com/britojr/utl/ioutl"
 )
 
 // Define subcommand names
@@ -112,7 +112,7 @@ func runStructComm() {
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	n := ds.NCols()
 	sll, elapsed := learn.SampleStructure(ds, k, h, ctfileout)
-	fmt.Println(utl.Sprintc(
+	fmt.Println(ioutl.Sprintc(
 		dsfile, ctfileout, n, k, h, sll, elapsed,
 	))
 }
@@ -154,7 +154,7 @@ func runParamComm() {
 	ll, elapsed := learn.Parameters(
 		ds, ctfilein, ctfileout, marfile, hcard, alpha, epslon, dist, mode, skipEM,
 	)
-	fmt.Println(utl.Sprintc(
+	fmt.Println(ioutl.Sprintc(
 		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, skipEM,
 	))
 }
@@ -181,7 +181,7 @@ func runPartsumComm() {
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	zm, elapsed := learn.PartitionSum(ds, ctfilein, mkfile, zfile, discard)
-	fmt.Println(utl.Sprintc(dsfile, ctfilein, zfile, zm, discard, elapsed))
+	fmt.Println(ioutl.Sprintc(dsfile, ctfilein, zfile, zm, discard, elapsed))
 }
 
 func runMarginComm() {
@@ -198,7 +198,7 @@ func runMarginComm() {
 
 	fmt.Printf("c=%v, m=%v\n", ctfilein, marfile)
 	learn.SaveMarginas(ctfilein, marfile)
-	fmt.Println(utl.Sprintc(ctfilein, marfile))
+	fmt.Println(ioutl.Sprintc(ctfilein, marfile))
 }
 
 func runMargerrComm() {
@@ -221,7 +221,7 @@ func runMargerrComm() {
 
 	fmt.Printf("e=%v, a=%v, c=%v\n", exactmar, marfile, comp)
 	dif := learn.CompareMarginals(exactmar, marfile, comp)
-	fmt.Println(utl.Sprintc(exactmar, marfile, dif))
+	fmt.Println(ioutl.Sprintc(exactmar, marfile, dif))
 }
 
 func initSubcommands() {

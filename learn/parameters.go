@@ -11,8 +11,8 @@ import (
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/kbn/likelihood"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/utl/conv"
-	"github.com/britojr/kbn/utl/stats"
+	"github.com/britojr/utl/conv"
+	"github.com/britojr/utl/stats"
 )
 
 // DependenceMode specifies the dependence mode to use on factor initialilazion

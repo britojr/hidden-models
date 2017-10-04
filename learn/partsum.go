@@ -10,10 +10,10 @@ import (
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/mrf"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/errchk"
-	"github.com/britojr/kbn/utl/floats"
-	"github.com/britojr/kbn/utl/stats"
+	"github.com/britojr/utl/errchk"
+	"github.com/britojr/utl/floats"
+	"github.com/britojr/utl/ioutl"
+	"github.com/britojr/utl/stats"
 )
 
 // PartitionSum calculates an approximation of the partition sum of a MRF
@@ -65,7 +65,7 @@ func partsumStats(zs []float64, d float64) []float64 {
 }
 
 func loadMRF(fname string) *mrf.Mrf {
-	f := utl.OpenFile(fname)
+	f := ioutl.OpenFile(fname)
 	defer f.Close()
 	return mrf.LoadFromUAI(f)
 }
@@ -74,5 +74,5 @@ func savePartsum(zs []float64, fname string) {
 	f, err := os.Create(fname)
 	errchk.Check(err, fmt.Sprintf("Can't create file %v", fname))
 	defer f.Close()
-	fmt.Fprint(f, utl.Sprintc(zs))
+	fmt.Fprint(f, ioutl.Sprintc(zs))
 }

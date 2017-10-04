@@ -8,7 +8,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/kbn/list"
-	"github.com/britojr/kbn/utl/stats"
+	"github.com/britojr/utl/stats"
 )
 
 // Factor ..

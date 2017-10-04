@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/utl/errchk"
 )
 
 func TestNew(t *testing.T) {

@@ -11,9 +11,9 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/kbn/utl"
-	"github.com/britojr/kbn/utl/conv"
-	"github.com/britojr/kbn/utl/errchk"
+	"github.com/britojr/utl/conv"
+	"github.com/britojr/utl/errchk"
+	"github.com/britojr/utl/ioutl"
 )
 
 const (
@@ -27,13 +27,13 @@ func main() {
 		fmt.Printf("\nUsage: %v <lidaifile.out> <filename.ct0> [vals.out]\n\n", os.Args[0])
 		os.Exit(1)
 	}
-	r := utl.OpenFile(os.Args[1])
-	w := utl.CreateFile(os.Args[2])
+	r := ioutl.OpenFile(os.Args[1])
+	w := ioutl.CreateFile(os.Args[2])
 	defer r.Close()
 	defer w.Close()
 	c := parseToCT(r)
 	if len(os.Args) > 3 {
-		v := utl.OpenFile(os.Args[3])
+		v := ioutl.OpenFile(os.Args[3])
 		defer v.Close()
 		parseValues(v, c)
 	}
