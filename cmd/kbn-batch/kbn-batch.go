@@ -263,7 +263,7 @@ func readParameters(argfile string) {
 	fmt.Fscanf(r, "%d", &npr)
 	for i := 0; i < npr; i++ {
 		// alpha float64, potdist, potmode int, iter int
-		fmt.Fscanf(r, "%f %d %d %d", &alpha, &potdist, &potmode, &iter)
+		fmt.Fscanf(r, "%f %s %s %d", &alpha, &potdist, &potmode, &iter)
 		paramArgs = append(paramArgs, paramArg{alpha, potdist, potmode, iter})
 	}
 	fmt.Fscanf(r, "%d", &nps)
