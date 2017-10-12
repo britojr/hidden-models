@@ -252,9 +252,13 @@ func initSubcommands() {
 	paramComm.BoolVar(&skipEM, "skipem", false, "if should skip EM")
 	paramComm.Float64Var(&epslon, "e", 1e-2, "minimum precision for EM convergence")
 	paramComm.Float64Var(&alpha, "a", 1, "alpha parameter, required for --dist=dirichlet")
-	paramComm.StringVar(&potdist, "dist", "uniform", "distribution {random|uniform|dirichlet} (required)")
+	paramComm.StringVar(&potdist, "dist", string(learn.DistUniform),
+		fmt.Sprintf("distribution {%v|%v|%v} (required)", learn.DistRandom, learn.DistUniform, learn.DistDirichlet),
+	)
 	paramComm.IntVar(&hcard, "hc", 2, "cardinality of hidden variables")
-	paramComm.StringVar(&potmode, "mode", "independent", "mode {independent|conditional|full} (required)")
+	paramComm.StringVar(&potmode, "mode", string(learn.ModeIndep),
+		fmt.Sprintf("mode {%v|%v|%v} (required)", learn.ModeIndep, learn.ModeCond, learn.ModeFull),
+	)
 	paramComm.BoolVar(&verbose, "v", false, "prints detailed steps")
 
 	// partsum subcommand flags
