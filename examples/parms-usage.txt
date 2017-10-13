@@ -1,0 +1,6 @@
+parms file is used on kbn-batch command
+<number of struct entries>
+<tree-width> <hidden var proportion> <repeat n-times>
+<number of param entries>
+<alpha> <distribution> <combine mode> <repeat n-times>
+<number of partsum entries>
