@@ -1,6 +1,6 @@
-# kbn
+# sampling hidden models
 
-learn bounded tree-width probabilistic models with latent variables via k-tree sampling
+learn bounded tree-width probabilistic models with hidden variables via k-tree sampling
 
 [![Build Status](https://travis-ci.org/britojr/kbn.svg?branch=master)](https://travis-ci.org/britojr/kbn)
 [![Coverage Status](https://coveralls.io/repos/github/britojr/kbn/badge.svg?branch=master)](https://coveralls.io/github/britojr/kbn?branch=master)
