@@ -6,7 +6,7 @@ struct_blk:
     repeat    : 2
   - treewidth : 1
     hprop     : 0.5
-    repeat    : 3      
+    repeat    : 3
 
 params_blk:
   - dist         : unif

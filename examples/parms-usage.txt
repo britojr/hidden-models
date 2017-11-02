@@ -19,7 +19,7 @@ struct_blk:
     repeat    : 5
   - treewidth : 4
     hnum      : 2
-    repeat    : 5      
+    repeat    : 5
 
 # list of parameter learning properties
 # alpha: used on dirichlet distribution
@@ -44,5 +44,4 @@ params_blk:
 
 partsum_blk:
   - discards : 0.1
-
 

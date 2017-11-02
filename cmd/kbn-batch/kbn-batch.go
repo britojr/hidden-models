@@ -104,7 +104,8 @@ func generateStructs(csvf string) {
 		structBlks := v.([]interface{})
 		for _, it := range structBlks {
 			blk := it.(map[interface{}]interface{})
-			var h, k, repeat int
+			var h, k int
+			repeat := 1
 			if v, ok := blk[cRepeat]; ok {
 				repeat = v.(int)
 				fmt.Printf("%v : '%v'\n", cRepeat, repeat)
@@ -154,11 +155,9 @@ func generateParams(csvf string, ctfis []string) {
 		if v, ok := parMap[cParamsBlk]; ok {
 			for _, it := range v.([]interface{}) {
 				blk := it.(map[interface{}]interface{})
-				var (
-					repeat           int
-					alpha            float64
-					potdist, potmode string
-				)
+				var alpha float64
+				var potdist, potmode string
+				repeat := 1
 				epslon := defaultEpslon
 				hc := defaultHCard
 				if v, ok := blk[cRepeat]; ok {
