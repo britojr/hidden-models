@@ -1,5 +1,20 @@
-1
-1 1.125 20
-1
-0 rand cond 10
-0
+file_delim  : ','
+file_header : 4
+struct_blk:
+  - treewidth : 3
+    hnum      : 2
+    repeat    : 2
+  - treewidth : 1
+    hprop     : 0.5
+    repeat    : 3      
+
+params_blk:
+  - dist         : unif
+    mode         : indep
+    em_threshold : 1e-4
+    repeat       : 1
+  - dist         : rand
+    mode         : cond
+    hcard        : [12, 7]
+    repeat       : 5
+

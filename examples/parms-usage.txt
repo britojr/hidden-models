@@ -1,6 +1,46 @@
-parms file is used on kbn-batch command
-<number of struct entries>
-<tree-width> <hidden var proportion> <repeat n-times>
-<number of param entries>
-<alpha> <distribution> <combine mode> <repeat n-times>
-<number of partsum entries>
+# parms file is used on kbn-batch command
+
+# default file delimiter
+file_delim  : ','
+
+# default header type: 4 = "Name_Card"
+file_header : 4
+
+# list of structure sampling properties
+# hnum: number of hidden variables
+# hprop: proportion of hidden variables with relation to total number of variables
+# repeat: how many samples with this same set of properties
+struct_blk:
+  - treewidth : 1
+    hnum      : 2
+    repeat    : 5
+  - treewidth : 1
+    hprop     : 0.5
+    repeat    : 5
+  - treewidth : 4
+    hnum      : 2
+    repeat    : 5      
+
+# list of parameter learning properties
+# alpha: used on dirichlet distribution
+# dist: initial distribution of hidden variables (unif, indep, dirichlet)
+# mode: combine mode of hidden and observed (cond, indep, full)
+# hcard: array with hidden vars cardinalities, if all the same can set only the first (ex: hcard: [2])
+# em_threshold: minimum difference for EM convergence
+# repeat: how many samples with this same set of properties
+params_blk:
+  - alpha        : 0
+    dist         : unif
+    mode         : indep
+    repeat       : 1
+  - alpha        : 0
+    dist         : rand
+    mode         : cond
+    repeat       : 5
+    hcard        : [12, 7]
+    em_threshold : 1e-4
+
+partsum_blk:
+  - discards : 0.1
+
+
