@@ -17,4 +17,5 @@ params_blk:
     mode         : cond
     hcard        : [12, 7]
     repeat       : 5
+    em_max_iterations : 4
 

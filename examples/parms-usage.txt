@@ -27,6 +27,7 @@ struct_blk:
 # mode: combine mode of hidden and observed (cond, indep, full)
 # hcard: array with hidden vars cardinalities, if all the same can set only the first (ex: hcard: [2])
 # em_threshold: minimum difference for EM convergence
+# em_max_iterations: maximum EM iterations
 # repeat: how many samples with this same set of properties
 params_blk:
   - alpha        : 0
@@ -39,6 +40,7 @@ params_blk:
     repeat       : 5
     hcard        : [12, 7]
     em_threshold : 1e-4
+    em_max_iterations : 80
 
 partsum_blk:
   - discards : 0.1
