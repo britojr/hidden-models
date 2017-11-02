@@ -36,14 +36,15 @@ var (
 	ctfileout string // cliquetree save file
 
 	// param command
-	ctfilein string  // cliquetree load file
-	epslon   float64 // minimum precision for EM convergence
-	skipEM   bool    // if should skip EM
-	potdist  string  // initial potential distribution
-	potmode  string  // mode to complete the initial potential distribution
-	hcard    int     // cardinality of hiden variables
-	alpha    float64 // alpha parameter for dirichlet distribution
-	marfile  string  // save marginals file
+	ctfilein  string  // cliquetree load file
+	epslon    float64 // minimum precision for EM convergence
+	maxIterEM int     // maximum number of EM  iterations (0-> unlimited)
+	skipEM    bool    // if should skip EM
+	potdist   string  // initial potential distribution
+	potmode   string  // mode to complete the initial potential distribution
+	hcard     int     // cardinality of hiden variables
+	alpha     float64 // alpha parameter for dirichlet distribution
+	marfile   string  // save marginals file
 	//ctfileout
 
 	//partsum command
@@ -152,7 +153,7 @@ func runParamComm() {
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ll, elapsed := learn.Parameters(
-		ds, ctfilein, ctfileout, marfile, []int{hcard}, alpha, epslon, dist, mode, skipEM,
+		ds, ctfilein, ctfileout, marfile, []int{hcard}, alpha, epslon, maxIterEM, dist, mode, skipEM,
 	)
 	fmt.Println(ioutl.Sprintc(
 		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, skipEM,

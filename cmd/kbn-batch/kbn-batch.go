@@ -39,6 +39,7 @@ const (
 	cMode        = "mode"
 	cHCard       = "hcard"
 	cEMThreshold = "em_threshold"
+	cMaxIterEM   = "em_max_iterations"
 	cPartsumBlk  = "partsum_blk"
 	cDiscards    = "discards"
 )
@@ -48,7 +49,7 @@ var (
 	delim         = uint(',')
 	hdr           = uint(4)
 	nk            = 0
-	iterem        = 0
+	maxIterEM     = 0
 	defaultHCard  = []int{2}
 	defaultEpslon = 1e-3
 
@@ -172,6 +173,10 @@ func generateParams(csvf string, ctfis []string) {
 					epslon = convToF64(v)
 					fmt.Printf("%v : '%v'\n", cEMThreshold, epslon)
 				}
+				if v, ok := blk[cMaxIterEM]; ok {
+					maxIterEM = v.(int)
+					fmt.Printf("%v : '%v'\n", cMaxIterEM, maxIterEM)
+				}
 				if v, ok := blk[cDist]; ok {
 					potdist = v.(string)
 					fmt.Printf("%v : '%v'\n", cDist, potdist)
@@ -192,7 +197,7 @@ func generateParams(csvf string, ctfis []string) {
 					paramCommand(
 						csvf, delim, hdr,
 						ctfi, ctfo, marf, hc,
-						alpha, epslon, iterem, potdist, potmode,
+						alpha, epslon, maxIterEM, potdist, potmode,
 					)
 				}
 			}
@@ -284,10 +289,10 @@ func paramCommand(
 	mode, _ := learn.ValidDependenceMode(potmode)
 	dist, _ := learn.ValidDistribution(potdist)
 	ll, elapsed := learn.Parameters(
-		ds, ctin, ctout, marfile, hc, alpha, epslon, dist, mode, skipEM,
+		ds, ctin, ctout, marfile, hc, alpha, epslon, maxIterEM, dist, mode, skipEM,
 	)
 	fmt.Fprintln(paramfp, ioutl.Sprintc(
-		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterem,
+		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, maxIterEM,
 	))
 }
 
