@@ -1,21 +1,20 @@
-/*
-run experiments in batch
-*/
+// run experiments in batch
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
-	"github.com/britojr/utl/conv"
 	"github.com/britojr/utl/errchk"
 	"github.com/britojr/utl/ioutl"
 )
@@ -26,29 +25,34 @@ const (
 	partsumStep
 )
 
-type structArg struct {
-	k    int
-	hf   float64
-	iter int
-}
-type paramArg struct {
-	alpha            float64
-	potdist, potmode string
-	iter             int
-}
+const (
+	cFileDelim   = "file_delim"
+	cFileHeader  = "file_header"
+	cStructBlk   = "struct_blk"
+	cTreewidth   = "treewidth"
+	cHNum        = "hnum"
+	cHProp       = "hprop"
+	cRepeat      = "repeat"
+	cParamsBlk   = "params_blk"
+	cAlpha       = "alpha"
+	cDist        = "dist"
+	cMode        = "mode"
+	cHCard       = "hcard"
+	cEMThreshold = "em_threshold"
+	cPartsumBlk  = "partsum_blk"
+	cDiscards    = "discards"
+)
 
 // Define parameters defaults
 var (
-	delim  = uint(',')
-	hdr    = uint(4)
-	nk     = 0
-	hc     = []int{2}
-	iterem = 0
-	epslon = 1e-5
+	delim         = uint(',')
+	hdr           = uint(4)
+	nk            = 0
+	iterem        = 0
+	defaultHCard  = []int{2}
+	defaultEpslon = 1e-3
 
-	structArgs = []structArg{}
-	paramArgs  = []paramArg{}
-	discards   = []float64{}
+	parMap map[interface{}]interface{}
 	//
 	argfile                      string
 	step                         int
@@ -95,11 +99,31 @@ func batchStruct(csvfs []string) {
 func generateStructs(csvf string) {
 	ds := dataset.NewFromFile(csvf, rune(delim), dataset.HdrFlags(hdr))
 	n := ds.NCols()
-	for _, it := range structArgs {
-		h := int(it.hf * float64(n))
-		for i := 1; i <= it.iter; i++ {
-			ctfi := structSaveName(csvf, it.k, h, i)
-			structureCommand(csvf, delim, hdr, ctfi, it.k, h, nk)
+	if v, ok := parMap[cStructBlk]; ok {
+		structBlks := v.([]interface{})
+		for _, it := range structBlks {
+			blk := it.(map[interface{}]interface{})
+			var h, k, repeat int
+			if v, ok := blk[cRepeat]; ok {
+				repeat = v.(int)
+				fmt.Printf("%v : '%v'\n", cRepeat, repeat)
+			}
+			if v, ok := blk[cTreewidth]; ok {
+				k = v.(int)
+				fmt.Printf("%v : '%v'\n", cTreewidth, k)
+			}
+			if v, ok := blk[cHProp]; ok {
+				h = int(convToF64(v) * float64(n))
+				fmt.Printf("%v : '%v'\n", cHProp, h)
+			}
+			if v, ok := blk[cHNum]; ok {
+				h = v.(int)
+				fmt.Printf("%v : '%v'\n", cHNum, h)
+			}
+			for i := 1; i <= repeat; i++ {
+				ctfi := structSaveName(csvf, k, h, i)
+				structureCommand(csvf, delim, hdr, ctfi, k, h, nk)
+			}
 		}
 	}
 }
@@ -126,14 +150,51 @@ func batchParam(csvfs []string) {
 
 func generateParams(csvf string, ctfis []string) {
 	for _, ctfi := range ctfis {
-		for _, it := range paramArgs {
-			for i := 1; i <= it.iter; i++ {
-				ctfo, marf := paramSaveNames(ctfi, it.alpha, it.potdist, it.potmode, i)
-				paramCommand(
-					csvf, delim, hdr,
-					ctfi, ctfo, marf, hc,
-					it.alpha, epslon, iterem, it.potdist, it.potmode,
+		if v, ok := parMap[cParamsBlk]; ok {
+			for _, it := range v.([]interface{}) {
+				blk := it.(map[interface{}]interface{})
+				var (
+					repeat           int
+					alpha            float64
+					potdist, potmode string
 				)
+				epslon := defaultEpslon
+				hc := defaultHCard
+				if v, ok := blk[cRepeat]; ok {
+					repeat = v.(int)
+					fmt.Printf("%v : '%v'\n", cRepeat, repeat)
+				}
+				if v, ok := blk[cAlpha]; ok {
+					alpha = convToF64(v)
+					fmt.Printf("%v : '%v'\n", cAlpha, alpha)
+				}
+				if v, ok := blk[cEMThreshold]; ok {
+					epslon = convToF64(v)
+					fmt.Printf("%v : '%v'\n", cEMThreshold, epslon)
+				}
+				if v, ok := blk[cDist]; ok {
+					potdist = v.(string)
+					fmt.Printf("%v : '%v'\n", cDist, potdist)
+				}
+				if v, ok := blk[cMode]; ok {
+					potmode = v.(string)
+					fmt.Printf("%v : '%v'\n", cMode, potmode)
+				}
+				if v, ok := blk[cHCard]; ok {
+					hc = make([]int, len(v.([]interface{})))
+					for i, c := range v.([]interface{}) {
+						hc[i] = c.(int)
+					}
+					fmt.Printf("%v : '%v'\n", cHCard, hc)
+				}
+				for i := 1; i <= repeat; i++ {
+					ctfo, marf := paramSaveNames(ctfi, alpha, potdist, potmode, i)
+					paramCommand(
+						csvf, delim, hdr,
+						ctfi, ctfo, marf, hc,
+						alpha, epslon, iterem, potdist, potmode,
+					)
+				}
 			}
 		}
 	}
@@ -161,12 +222,20 @@ func batchPartsum(csvfs []string) {
 
 func generatePartsums(csvf string, ctfis []string) {
 	for _, ctfi := range ctfis {
-		for _, dis := range discards {
-			mkfile := mrfFileName(csvf)
-			zfile := partsumSaveName(ctfi, dis)
-			partsumCommand(
-				csvf, delim, hdr, ctfi, mkfile, zfile, dis,
-			)
+		if v, ok := parMap[cParamsBlk]; ok {
+			for _, it := range v.([]interface{}) {
+				blk := it.(map[interface{}]interface{})
+				var dis float64
+				if v, ok := blk[cDiscards]; ok {
+					dis = convToF64(v)
+					fmt.Printf("%v : '%v'\n", cDiscards, dis)
+				}
+				mkfile := mrfFileName(csvf)
+				zfile := partsumSaveName(ctfi, dis)
+				partsumCommand(
+					csvf, delim, hdr, ctfi, mkfile, zfile, dis,
+				)
+			}
 		}
 	}
 }
@@ -247,42 +316,26 @@ func parseFlags() {
 }
 
 func readParameters(argfile string) {
-	r, err := os.Open(argfile)
-	errchk.Check(err, fmt.Sprintf("Can't open file %v", argfile))
-	defer r.Close()
-	var (
-		nst, npr, nps    int
-		k, iter          int
-		potdist, potmode string
-		hf, alpha, dis   float64
-	)
-	fmt.Fscanf(r, "%d ", &nst)
-	for i := 0; i < nst; i++ {
-		// k int, hf float64, iter int
-		fmt.Fscanf(r, "%d %f %d", &k, &hf, &iter)
-		structArgs = append(structArgs, structArg{k, hf, iter})
+	parMap = make(map[interface{}]interface{})
+	data, err := ioutil.ReadFile(argfile)
+	errchk.Check(err, "")
+	errchk.Check(yaml.Unmarshal([]byte(data), &parMap), "")
+	if v, ok := parMap[cFileDelim]; ok {
+		delim = uint(v.(string)[0])
+		fmt.Printf("%v : '%c'\n", cFileDelim, delim)
 	}
-	fmt.Fscanf(r, "%d", &npr)
-	for i := 0; i < npr; i++ {
-		// alpha float64, potdist, potmode int, iter int
-		fmt.Fscanf(r, "%f %s %s %d", &alpha, &potdist, &potmode, &iter)
-		paramArgs = append(paramArgs, paramArg{alpha, potdist, potmode, iter})
+	if v, ok := parMap[cFileHeader]; ok {
+		hdr = uint(v.(int))
+		fmt.Printf("%v : '%v'\n", cFileHeader, hdr)
 	}
-	fmt.Fscanf(r, "%d", &nps)
-	for i := 0; i < nps; i++ {
-		// dis float64
-		fmt.Fscanf(r, "%f", &dis)
-		discards = append(discards, dis)
+}
+
+func convToF64(v interface{}) float64 {
+	switch v.(type) {
+	case int:
+		return float64(v.(int))
+	case float64:
+		return v.(float64)
 	}
-	fmt.Println(structArgs)
-	fmt.Println(paramArgs)
-	fmt.Println(discards)
-	hclist := ""
-	fmt.Fscanf(r, "%s", &hclist)
-	if hclist == "hc" {
-		scanner := bufio.NewScanner(r)
-		scanner.Scan()
-		hc = conv.Satoi(strings.Fields(scanner.Text()))
-	}
-	fmt.Printf("hc: %v\n", hc)
+	return 0
 }
