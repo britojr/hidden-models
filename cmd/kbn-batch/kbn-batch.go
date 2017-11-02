@@ -44,7 +44,7 @@ var (
 	nk     = 0
 	hc     = []int{2}
 	iterem = 0
-	epslon = 0.01
+	epslon = 1e-5
 
 	structArgs = []structArg{}
 	paramArgs  = []paramArg{}
