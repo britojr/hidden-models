@@ -222,7 +222,7 @@ func extendCardin(dscardin, hc []int, t int) []int {
 	cardin := make([]int, t)
 	copy(cardin, dscardin)
 	if len(hc) > 0 {
-		if len(hc) < t {
+		if len(hc) != t-len(dscardin) {
 			for i := len(dscardin); i < len(cardin); i++ {
 				cardin[i] = hc[0]
 			}
