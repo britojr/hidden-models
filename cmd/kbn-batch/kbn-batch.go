@@ -4,6 +4,7 @@ run experiments in batch
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/learn"
+	"github.com/britojr/utl/conv"
 	"github.com/britojr/utl/errchk"
 	"github.com/britojr/utl/ioutl"
 )
@@ -40,7 +42,7 @@ var (
 	delim  = uint(',')
 	hdr    = uint(4)
 	nk     = 0
-	hc     = []int{12, 7}
+	hc     = []int{2}
 	iterem = 0
 	epslon = 0.01
 
@@ -275,4 +277,12 @@ func readParameters(argfile string) {
 	fmt.Println(structArgs)
 	fmt.Println(paramArgs)
 	fmt.Println(discards)
+	hclist := ""
+	fmt.Fscanf(r, "%s", &hclist)
+	if hclist == "hc" {
+		scanner := bufio.NewScanner(r)
+		scanner.Scan()
+		hc = conv.Satoi(strings.Fields(scanner.Text()))
+	}
+	fmt.Printf("hc: %v\n", hc)
 }
