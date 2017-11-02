@@ -152,7 +152,7 @@ func runParamComm() {
 	)
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	ll, elapsed := learn.Parameters(
-		ds, ctfilein, ctfileout, marfile, hcard, alpha, epslon, dist, mode, skipEM,
+		ds, ctfilein, ctfileout, marfile, []int{hcard}, alpha, epslon, dist, mode, skipEM,
 	)
 	fmt.Println(ioutl.Sprintc(
 		dsfile, ctfilein, ctfileout, ll, elapsed, alpha, epslon, potdist, potmode, skipEM,

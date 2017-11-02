@@ -40,7 +40,7 @@ var (
 	delim  = uint(',')
 	hdr    = uint(4)
 	nk     = 0
-	hc     = 2
+	hc     = []int{12, 7}
 	iterem = 0
 	epslon = 0.01
 
@@ -205,7 +205,7 @@ func structureCommand(
 }
 
 func paramCommand(
-	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc int,
+	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc []int,
 	alpha, epslon float64, iterem int, potdist, potmode string,
 ) {
 	skipEM := false

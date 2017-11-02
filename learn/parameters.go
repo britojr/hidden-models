@@ -81,12 +81,12 @@ type Counter interface {
 // Parameters learns the parameters of a cliquetree structure based on a dataset
 // the learned structure is saved in the optional output file
 func Parameters(
-	ds *dataset.Dataset, ctin, ctout, marfile string, hc int,
+	ds *dataset.Dataset, ctin, ctout, marfile string, hc []int,
 	alpha, epslon float64, potdist Distribution, potmode DependenceMode, skipEM bool,
 ) (float64, time.Duration) {
 	ct := LoadCliqueTree(ctin)
 	log.Printf("Successfully read cliquetree\n")
-	cardin := extendCardin(ds.Cardin(), ct.N(), hc)
+	cardin := extendCardin(ds.Cardin(), hc, ct.N())
 
 	start := time.Now()
 	ll := learnParameters(
@@ -218,11 +218,19 @@ func separate(n, t int, varlist []int) (observed, hidden []int) {
 }
 
 // extendCardin extends cardinality to add hidden variables
-func extendCardin(dscardin []int, t, hc int) []int {
+func extendCardin(dscardin, hc []int, t int) []int {
 	cardin := make([]int, t)
 	copy(cardin, dscardin)
-	for i := len(dscardin); i < len(cardin); i++ {
-		cardin[i] = hc
+	if len(hc) > 0 {
+		if len(hc) < t {
+			for i := len(dscardin); i < len(cardin); i++ {
+				cardin[i] = hc[0]
+			}
+		} else {
+			for i := len(dscardin); i < len(cardin); i++ {
+				cardin[i] = hc[i-len(dscardin)]
+			}
+		}
 	}
 	return cardin
 }
