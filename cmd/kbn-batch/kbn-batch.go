@@ -46,12 +46,11 @@ const (
 
 // Define parameters defaults
 var (
-	delim         = uint(',')
-	hdr           = uint(4)
-	nk            = 0
-	maxIterEM     = 0
-	defaultHCard  = []int{2}
-	defaultEpslon = 1e-3
+	delim        = uint(',')
+	hdr          = uint(4)
+	nk           = 0
+	maxIterEM    = 0
+	defaultHCard = []int{2}
 
 	parMap map[interface{}]interface{}
 	//
@@ -155,10 +154,9 @@ func generateParams(csvf string, ctfis []string) {
 		if v, ok := parMap[cParamsBlk]; ok {
 			for _, it := range v.([]interface{}) {
 				blk := it.(map[interface{}]interface{})
-				var alpha float64
+				var alpha, epslon float64
 				var potdist, potmode string
 				repeat := 1
-				epslon := defaultEpslon
 				hc := defaultHCard
 				if v, ok := blk[cRepeat]; ok {
 					repeat = v.(int)
