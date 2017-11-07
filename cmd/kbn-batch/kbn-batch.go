@@ -281,17 +281,17 @@ func structureCommand(
 
 func paramCommand(
 	dsfile string, delim, hdr uint, ctin, ctout, marfile string, hc []int,
-	alpha, epslon float64, iterem int, potdist, potmode string,
+	alpha, epslon float64, maxIterEM int, potdist, potmode string,
 ) {
 	skipEM := false
 	ds := dataset.NewFromFile(dsfile, rune(delim), dataset.HdrFlags(hdr))
 	mode, _ := learn.ValidDependenceMode(potmode)
 	dist, _ := learn.ValidDistribution(potdist)
-	ll, elapsed := learn.Parameters(
+	ll, iterEM, elapsed := learn.Parameters(
 		ds, ctin, ctout, marfile, hc, alpha, epslon, maxIterEM, dist, mode, skipEM,
 	)
 	fmt.Fprintln(paramfp, ioutl.Sprintc(
-		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, maxIterEM,
+		dsfile, ctin, ctout, ll, elapsed, alpha, epslon, potdist, potmode, iterEM,
 	))
 }
 

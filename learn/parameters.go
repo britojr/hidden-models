@@ -84,13 +84,13 @@ func Parameters(
 	ds *dataset.Dataset, ctin, ctout, marfile string, hc []int,
 	alpha, epslon float64, maxIterEM int,
 	potdist Distribution, potmode DependenceMode, skipEM bool,
-) (float64, time.Duration) {
+) (float64, int, time.Duration) {
 	ct := LoadCliqueTree(ctin)
 	log.Printf("Successfully read cliquetree\n")
 	cardin := extendCardin(ds.Cardin(), hc, ct.N())
 
 	start := time.Now()
-	ll := learnParameters(
+	ll, it := learnParameters(
 		ct, ds, cardin, ds.NCols(), alpha, epslon, maxIterEM, potdist, potmode, skipEM,
 	)
 	elapsed := time.Since(start)
@@ -104,21 +104,21 @@ func Parameters(
 		saveCTMarginals(ct, ds.NCols(), marfile)
 		log.Printf("Saved marginals in %v\n", marfile)
 	}
-	return ll, elapsed
+	return ll, it, elapsed
 }
 
 func learnParameters(
 	ct *cliquetree.CliqueTree, ds *dataset.Dataset, cardin []int, n int,
 	alpha, epslon float64, maxIterEM int,
 	potdist Distribution, potmode DependenceMode, skipEM bool,
-) (ll float64) {
+) (ll float64, it int) {
 	initializePotentials(ct, ds, cardin, n, potdist, potmode, alpha)
 	if skipEM {
 		return
 	}
 	// no need to run EM if there is no latent variables
 	if ct.N() > ds.NCols() || potmode == ModeFull {
-		ll = em.ExpectationMaximization(ct, ds.Data(), epslon, maxIterEM)
+		ll, it = em.ExpectationMaximization(ct, ds.Data(), epslon, maxIterEM)
 	} else {
 		// if there are no latent variables, calculate LL just using counting
 		ll = likelihood.StructLoglikelihood(ct.Cliques(), ct.SepSets(), ds)

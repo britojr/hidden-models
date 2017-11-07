@@ -12,7 +12,7 @@ import (
 
 // ExpectationMaximization runs EM algorithm for a cliquetree tree and returns
 // the loglikelihood after convergence
-func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64, maxIter int) float64 {
+func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64, maxIter int) (float64, int) {
 	log.Printf("Start EM\n")
 	var llnew, llant float64
 	newpot, llant := expectationStep(ct, data)
@@ -29,7 +29,7 @@ func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon flo
 		log.Printf("\tdiff: %v\n", diff)
 	}
 	log.Printf("EM Iterations: %v\n", i)
-	return llnew
+	return llnew, i
 }
 
 // expectationStep calculates the expected count of a list of observations and a cliquetree

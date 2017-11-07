@@ -138,7 +138,7 @@ func TestExpectationMaximization(t *testing.T) {
 		if err != nil {
 			t.Errorf(err.Error())
 		}
-		ll := ExpectationMaximization(c, tt.data, 1e-8, 0)
+		ll, _ := ExpectationMaximization(c, tt.data, 1e-8, 0)
 		if tt.ll != ll {
 			t.Errorf("wrong ll %v != %v", tt.ll, ll)
 		}
