@@ -14,13 +14,16 @@ import (
 // the loglikelihood after convergence
 func ExpectationMaximization(ct *cliquetree.CliqueTree, data [][]int, epslon float64, maxIter int) (float64, int) {
 	log.Printf("Start EM\n")
+	if epslon <= 0 && maxIter <= 0 {
+		maxIter = 1
+	}
 	var llnew, llant float64
 	newpot, llant := expectationStep(ct, data)
 	maximizationStep(ct, newpot)
 	ct.SetAllPotentials(newpot)
 	diff := epslon * 10
 	i := 0
-	for ; diff >= epslon && (maxIter <= 0 || i < maxIter); i++ {
+	for ; (epslon <= 0 || diff >= epslon) && (maxIter <= 0 || i < maxIter); i++ {
 		newpot, llnew = expectationStep(ct, data)
 		maximizationStep(ct, newpot)
 		ct.SetAllPotentials(newpot)
