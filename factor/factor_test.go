@@ -8,6 +8,7 @@ import (
 
 	"github.com/britojr/kbn/assignment"
 	"github.com/britojr/utl/floats"
+	gfloats "gonum.org/v1/gonum/floats"
 )
 
 type testStruct struct {
@@ -487,8 +488,8 @@ func TestSetRandom(t *testing.T) {
 		if v.size != len(got.Values()) {
 			t.Errorf("want %v, got %v", v.size, got.Values())
 		}
-		if v.size != 0 && !floats.AlmostEqual(1, floats.Sum(got.Values())) {
-			t.Errorf("not normalized, sum %v", floats.Sum(got.Values()))
+		if v.size != 0 && !floats.AlmostEqual(1, gfloats.Sum(got.Values())) {
+			t.Errorf("not normalized, sum %v", gfloats.Sum(got.Values()))
 		}
 	}
 
@@ -535,8 +536,8 @@ func TestSetDirichlet(t *testing.T) {
 		if tt.size != len(got.Values()) {
 			t.Errorf("want %v, got %v", tt.size, got.Values())
 		}
-		if tt.size != 0 && !floats.AlmostEqual(1, floats.Sum(got.Values())) {
-			t.Errorf("not normalized, sum %v", floats.Sum(got.Values()))
+		if tt.size != 0 && !floats.AlmostEqual(1, gfloats.Sum(got.Values())) {
+			t.Errorf("not normalized, sum %v", gfloats.Sum(got.Values()))
 		}
 	}
 

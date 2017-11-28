@@ -15,7 +15,7 @@ import (
 	"github.com/britojr/tcc/generator"
 	"github.com/britojr/utl/conv"
 	"github.com/britojr/utl/errchk"
-	"github.com/britojr/utl/floats"
+	"gonum.org/v1/gonum/floats"
 )
 
 // CliqueTree ..

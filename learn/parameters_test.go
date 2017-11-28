@@ -7,6 +7,7 @@ import (
 
 	"github.com/britojr/kbn/factor"
 	"github.com/britojr/utl/floats"
+	gfloats "gonum.org/v1/gonum/floats"
 )
 
 type FakeCounter struct {
@@ -72,7 +73,7 @@ func testConditionalUniform(t *testing.T, cases []struct {
 			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
 		}
 		for i, f := range faclist {
-			tot := floats.Sum(f.Values())
+			tot := gfloats.Sum(f.Values())
 			if !floats.AlmostEqual(tot, 1) {
 				t.Errorf("uniform factor not normalized, sums to: %v", tot)
 			}
@@ -101,7 +102,7 @@ func testRandomIndependent(t *testing.T, cases []struct {
 			t.Errorf("wrong number of factors, expected %v, got %v", len(tt.result), len(faclist))
 		}
 		for _, f := range faclist {
-			tot := floats.Sum(f.Values())
+			tot := gfloats.Sum(f.Values())
 			if !floats.AlmostEqual(tot, 1) {
 				t.Errorf("random factor not normalized, sums to: %v", tot)
 			}
@@ -143,7 +144,7 @@ func TestCreateRandomPortentials(t *testing.T) {
 	for _, tt := range cases {
 		faclist := createRandomPotentials(tt.cliques, tt.cardin, DistRandom, 0)
 		for _, f := range faclist {
-			tot := floats.Sum(f.Values())
+			tot := gfloats.Sum(f.Values())
 			if !floats.AlmostEqual(tot, 1) {
 				t.Errorf("random factor not normalized, sums to: %v", tot)
 			}

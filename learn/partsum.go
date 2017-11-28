@@ -11,9 +11,9 @@ import (
 	"github.com/britojr/kbn/dataset"
 	"github.com/britojr/kbn/mrf"
 	"github.com/britojr/utl/errchk"
-	"github.com/britojr/utl/floats"
 	"github.com/britojr/utl/ioutl"
 	"github.com/britojr/utl/stats"
+	"gonum.org/v1/gonum/floats"
 )
 
 // PartitionSum calculates an approximation of the partition sum of a MRF

@@ -7,7 +7,7 @@ import (
 
 	"github.com/britojr/kbn/cliquetree"
 	"github.com/britojr/kbn/factor"
-	"github.com/britojr/utl/floats"
+	"gonum.org/v1/gonum/floats"
 )
 
 // ExpectationMaximization runs EM algorithm for a cliquetree tree and returns
