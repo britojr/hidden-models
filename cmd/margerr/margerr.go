@@ -39,7 +39,7 @@ func main() {
 
 	mp := ioutl.CreateFile(fmt.Sprintf("marginals_%v.txt", time.Now().Format(time.RFC3339)))
 	defer mp.Close()
-	cfuncs := []string{"mse", "entropy", "l1", "l2", "abs", "hel"}
+	cfuncs := []string{"mse", "entropy", "l1", "l2", "mean-abs", "max-abs", "hel"}
 	fmt.Fprintln(mp, ioutl.Sprintc("marfile", cfuncs))
 
 	for _, marf := range marfs {

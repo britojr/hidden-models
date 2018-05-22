@@ -21,17 +21,19 @@ const (
 	CrossEntropy              = "entropy"
 	L1Distance                = "l1"
 	L2Distance                = "l2"
-	MaxAbsError               = "abs"
+	MaxAbsError               = "max-abs"
+	MeanAbsError              = "mean-abs"
 	Hellinger                 = "hel"
 )
 
 var distances = map[string]DistanceFunc{
-	"mse":     MSE,
-	"entropy": CrossEntropy,
-	"l1":      L1Distance,
-	"l2":      L2Distance,
-	"abs":     MaxAbsError,
-	"hel":     Hellinger,
+	"mse":      MSE,
+	"entropy":  CrossEntropy,
+	"l1":       L1Distance,
+	"l2":       L2Distance,
+	"max-abs":  MaxAbsError,
+	"mean-abs": MeanAbsError,
+	"hel":      Hellinger,
 }
 
 // String returns the distance functons names
@@ -74,6 +76,8 @@ func CompareMarginals(exact, approx string, dsfunc DistanceFunc) (d float64) {
 		d = stats.MatDistance(e, a, 2)
 	case MaxAbsError:
 		d = stats.MatMaxAbsErr(e, a)
+	case MeanAbsError:
+		d = stats.MatMeanAbsErr(e, a)
 	case Hellinger:
 		d = stats.MatHellDist(e, a)
 	default:
